@@ -106,7 +106,8 @@ export default function Appointments() {
 
       <Card className="border-border/60 shadow-soft">
         <CardContent className="p-0">
-          <div className="overflow-x-auto">
+          {/* Desktop table */}
+          <div className="hidden overflow-x-auto md:block">
             <Table>
               <TableHeader>
                 <TableRow className="bg-secondary/40">
@@ -187,6 +188,63 @@ export default function Appointments() {
                 )}
               </TableBody>
             </Table>
+          </div>
+
+          {/* Mobile cards */}
+          <div className="divide-y divide-border/60 md:hidden">
+            {filtered.map((a) => (
+              <div key={a.id} className="p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-medium">{a.clientName}</p>
+                    <p className="truncate text-xs text-muted-foreground">{a.phone}</p>
+                  </div>
+                  <span className={cn('shrink-0 rounded-full border px-2.5 py-0.5 text-xs', statusColors[a.status])}>
+                    {statusLabels[a.status]}
+                  </span>
+                </div>
+                <p className="mt-2 text-sm">{a.serviceName}</p>
+                <div className="mt-2 flex items-center justify-between">
+                  <span className="text-xs text-muted-foreground">
+                    {new Date(a.date).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })} • {a.time}
+                  </span>
+                  <span className="text-sm font-semibold text-primary">{formatAriary(a.price)}</span>
+                </div>
+                <div className="mt-3 flex gap-1">
+                  <Button size="sm" variant="outline" className="h-8 flex-1 rounded-full" onClick={() => setViewing(a)}>
+                    <Eye className="mr-1.5 h-3.5 w-3.5" /> Voir
+                  </Button>
+                  <Button size="sm" variant="outline" className="h-8 flex-1 rounded-full" title="Modifier">
+                    <Pencil className="mr-1.5 h-3.5 w-3.5" /> Modifier
+                  </Button>
+                  {a.status === 'pending' && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-8 flex-1 rounded-full text-emerald-600"
+                      onClick={() => setStatus(a.id, 'confirmed')}
+                    >
+                      <Check className="mr-1.5 h-3.5 w-3.5" /> Confirmer
+                    </Button>
+                  )}
+                  {a.status !== 'cancelled' && a.status !== 'completed' && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-8 flex-1 rounded-full text-rose-600"
+                      onClick={() => setStatus(a.id, 'cancelled')}
+                    >
+                      <X className="mr-1.5 h-3.5 w-3.5" /> Annuler
+                    </Button>
+                  )}
+                </div>
+              </div>
+            ))}
+            {filtered.length === 0 && (
+              <p className="py-10 text-center text-sm text-muted-foreground">
+                Aucun rendez-vous trouvé.
+              </p>
+            )}
           </div>
         </CardContent>
       </Card>

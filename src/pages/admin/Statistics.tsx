@@ -99,7 +99,7 @@ export default function Statistics() {
                 <span className={`grid h-11 w-11 place-items-center rounded-2xl bg-secondary ${k.color}`}>
                   <k.icon className="h-5 w-5" />
                 </span>
-                <p className="mt-4 text-2xl font-semibold">{k.value}</p>
+                <p className="mt-4 text-xl font-semibold sm:text-2xl">{k.value}</p>
                 <p className="text-sm text-muted-foreground">{k.label}</p>
               </CardContent>
             </Card>

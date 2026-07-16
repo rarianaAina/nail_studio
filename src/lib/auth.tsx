@@ -21,20 +21,20 @@ interface AuthState {
   logout: () => void;
 }
 
-const STORAGE_KEY = 'elegance.auth';
+const STORAGE_KEY = 'nida.auth';
 
 const mockUsers: (User & { password: string })[] = [
   {
     id: 'u-admin',
-    name: 'Admin',
-    email: 'admin@nidanail.mg',
+    name: 'Admin Nida',
+    email: 'admin@nida.mg',
     password: 'admin123',
     role: 'admin',
   },
   {
     id: 'u-client',
     name: 'Hanta Rakotoarison',
-    email: 'cliente@nidanail.mg',
+    email: 'cliente@nida.mg',
     phone: '+261 34 11 22 33',
     password: 'cliente123',
     role: 'client',

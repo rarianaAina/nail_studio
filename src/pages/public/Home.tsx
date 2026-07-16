@@ -49,7 +49,7 @@ export default function Home() {
             </Badge>
             <h1 className="font-display text-5xl font-semibold leading-[1.05] text-balance text-foreground sm:text-6xl lg:text-7xl">
               L'art des ongles,
-              <span className="block italic text-primary">sublimé avec Nida</span>
+              <span className="block italic text-primary">sublimé avec élégance</span>
             </h1>
             <p className="mx-auto mt-6 max-w-xl text-base text-foreground/70 lg:mx-0">
               Des mains soignées, des ongles sublimes. Découvrez un univers de
@@ -65,7 +65,7 @@ export default function Home() {
                 <Link to="/prestations">Découvrir nos prestations</Link>
               </Button>
             </div>
-            <div className="mt-10 flex items-center justify-center gap-6 lg:justify-start">
+            <div className="mt-10 flex items-center justify-center gap-4 sm:gap-6 lg:justify-start">
               <div className="flex -space-x-3">
                 {[3997389, 3997391, 704815].map((id) => (
                   <img
@@ -107,7 +107,7 @@ export default function Home() {
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.6 }}
-              className="absolute -left-4 top-12 rounded-2xl bg-white/90 p-3 shadow-soft backdrop-blur sm:-left-8"
+              className="absolute left-2 top-12 rounded-2xl bg-white/90 p-3 shadow-soft backdrop-blur sm:-left-8"
             >
               <div className="flex items-center gap-2">
                 <span className="grid h-9 w-9 place-items-center rounded-xl bg-primary/10 text-primary">
@@ -123,7 +123,7 @@ export default function Home() {
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.8 }}
-              className="absolute -right-4 bottom-16 rounded-2xl bg-white/90 p-3 shadow-soft backdrop-blur sm:-right-8"
+              className="absolute right-2 bottom-16 rounded-2xl bg-white/90 p-3 shadow-soft backdrop-blur sm:-right-8"
             >
               <div className="flex items-center gap-2">
                 <span className="grid h-9 w-9 place-items-center rounded-xl bg-accent/15 text-accent">
@@ -419,21 +419,21 @@ export default function Home() {
           <div className="absolute -bottom-24 -left-20 h-72 w-72 rounded-full bg-accent/30 blur-3xl" />
           <div className="relative">
             <h2 className="font-display text-4xl font-semibold sm:text-5xl">
-              Prête à révéler votre Nida ?
+              Prête à révéler votre élégance ?
             </h2>
             <p className="mx-auto mt-4 max-w-xl text-primary-foreground/90">
               Réservez votre créneau en quelques secondes. Notre équipe vous
               confirmera votre rendez-vous dans les meilleurs délais.
             </p>
             <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
-              <Button asChild size="lg" variant="secondary" className="rounded-full bg-white px-7 text-primary hover:bg-white/90">
+              <Button asChild size="lg" className="rounded-full bg-white px-6 text-primary hover:bg-white/90 sm:px-7">
                 <Link to="/reservation">
                   <CalendarHeart className="mr-2 h-4 w-4" /> Prendre rendez-vous
                 </Link>
               </Button>
-              <Button asChild size="lg" variant="outline" className="rounded-full border-white/40 bg-transparent px-7 text-white hover:bg-white/10 hover:text-white">
+              <Button asChild size="lg" variant="outline" className="rounded-full border-white/40 bg-transparent px-6 text-white hover:bg-white/10 hover:text-white sm:px-7">
                 <a href={`tel:${salonInfo.phone}`}>
-                  <Phone className="mr-2 h-4 w-4" /> {salonInfo.phone}
+                  <Phone className="mr-2 h-4 w-4" /> <span className="text-sm sm:text-base">{salonInfo.phone}</span>
                 </a>
               </Button>
             </div>

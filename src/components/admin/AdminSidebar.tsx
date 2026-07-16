@@ -47,7 +47,7 @@ export default function AdminSidebar() {
           <CalendarHeart className="h-5 w-5" />
         </span>
         <div>
-          <p className="font-display text-lg font-semibold leading-tight">NidaNail</p>
+          <p className="font-display text-lg font-semibold leading-tight">Nida</p>
           <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
             Admin
           </p>
@@ -84,7 +84,7 @@ export default function AdminSidebar() {
             </span>
             <div className="flex-1">
               <p className="text-sm font-medium">{user?.name ?? 'Admin'}</p>
-              <p className="text-xs text-muted-foreground">{user?.email ?? 'admin@nidanail.mg'}</p>
+              <p className="text-xs text-muted-foreground">{user?.email ?? 'admin@nida.mg'}</p>
             </div>
           </div>
         </div>
@@ -112,7 +112,7 @@ export default function AdminSidebar() {
           <span className="grid h-9 w-9 place-items-center rounded-full bg-primary/10 text-primary">
             <CalendarHeart className="h-4 w-4" />
           </span>
-          <span className="font-display text-lg font-semibold">NidaNail Admin</span>
+          <span className="font-display text-lg font-semibold">Nida Admin</span>
         </Link>
         <button
           onClick={() => setOpen(true)}

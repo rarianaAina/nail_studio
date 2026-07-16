@@ -77,12 +77,12 @@ export default function CalendarPage() {
 
             <div className="mt-4 grid grid-cols-7 gap-1">
               {weekdays.map((d) => (
-                <div key={d} className="py-2 text-center text-xs font-medium uppercase text-muted-foreground">
+                <div key={d} className="py-2 text-center text-[10px] font-medium uppercase text-muted-foreground sm:text-xs">
                   {d}
                 </div>
               ))}
               {cells.map((d, i) => {
-                if (!d) return <div key={i} className="min-h-[80px] rounded-xl bg-secondary/20" />;
+                if (!d) return <div key={i} className="min-h-[56px] rounded-xl bg-secondary/20 sm:min-h-[80px]" />;
                 const iso = d.toISOString().slice(0, 10);
                 const appts = byDate[iso] || [];
                 const isToday = iso === new Date().toISOString().slice(0, 10);
@@ -92,7 +92,7 @@ export default function CalendarPage() {
                     key={i}
                     onClick={() => setSelected(iso)}
                     className={cn(
-                      'min-h-[80px] rounded-xl border p-1.5 text-left transition-all sm:p-2',
+                      'min-h-[56px] rounded-xl border p-1 text-left transition-all sm:min-h-[80px] sm:p-2',
                       isSelected
                         ? 'border-primary bg-primary/5 shadow-glow'
                         : 'border-border hover:border-primary/40'
@@ -101,19 +101,19 @@ export default function CalendarPage() {
                     <div className="flex items-center justify-between">
                       <span
                         className={cn(
-                          'grid h-6 w-6 place-items-center rounded-full text-xs font-semibold',
+                          'grid h-5 w-5 place-items-center rounded-full text-[11px] font-semibold sm:h-6 sm:w-6 sm:text-xs',
                           isToday ? 'bg-primary text-primary-foreground' : 'text-foreground'
                         )}
                       >
                         {d.getDate()}
                       </span>
                       {appts.length > 0 && (
-                        <span className="text-[10px] font-medium text-primary">
+                        <span className="text-[9px] font-medium text-primary sm:text-[10px]">
                           {appts.length}
                         </span>
                       )}
                     </div>
-                    <div className="mt-1 space-y-0.5">
+                    <div className="mt-1 hidden space-y-0.5 sm:block">
                       {appts.slice(0, 2).map((a) => (
                         <div
                           key={a.id}
@@ -128,6 +128,14 @@ export default function CalendarPage() {
                         </div>
                       )}
                     </div>
+                    {/* Mobile: dot indicator instead of chips */}
+                    {appts.length > 0 && (
+                      <div className="mt-1 flex justify-center gap-0.5 sm:hidden">
+                        {appts.slice(0, 3).map((a) => (
+                          <span key={a.id} className="h-1 w-1 rounded-full bg-primary" />
+                        ))}
+                      </div>
+                    )}
                   </button>
                 );
               })}

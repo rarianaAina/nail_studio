@@ -68,10 +68,10 @@ export default function Auth() {
     setRole(r);
     setMode('login');
     if (r === 'admin') {
-      set('email', 'admin@nidanail.mg');
+      set('email', 'admin@nida.mg');
       set('password', 'admin123');
     } else {
-      set('email', 'cliente@nidanail.mg');
+      set('email', 'cliente@nida.mg');
       set('password', 'cliente123');
     }
   };
@@ -89,7 +89,7 @@ export default function Auth() {
             <CalendarHeart className="h-5 w-5" />
           </span>
           <div>
-            <p className="font-display text-xl font-semibold">NidaNail</p>
+            <p className="font-display text-xl font-semibold">Nida</p>
             <p className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">
               Nail Studio
             </p>
@@ -104,7 +104,7 @@ export default function Auth() {
             className="font-display text-5xl font-semibold leading-tight text-foreground"
           >
             L'art des ongles,
-            <span className="block italic text-primary">sublimé avec NidaNail</span>
+            <span className="block italic text-primary">sublimé avec élégance</span>
           </motion.h1>
           <motion.p
             initial={{ opacity: 0, y: 20 }}
@@ -133,7 +133,7 @@ export default function Auth() {
         </div>
 
         <div className="relative text-xs text-muted-foreground">
-          © {new Date().getFullYear()} NidaNail Nail Studio — Antananarivo, Madagascar
+          © {new Date().getFullYear()} Nida Nail Studio — Antananarivo, Madagascar
         </div>
       </div>
 
@@ -152,7 +152,7 @@ export default function Auth() {
               <CalendarHeart className="h-5 w-5" />
             </span>
             <div>
-              <p className="font-display text-xl font-semibold">NidaNail</p>
+              <p className="font-display text-xl font-semibold">Nida</p>
               <p className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">
                 Nail Studio
               </p>
@@ -199,7 +199,7 @@ export default function Auth() {
                 <p className="mt-1 text-sm text-muted-foreground">
                   {mode === 'login'
                     ? 'Connectez-vous pour accéder à votre espace.'
-                    : 'Rejoignez NidaNail pour réserver en ligne.'}
+                    : 'Rejoignez Nida pour réserver en ligne.'}
                 </p>
 
                 {/* Role selector */}
@@ -344,7 +344,7 @@ export default function Auth() {
                       className="rounded-lg bg-background px-3 py-2 text-left text-xs shadow-soft transition-transform hover:-translate-y-0.5"
                     >
                       <p className="font-semibold text-foreground">Admin</p>
-                      <p className="text-muted-foreground">admin@nidanail.mg</p>
+                      <p className="text-muted-foreground">admin@nida.mg</p>
                       <p className="text-muted-foreground">admin123</p>
                     </button>
                     <button
@@ -352,7 +352,7 @@ export default function Auth() {
                       className="rounded-lg bg-background px-3 py-2 text-left text-xs shadow-soft transition-transform hover:-translate-y-0.5"
                     >
                       <p className="font-semibold text-foreground">Cliente</p>
-                      <p className="text-muted-foreground">cliente@nidanail.mg</p>
+                      <p className="text-muted-foreground">cliente@nida.mg</p>
                       <p className="text-muted-foreground">cliente123</p>
                     </button>
                   </div>

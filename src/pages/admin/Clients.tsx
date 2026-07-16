@@ -45,7 +45,7 @@ export default function Clients() {
                 <s.icon className="h-5 w-5" />
               </span>
               <div>
-                <p className="text-xl font-semibold">{s.value}</p>
+                <p className="text-lg font-semibold sm:text-xl">{s.value}</p>
                 <p className="text-sm text-muted-foreground">{s.label}</p>
               </div>
             </CardContent>

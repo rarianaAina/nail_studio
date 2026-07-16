@@ -24,14 +24,14 @@ const px = (id: string, w = 800, h = 600) =>
   `https://images.pexels.com/photos/${id}/pexels-photo-${id}.jpeg?auto=compress&cs=tinysrgb&w=${w}&h=${h}&fit=crop`;
 
 export const salonInfo: SalonInfo = {
-  name: 'NidaNail Nail Studio',
+  name: 'Nida Nail Studio',
   tagline: "L'art des ongles, sublimé",
   address: '12 Rue Jean-Jaurès, Analakely, Antananarivo 101, Madagascar',
   phone: '+261 34 12 345 67',
   whatsapp: '+261 34 12 345 67',
-  facebook: 'https://facebook.com/elegance.nail.studio',
-  instagram: 'https://instagram.com/elegance.nail.studio',
-  email: 'contact@elegance-nail.mg',
+  facebook: 'https://facebook.com/nida.nail.studio',
+  instagram: 'https://instagram.com/nida.nail.studio',
+  email: 'contact@nida-nail.mg',
   hours: [
     { day: 'Lundi', open: '09:00', close: '18:00' },
     { day: 'Mardi', open: '09:00', close: '18:00' },

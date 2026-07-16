@@ -126,7 +126,7 @@ export default function Dashboard() {
                     {s.delta}
                   </span>
                 </div>
-                <p className="mt-4 text-2xl font-semibold">{s.value}</p>
+                <p className="mt-4 text-xl font-semibold sm:text-2xl">{s.value}</p>
                 <p className="text-sm text-muted-foreground">{s.label}</p>
               </CardContent>
             </Card>
@@ -256,22 +256,22 @@ export default function Dashboard() {
             {todayAppointments.map((a) => (
               <div
                 key={a.id}
-                className="flex items-center justify-between rounded-xl border border-border/60 bg-secondary/30 p-3"
+                className="flex flex-col gap-3 rounded-xl border border-border/60 bg-secondary/30 p-3 sm:flex-row sm:items-center sm:justify-between"
               >
-                <div className="flex items-center gap-3">
-                  <span className="grid h-10 w-10 place-items-center rounded-full bg-primary/10 font-display text-sm font-semibold text-primary">
+                <div className="flex min-w-0 items-center gap-3">
+                  <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-primary/10 font-display text-sm font-semibold text-primary">
                     {a.clientName[0]}
                   </span>
-                  <div>
-                    <p className="text-sm font-medium">{a.clientName}</p>
-                    <p className="text-xs text-muted-foreground">{a.serviceName}</p>
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium">{a.clientName}</p>
+                    <p className="truncate text-xs text-muted-foreground">{a.serviceName}</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center justify-between gap-3 sm:justify-end">
                   <span className="flex items-center gap-1 text-xs text-muted-foreground">
                     <Clock className="h-3 w-3" /> {a.time}
                   </span>
-                  <span className={`rounded-full border px-2.5 py-0.5 text-xs ${statusColors[a.status]}`}>
+                  <span className={`shrink-0 rounded-full border px-2.5 py-0.5 text-xs ${statusColors[a.status]}`}>
                     {statusLabels[a.status]}
                   </span>
                 </div>

@@ -106,15 +106,15 @@ export default function Settings() {
         </CardHeader>
         <CardContent className="space-y-2">
           {hours.map((h, i) => (
-            <div key={h.day} className="flex flex-col gap-2 border-b border-border/60 py-3 sm:flex-row sm:items-center">
-              <span className="w-28 font-medium">{h.day}</span>
+            <div key={h.day} className="flex flex-col gap-2 border-b border-border/60 py-3 sm:flex-row sm:items-center sm:gap-4">
+              <span className="w-24 font-medium sm:w-28">{h.day}</span>
               <div className="flex items-center gap-2">
                 <Input
                   type="time"
                   value={h.open}
                   disabled={h.closed}
                   onChange={(e) => setHours((prev) => prev.map((x, j) => (j === i ? { ...x, open: e.target.value } : x)))}
-                  className="w-32"
+                  className="w-full flex-1 sm:w-28 sm:flex-none"
                 />
                 <span className="text-muted-foreground">—</span>
                 <Input
@@ -122,10 +122,10 @@ export default function Settings() {
                   value={h.close}
                   disabled={h.closed}
                   onChange={(e) => setHours((prev) => prev.map((x, j) => (j === i ? { ...x, close: e.target.value } : x)))}
-                  className="w-32"
+                  className="w-full flex-1 sm:w-28 sm:flex-none"
                 />
               </div>
-              <label className="ml-auto flex items-center gap-2 text-sm text-muted-foreground">
+              <label className="flex items-center gap-2 text-sm text-muted-foreground sm:ml-auto">
                 <input
                   type="checkbox"
                   checked={!!h.closed}
@@ -193,7 +193,7 @@ export default function Settings() {
             ))}
           </div>
           <Separator />
-          <div className="flex items-center gap-4">
+          <div className="flex flex-wrap items-center gap-4">
             <span className="h-12 w-12 rounded-full" style={{ background: color.primary }} />
             <div>
               <p className="text-sm font-medium">Aperçu principal</p>
@@ -209,7 +209,7 @@ export default function Settings() {
       </Card>
 
       <div className="flex justify-end">
-        <Button size="lg" className="rounded-full" onClick={save}>
+        <Button size="lg" className="w-full rounded-full sm:w-auto" onClick={save}>
           <Save className="mr-2 h-4 w-4" /> Enregistrer les modifications
         </Button>
       </div>
