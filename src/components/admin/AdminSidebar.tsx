@@ -13,11 +13,13 @@ import {
   X,
   CalendarHeart,
   LogOut,
+  Bell,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useAuth } from '@/lib/auth';
+import { useAuth } from '@/hooks/useAuth';
+import { useReminders } from '@/hooks/useReminders';
 import { toast } from 'sonner';
-import { cn } from '@/lib/utils';
+import { cn } from '@/utils/cn';
 
 const items = [
   { to: '/admin', label: 'Tableau de bord', icon: LayoutDashboard, end: true },
@@ -26,6 +28,7 @@ const items = [
   { to: '/admin/clientes', label: 'Clientes', icon: Users },
   { to: '/admin/prestations', label: 'Prestations', icon: Sparkles },
   { to: '/admin/statistiques', label: 'Statistiques', icon: BarChart3 },
+  { to: '/admin/notifications', label: 'Notifications', icon: Bell, badge: true },
   { to: '/admin/parametres', label: 'Paramètres', icon: Settings },
 ];
 
@@ -33,6 +36,7 @@ export default function AdminSidebar() {
   const [open, setOpen] = useState(false);
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const { pending } = useReminders();
 
   const onLogout = () => {
     logout();
@@ -48,9 +52,7 @@ export default function AdminSidebar() {
         </span>
         <div>
           <p className="font-display text-lg font-semibold leading-tight">Nida</p>
-          <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
-            Admin
-          </p>
+          <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Admin</p>
         </div>
       </Link>
 
@@ -70,8 +72,13 @@ export default function AdminSidebar() {
               )
             }
           >
-            <it.icon className="h-4 w-4" />
-            {it.label}
+            <it.icon className="h-4 w-4 shrink-0" />
+            <span className="flex-1">{it.label}</span>
+            {it.badge && pending.length > 0 && (
+              <span className="grid h-5 min-w-[20px] place-items-center rounded-full bg-primary px-1.5 text-[10px] font-semibold text-primary-foreground [.bg-primary_&]:bg-white [.bg-primary_&]:text-primary">
+                {pending.length}
+              </span>
+            )}
           </NavLink>
         ))}
       </nav>
@@ -82,9 +89,9 @@ export default function AdminSidebar() {
             <span className="grid h-9 w-9 place-items-center rounded-full bg-primary font-display text-sm font-semibold text-primary-foreground">
               {user?.name[0] ?? 'A'}
             </span>
-            <div className="flex-1">
-              <p className="text-sm font-medium">{user?.name ?? 'Admin'}</p>
-              <p className="text-xs text-muted-foreground">{user?.email ?? 'admin@nida.mg'}</p>
+            <div className="flex-1 min-w-0">
+              <p className="truncate text-sm font-medium">{user?.name ?? 'Admin'}</p>
+              <p className="truncate text-xs text-muted-foreground">{user?.email ?? 'admin@nida.mg'}</p>
             </div>
           </div>
         </div>
@@ -114,13 +121,23 @@ export default function AdminSidebar() {
           </span>
           <span className="font-display text-lg font-semibold">Nida Admin</span>
         </Link>
-        <button
-          onClick={() => setOpen(true)}
-          className="grid h-10 w-10 place-items-center rounded-full bg-secondary"
-          aria-label="Menu"
-        >
-          <Menu className="h-5 w-5" />
-        </button>
+        <div className="flex items-center gap-2">
+          {pending.length > 0 && (
+            <NavLink to="/admin/notifications" className="relative grid h-9 w-9 place-items-center rounded-full bg-secondary">
+              <Bell className="h-4 w-4" />
+              <span className="absolute -right-0.5 -top-0.5 grid h-4 w-4 place-items-center rounded-full bg-primary text-[9px] font-semibold text-primary-foreground">
+                {pending.length}
+              </span>
+            </NavLink>
+          )}
+          <button
+            onClick={() => setOpen(true)}
+            className="grid h-10 w-10 place-items-center rounded-full bg-secondary"
+            aria-label="Menu"
+          >
+            <Menu className="h-5 w-5" />
+          </button>
+        </div>
       </div>
 
       <AnimatePresence>

@@ -1,48 +1,36 @@
 import { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
+import { Search, Eye, Pencil, Check, X, CalendarPlus, Bell } from 'lucide-react';
 import {
-  Search,
-  Eye,
-  Pencil,
-  Check,
-  X,
-  CalendarPlus,
-} from 'lucide-react';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from '@/components/ui/dialog';
-import { appointments as initial, formatAriary, statusColors, statusLabels, type Appointment, type AppointmentStatus } from '@/lib/data';
 import { toast } from 'sonner';
-import { cn } from '@/lib/utils';
+import { cn } from '@/utils/cn';
+import { useAppointments } from '@/hooks/useAppointments';
+import { useReminderSettings } from '@/hooks/useReminderSettings';
+import { reminderService } from '@/services/reminderService';
+import { formatAriary, STATUS_COLORS, STATUS_LABELS } from '@/utils';
+import type { Appointment, AppointmentStatus } from '@/types';
 
-const filters: ('Tous' | AppointmentStatus)[] = ['Tous', 'pending', 'confirmed', 'completed', 'cancelled'];
+const FILTERS: ('Tous' | AppointmentStatus)[] = ['Tous', 'pending', 'confirmed', 'completed', 'cancelled'];
 
 export default function Appointments() {
-  const [list, setList] = useState<Appointment[]>(initial);
+  const { appointments, updateStatus } = useAppointments();
+  const { reminderSettings } = useReminderSettings();
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState<'Tous' | AppointmentStatus>('Tous');
   const [viewing, setViewing] = useState<Appointment | null>(null);
 
   const filtered = useMemo(
     () =>
-      list.filter((a) => {
+      appointments.filter((a) => {
         const matchQ =
           a.clientName.toLowerCase().includes(query.toLowerCase()) ||
           a.phone.includes(query) ||
@@ -50,12 +38,46 @@ export default function Appointments() {
         const matchF = filter === 'Tous' || a.status === filter;
         return matchQ && matchF;
       }),
-    [list, query, filter]
+    [appointments, query, filter]
   );
 
-  const setStatus = (id: string, status: AppointmentStatus) => {
-    setList((prev) => prev.map((a) => (a.id === id ? { ...a, status } : a)));
-    toast.success(`Statut mis à jour : ${statusLabels[status]}`);
+  const handleStatus = async (id: string, status: AppointmentStatus) => {
+    await updateStatus(id, status);
+
+    if (status === 'confirmed' && reminderSettings?.enabled) {
+      const appt = appointments.find((a) => a.id === id);
+      if (appt) {
+        try {
+          await reminderService.create({
+            appointmentId: appt.id,
+            clientName: appt.clientName,
+            clientPhone: appt.phone,
+            clientEmail: appt.email,
+            serviceName: appt.serviceName,
+            appointmentDate: appt.date,
+            appointmentTime: appt.time,
+            recipients: reminderSettings.recipients,
+            delayHours: reminderSettings.delayHours,
+          });
+          toast.success(
+            `Rendez-vous confirmé. Un rappel sera envoyé ${reminderSettings.delayHours} h avant à : ${
+              reminderSettings.recipients === 'client' ? 'la cliente' :
+              reminderSettings.recipients === 'admin' ? "l'administratrice" : 'la cliente et l\'administratrice'
+            }.`,
+            { duration: 5000, icon: <Bell className="h-4 w-4" /> }
+          );
+        } catch {
+          toast.success(`Statut mis à jour : ${STATUS_LABELS[status]}`);
+        }
+      }
+    } else if (status === 'cancelled') {
+      try {
+        await reminderService.deleteByAppointmentId(id);
+      } catch { /* silent — rappel peut ne pas exister */ }
+      toast.success(`Statut mis à jour : ${STATUS_LABELS[status]}`);
+    } else {
+      toast.success(`Statut mis à jour : ${STATUS_LABELS[status]}`);
+    }
   };
 
   return (
@@ -72,6 +94,18 @@ export default function Appointments() {
         </Button>
       </div>
 
+      {/* Info rappel actif */}
+      {reminderSettings?.enabled && (
+        <div className="flex items-center gap-3 rounded-2xl border border-primary/20 bg-primary/5 px-4 py-3 text-sm text-primary">
+          <Bell className="h-4 w-4 shrink-0" />
+          <span>
+            Rappels activés — envoi automatique{' '}
+            <span className="font-semibold">{reminderSettings.delayHours} h avant</span>{' '}
+            chaque rendez-vous confirmé.
+          </span>
+        </div>
+      )}
+
       <Card className="border-border/60 shadow-soft">
         <CardContent className="p-4">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -85,7 +119,7 @@ export default function Appointments() {
               />
             </div>
             <div className="no-scrollbar flex gap-2 overflow-x-auto">
-              {filters.map((f) => (
+              {FILTERS.map((f) => (
                 <button
                   key={f}
                   onClick={() => setFilter(f)}
@@ -96,7 +130,7 @@ export default function Appointments() {
                       : 'border-border text-foreground/70 hover:border-primary/40'
                   )}
                 >
-                  {f === 'Tous' ? 'Tous' : statusLabels[f]}
+                  {f === 'Tous' ? 'Tous' : STATUS_LABELS[f]}
                 </button>
               ))}
             </div>
@@ -106,7 +140,7 @@ export default function Appointments() {
 
       <Card className="border-border/60 shadow-soft">
         <CardContent className="p-0">
-          {/* Desktop table */}
+          {/* Desktop */}
           <div className="hidden overflow-x-auto md:block">
             <Table>
               <TableHeader>
@@ -134,44 +168,36 @@ export default function Appointments() {
                     <TableCell>{a.serviceName}</TableCell>
                     <TableCell className="font-medium text-primary">{formatAriary(a.price)}</TableCell>
                     <TableCell>
-                      {new Date(a.date).toLocaleDateString('fr-FR', {
-                        day: '2-digit',
-                        month: 'short',
-                      })}
+                      {new Date(a.date).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })}
                     </TableCell>
                     <TableCell>{a.time}</TableCell>
                     <TableCell>
-                      <span className={cn('rounded-full border px-2.5 py-0.5 text-xs', statusColors[a.status])}>
-                        {statusLabels[a.status]}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className={cn('rounded-full border px-2.5 py-0.5 text-xs', STATUS_COLORS[a.status])}>
+                          {STATUS_LABELS[a.status]}
+                        </span>
+                        {a.status === 'confirmed' && reminderSettings?.enabled && (
+                          <span title="Rappel programmé" className="text-primary">
+                            <Bell className="h-3.5 w-3.5" />
+                          </span>
+                        )}
+                      </div>
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-1">
-                        <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => setViewing(a)} title="Voir">
+                        <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => setViewing(a)}>
                           <Eye className="h-4 w-4" />
                         </Button>
-                        <Button size="icon" variant="ghost" className="h-8 w-8" title="Modifier">
+                        <Button size="icon" variant="ghost" className="h-8 w-8">
                           <Pencil className="h-4 w-4" />
                         </Button>
                         {a.status === 'pending' && (
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            className="h-8 w-8 text-emerald-600"
-                            onClick={() => setStatus(a.id, 'confirmed')}
-                            title="Confirmer"
-                          >
+                          <Button size="icon" variant="ghost" className="h-8 w-8 text-emerald-600" onClick={() => handleStatus(a.id, 'confirmed')}>
                             <Check className="h-4 w-4" />
                           </Button>
                         )}
                         {a.status !== 'cancelled' && a.status !== 'completed' && (
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            className="h-8 w-8 text-rose-600"
-                            onClick={() => setStatus(a.id, 'cancelled')}
-                            title="Annuler"
-                          >
+                          <Button size="icon" variant="ghost" className="h-8 w-8 text-rose-600" onClick={() => handleStatus(a.id, 'cancelled')}>
                             <X className="h-4 w-4" />
                           </Button>
                         )}
@@ -190,7 +216,7 @@ export default function Appointments() {
             </Table>
           </div>
 
-          {/* Mobile cards */}
+          {/* Mobile */}
           <div className="divide-y divide-border/60 md:hidden">
             {filtered.map((a) => (
               <div key={a.id} className="p-4">
@@ -199,9 +225,14 @@ export default function Appointments() {
                     <p className="truncate font-medium">{a.clientName}</p>
                     <p className="truncate text-xs text-muted-foreground">{a.phone}</p>
                   </div>
-                  <span className={cn('shrink-0 rounded-full border px-2.5 py-0.5 text-xs', statusColors[a.status])}>
-                    {statusLabels[a.status]}
-                  </span>
+                  <div className="flex items-center gap-1.5">
+                    {a.status === 'confirmed' && reminderSettings?.enabled && (
+                      <Bell className="h-3.5 w-3.5 text-primary" />
+                    )}
+                    <span className={cn('shrink-0 rounded-full border px-2.5 py-0.5 text-xs', STATUS_COLORS[a.status])}>
+                      {STATUS_LABELS[a.status]}
+                    </span>
+                  </div>
                 </div>
                 <p className="mt-2 text-sm">{a.serviceName}</p>
                 <div className="mt-2 flex items-center justify-between">
@@ -214,26 +245,13 @@ export default function Appointments() {
                   <Button size="sm" variant="outline" className="h-8 flex-1 rounded-full" onClick={() => setViewing(a)}>
                     <Eye className="mr-1.5 h-3.5 w-3.5" /> Voir
                   </Button>
-                  <Button size="sm" variant="outline" className="h-8 flex-1 rounded-full" title="Modifier">
-                    <Pencil className="mr-1.5 h-3.5 w-3.5" /> Modifier
-                  </Button>
                   {a.status === 'pending' && (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="h-8 flex-1 rounded-full text-emerald-600"
-                      onClick={() => setStatus(a.id, 'confirmed')}
-                    >
+                    <Button size="sm" variant="outline" className="h-8 flex-1 rounded-full text-emerald-600" onClick={() => handleStatus(a.id, 'confirmed')}>
                       <Check className="mr-1.5 h-3.5 w-3.5" /> Confirmer
                     </Button>
                   )}
                   {a.status !== 'cancelled' && a.status !== 'completed' && (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="h-8 flex-1 rounded-full text-rose-600"
-                      onClick={() => setStatus(a.id, 'cancelled')}
-                    >
+                    <Button size="sm" variant="outline" className="h-8 flex-1 rounded-full text-rose-600" onClick={() => handleStatus(a.id, 'cancelled')}>
                       <X className="mr-1.5 h-3.5 w-3.5" /> Annuler
                     </Button>
                   )}
@@ -241,9 +259,7 @@ export default function Appointments() {
               </div>
             ))}
             {filtered.length === 0 && (
-              <p className="py-10 text-center text-sm text-muted-foreground">
-                Aucun rendez-vous trouvé.
-              </p>
+              <p className="py-10 text-center text-sm text-muted-foreground">Aucun rendez-vous trouvé.</p>
             )}
           </div>
         </CardContent>
@@ -253,9 +269,7 @@ export default function Appointments() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Détails du rendez-vous</DialogTitle>
-            <DialogDescription>
-              Informations complètes du rendez-vous sélectionné.
-            </DialogDescription>
+            <DialogDescription>Informations complètes du rendez-vous sélectionné.</DialogDescription>
           </DialogHeader>
           {viewing && (
             <div className="space-y-3 text-sm">
@@ -266,7 +280,15 @@ export default function Appointments() {
               <div className="flex justify-between"><span className="text-muted-foreground">Prix</span><span className="font-medium text-primary">{formatAriary(viewing.price)}</span></div>
               <div className="flex justify-between"><span className="text-muted-foreground">Date</span><span>{new Date(viewing.date).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</span></div>
               <div className="flex justify-between"><span className="text-muted-foreground">Heure</span><span>{viewing.time}</span></div>
-              <div className="flex justify-between"><span className="text-muted-foreground">Statut</span><Badge className={cn('border', statusColors[viewing.status])}>{statusLabels[viewing.status]}</Badge></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">Statut</span><Badge className={cn('border', STATUS_COLORS[viewing.status])}>{STATUS_LABELS[viewing.status]}</Badge></div>
+              {viewing.status === 'confirmed' && reminderSettings?.enabled && (
+                <div className="mt-1 flex items-center gap-2 rounded-xl border border-primary/20 bg-primary/5 px-3 py-2">
+                  <Bell className="h-4 w-4 text-primary" />
+                  <span className="text-sm text-primary">
+                    Rappel programmé {reminderSettings.delayHours} h avant le rendez-vous.
+                  </span>
+                </div>
+              )}
             </div>
           )}
           <DialogFooter>

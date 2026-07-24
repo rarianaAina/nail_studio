@@ -8,55 +8,48 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from '@/components/ui/dialog';
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { services as initial, formatAriary, type Service } from '@/lib/data';
 import { toast } from 'sonner';
+import { useNailServices } from '@/hooks/useNailServices';
+import { formatAriary } from '@/utils';
+import type { Service, ServiceCategory } from '@/types';
 
-const blank: Service = {
-  id: '',
+const DEFAULT_IMAGE = 'https://images.pexels.com/photos/3997389/pexels-photo-3997389.jpeg?auto=compress&cs=tinysrgb&w=800&h=600&fit=crop';
+
+type DraftService = Omit<Service, 'id'> & { id?: string };
+
+const blank: DraftService = {
   name: '',
   category: 'Manucure',
   description: '',
   duration: 30,
   price: 0,
-  image: 'https://images.pexels.com/photos/3997389/pexels-photo-3997389.jpeg?auto=compress&cs=tinysrgb&w=800&h=600&fit=crop',
+  image: DEFAULT_IMAGE,
 };
 
 export default function AdminServices() {
-  const [list, setList] = useState<Service[]>(initial);
-  const [editing, setEditing] = useState<Service | null>(null);
+  const { services, createService, updateService, deleteService } = useNailServices();
+  const [editing, setEditing] = useState<DraftService | null>(null);
   const [deleting, setDeleting] = useState<Service | null>(null);
 
-  const save = (svc: Service) => {
+  const save = async (svc: DraftService) => {
     if (svc.id) {
-      setList((prev) => prev.map((s) => (s.id === svc.id ? svc : s)));
+      await updateService(svc.id, svc);
       toast.success('Prestation modifiée.');
     } else {
-      const id = 'svc-' + Date.now();
-      setList((prev) => [...prev, { ...svc, id }]);
+      await createService(svc);
       toast.success('Prestation ajoutée.');
     }
     setEditing(null);
   };
 
-  const remove = (id: string) => {
-    setList((prev) => prev.filter((s) => s.id !== id));
+  const remove = async (id: string) => {
+    await deleteService(id);
     toast.success('Prestation supprimée.');
     setDeleting(null);
   };
@@ -66,9 +59,7 @@ export default function AdminServices() {
       <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
         <div>
           <h1 className="font-display text-3xl font-semibold">Prestations</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Ajoutez, modifiez ou supprimez des prestations.
-          </p>
+          <p className="mt-1 text-sm text-muted-foreground">Ajoutez, modifiez ou supprimez des prestations.</p>
         </div>
         <Button className="rounded-full" onClick={() => setEditing({ ...blank })}>
           <Plus className="mr-2 h-4 w-4" /> Ajouter une prestation
@@ -76,13 +67,8 @@ export default function AdminServices() {
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {list.map((s, i) => (
-          <motion.div
-            key={s.id}
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.05 }}
-          >
+        {services.map((s, i) => (
+          <motion.div key={s.id} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
             <Card className="group overflow-hidden border-border/60 shadow-soft transition-all hover:shadow-glow">
               <div className="relative aspect-[4/3] overflow-hidden">
                 <img src={s.image} alt={s.name} className="h-full w-full object-cover" />
@@ -91,9 +77,7 @@ export default function AdminServices() {
                     <Sparkles className="h-3 w-3" /> Populaire
                   </Badge>
                 )}
-                <Badge className="absolute right-3 top-3 rounded-full bg-white/90 text-foreground">
-                  {s.category}
-                </Badge>
+                <Badge className="absolute right-3 top-3 rounded-full bg-white/90 text-foreground">{s.category}</Badge>
               </div>
               <CardContent className="p-4">
                 <div className="flex items-start justify-between">
@@ -118,84 +102,51 @@ export default function AdminServices() {
         ))}
       </div>
 
-      {/* Edit dialog */}
       <Dialog open={!!editing} onOpenChange={(o) => !o && setEditing(null)}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle>{editing?.id ? 'Modifier la prestation' : 'Nouvelle prestation'}</DialogTitle>
-            <DialogDescription>
-              Renseignez les informations de la prestation.
-            </DialogDescription>
+            <DialogDescription>Renseignez les informations de la prestation.</DialogDescription>
           </DialogHeader>
           {editing && (
             <div className="grid gap-4">
               <div className="space-y-1.5">
                 <Label htmlFor="name">Nom</Label>
-                <Input
-                  id="name"
-                  value={editing.name}
-                  onChange={(e) => setEditing({ ...editing, name: e.target.value })}
-                />
+                <Input id="name" value={editing.name} onChange={(e) => setEditing({ ...editing, name: e.target.value })} />
               </div>
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-1.5">
                   <Label htmlFor="cat">Catégorie</Label>
-                  <Input
-                    id="cat"
-                    value={editing.category}
-                    onChange={(e) => setEditing({ ...editing, category: e.target.value as Service['category'] })}
-                  />
+                  <Input id="cat" value={editing.category} onChange={(e) => setEditing({ ...editing, category: e.target.value as ServiceCategory })} />
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="img">Image (URL)</Label>
-                  <Input
-                    id="img"
-                    value={editing.image}
-                    onChange={(e) => setEditing({ ...editing, image: e.target.value })}
-                  />
+                  <Input id="img" value={editing.image} onChange={(e) => setEditing({ ...editing, image: e.target.value })} />
                 </div>
               </div>
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-1.5">
                   <Label htmlFor="dur">Durée (min)</Label>
-                  <Input
-                    id="dur"
-                    type="number"
-                    value={editing.duration}
-                    onChange={(e) => setEditing({ ...editing, duration: Number(e.target.value) })}
-                  />
+                  <Input id="dur" type="number" value={editing.duration} onChange={(e) => setEditing({ ...editing, duration: Number(e.target.value) })} />
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="price">Prix (Ar)</Label>
-                  <Input
-                    id="price"
-                    type="number"
-                    value={editing.price}
-                    onChange={(e) => setEditing({ ...editing, price: Number(e.target.value) })}
-                  />
+                  <Input id="price" type="number" value={editing.price} onChange={(e) => setEditing({ ...editing, price: Number(e.target.value) })} />
                 </div>
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="desc">Description</Label>
-                <Textarea
-                  id="desc"
-                  rows={3}
-                  value={editing.description}
-                  onChange={(e) => setEditing({ ...editing, description: e.target.value })}
-                />
+                <Textarea id="desc" rows={3} value={editing.description} onChange={(e) => setEditing({ ...editing, description: e.target.value })} />
               </div>
             </div>
           )}
           <DialogFooter>
             <Button variant="outline" onClick={() => setEditing(null)}>Annuler</Button>
-            <Button onClick={() => editing && save(editing)} disabled={!editing?.name}>
-              Enregistrer
-            </Button>
+            <Button onClick={() => editing && save(editing)} disabled={!editing?.name}>Enregistrer</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Delete dialog */}
       <AlertDialog open={!!deleting} onOpenChange={(o) => !o && setDeleting(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>

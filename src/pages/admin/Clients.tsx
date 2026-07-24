@@ -3,9 +3,11 @@ import { motion } from 'framer-motion';
 import { Search, Phone, Mail, Calendar, Wallet, Users } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { clients, formatAriary } from '@/lib/data';
+import { useClients } from '@/hooks/useClients';
+import { formatAriary } from '@/utils';
 
 export default function Clients() {
+  const { clients, aggregates } = useClients();
   const [query, setQuery] = useState('');
 
   const filtered = useMemo(
@@ -15,29 +17,21 @@ export default function Clients() {
           c.name.toLowerCase().includes(query.toLowerCase()) ||
           c.phone.includes(query)
       ),
-    [query]
+    [clients, query]
   );
-
-  const totals = useMemo(() => {
-    const totalSpent = clients.reduce((sum, c) => sum + c.totalSpent, 0);
-    const totalVisits = clients.reduce((sum, c) => sum + c.visitCount, 0);
-    return { totalSpent, totalVisits, count: clients.length };
-  }, []);
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="font-display text-3xl font-semibold">Clientes</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Base de clientes du salon.
-        </p>
+        <p className="mt-1 text-sm text-muted-foreground">Base de clientes du salon.</p>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-3">
         {[
-          { label: 'Total clientes', value: String(totals.count), icon: Users },
-          { label: 'Total visites', value: String(totals.totalVisits), icon: Calendar },
-          { label: 'CA cumulé', value: formatAriary(totals.totalSpent), icon: Wallet },
+          { label: 'Total clientes', value: String(aggregates.totalClients), icon: Users },
+          { label: 'Total visites', value: String(aggregates.totalVisits), icon: Calendar },
+          { label: 'CA cumulé', value: formatAriary(aggregates.totalRevenue), icon: Wallet },
         ].map((s) => (
           <Card key={s.label} className="border-border/60 shadow-soft">
             <CardContent className="flex items-center gap-3 p-5">
@@ -88,19 +82,16 @@ export default function Clients() {
                     </p>
                   </div>
                 </div>
-
                 {c.email && (
                   <p className="mt-3 flex items-center gap-1.5 text-xs text-muted-foreground">
                     <Mail className="h-3 w-3" /> {c.email}
                   </p>
                 )}
-
                 {c.notes && (
                   <p className="mt-3 rounded-lg bg-secondary/60 p-2 text-xs italic text-muted-foreground">
                     "{c.notes}"
                   </p>
                 )}
-
                 <div className="mt-4 grid grid-cols-3 gap-2 border-t border-border/60 pt-4 text-center">
                   <div>
                     <p className="text-xs text-muted-foreground">Visites</p>
@@ -109,17 +100,12 @@ export default function Clients() {
                   <div>
                     <p className="text-xs text-muted-foreground">Dernière</p>
                     <p className="text-xs font-medium">
-                      {new Date(c.lastVisit).toLocaleDateString('fr-FR', {
-                        day: '2-digit',
-                        month: 'short',
-                      })}
+                      {new Date(c.lastVisit).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })}
                     </p>
                   </div>
                   <div>
                     <p className="text-xs text-muted-foreground">Total</p>
-                    <p className="text-xs font-semibold text-primary">
-                      {Math.round(c.totalSpent / 1000)}k Ar
-                    </p>
+                    <p className="text-xs font-semibold text-primary">{Math.round(c.totalSpent / 1000)}k Ar</p>
                   </div>
                 </div>
               </CardContent>
