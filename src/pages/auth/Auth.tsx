@@ -47,12 +47,12 @@ export default function Auth() {
     }
   };
 
-  const fillDemo = (r: UserRole) => {
-    setRole(r);
-    setMode('login');
-    set('email', r === 'admin' ? 'admin@nida.mg' : 'cliente@nida.mg');
-    set('password', r === 'admin' ? 'admin123' : 'cliente123');
-  };
+  // const fillDemo = (r: UserRole) => {
+  //   setRole(r);
+  //   setMode('login');
+  //   set('email', r === 'admin' ? 'admin@nida.mg' : 'cliente@nida.mg');
+  //   set('password', r === 'admin' ? 'admin123' : 'cliente123');
+  // };
 
   return (
     <div className="grid min-h-screen lg:grid-cols-2">
