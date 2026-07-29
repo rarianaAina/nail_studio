@@ -282,13 +282,13 @@ export default function Home() {
             </div>
           )}
 
-          <div className="mt-10 text-center">
+          {/* <div className="mt-10 text-center">
             <Button asChild variant="outline" className="rounded-full">
               <Link to="/galerie">
                 Voir toute la galerie <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
             </Button>
-          </div>
+          </div> */}
         </div>
       </section>
 
