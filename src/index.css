@@ -4,67 +4,76 @@
 
 @layer base {
   :root {
-    /* Brand palette */
-    --background: 40 30% 99%;
-    --foreground: 24 10% 12%;
+    /* Couleurs de base - Champagne/Beige */
+    --background: 45 30% 98%;
+    --foreground: 30 15% 15%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 24 10% 12%;
+    --card: 45 25% 100%;
+    --card-foreground: 30 15% 15%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 24 10% 12%;
+    --popover: 45 25% 100%;
+    --popover-foreground: 30 15% 15%;
 
-    /* Rose poudré */
-    --primary: 340 55% 62%;
-    --primary-foreground: 40 30% 99%;
+    /* Doré chaud - Couleur primaire */
+    --primary: 38 80% 55%;
+    --primary-foreground: 45 30% 98%;
 
-    /* Beige */
-    --secondary: 38 45% 94%;
-    --secondary-foreground: 24 10% 20%;
+    /* Beige clair */
+    --secondary: 40 25% 92%;
+    --secondary-foreground: 30 15% 20%;
 
-    --muted: 36 30% 95%;
-    --muted-foreground: 24 5% 42%;
+    /* Champagne */
+    --muted: 40 20% 94%;
+    --muted-foreground: 30 10% 45%;
 
-    /* Doré */
-    --accent: 40 55% 62%;
-    --accent-foreground: 24 20% 14%;
+    /* Doré accent */
+    --accent: 38 75% 50%;
+    --accent-foreground: 45 30% 98%;
 
     --destructive: 0 75% 55%;
-    --destructive-foreground: 40 30% 99%;
+    --destructive-foreground: 45 30% 98%;
 
-    --border: 36 25% 90%;
-    --input: 36 25% 90%;
-    --ring: 340 55% 62%;
+    --border: 40 20% 88%;
+    --input: 40 20% 88%;
+    --ring: 38 80% 55%;
 
-    --chart-1: 340 55% 62%;
-    --chart-2: 40 55% 62%;
-    --chart-3: 24 30% 70%;
-    --chart-4: 200 30% 70%;
-    --chart-5: 320 40% 72%;
+    /* Graphiques */
+    --chart-1: 38 80% 55%;
+    --chart-2: 45 70% 50%;
+    --chart-3: 30 40% 60%;
+    --chart-4: 50 60% 50%;
+    --chart-5: 15 50% 55%;
 
     --radius: 0.75rem;
   }
 
   .dark {
-    --background: 24 15% 10%;
-    --foreground: 40 30% 96%;
-    --card: 24 15% 13%;
-    --card-foreground: 40 30% 96%;
-    --popover: 24 15% 13%;
-    --popover-foreground: 40 30% 96%;
-    --primary: 340 55% 68%;
-    --primary-foreground: 24 15% 12%;
-    --secondary: 24 10% 18%;
-    --secondary-foreground: 40 30% 96%;
-    --muted: 24 10% 18%;
-    --muted-foreground: 40 10% 70%;
-    --accent: 40 50% 58%;
-    --accent-foreground: 24 15% 12%;
+    --background: 30 15% 10%;
+    --foreground: 45 25% 96%;
+    --card: 30 15% 13%;
+    --card-foreground: 45 25% 96%;
+    --popover: 30 15% 13%;
+    --popover-foreground: 45 25% 96%;
+    
+    /* Doré plus lumineux pour le mode sombre */
+    --primary: 38 80% 60%;
+    --primary-foreground: 30 15% 10%;
+    
+    --secondary: 30 10% 18%;
+    --secondary-foreground: 45 25% 96%;
+    
+    --muted: 30 10% 18%;
+    --muted-foreground: 45 10% 70%;
+    
+    --accent: 38 75% 55%;
+    --accent-foreground: 30 15% 10%;
+    
     --destructive: 0 70% 55%;
-    --destructive-foreground: 40 30% 99%;
-    --border: 24 10% 22%;
-    --input: 24 10% 22%;
-    --ring: 340 55% 68%;
+    --destructive-foreground: 45 30% 99%;
+    
+    --border: 30 10% 22%;
+    --input: 30 10% 22%;
+    --ring: 38 80% 60%;
   }
 }
 
@@ -98,29 +107,51 @@
     );
     background-size: 24px 24px;
   }
-  .gradient-rose {
-    background-image: linear-gradient(
-      135deg,
-      hsl(340 55% 95%) 0%,
-      hsl(38 45% 94%) 50%,
-      hsl(40 55% 92%) 100%
-    );
-  }
+  
+  /* Dégradé doré */
   .gradient-gold {
     background-image: linear-gradient(
       135deg,
-      hsl(40 70% 70%) 0%,
-      hsl(40 55% 55%) 100%
+      hsl(38 80% 95%) 0%,
+      hsl(45 60% 92%) 50%,
+      hsl(38 70% 88%) 100%
     );
   }
+  
+  /* Dégradé doré plus intense */
+  .gradient-gold-intense {
+    background-image: linear-gradient(
+      135deg,
+      hsl(38 85% 65%) 0%,
+      hsl(45 75% 55%) 50%,
+      hsl(38 80% 45%) 100%
+    );
+  }
+  
+  /* Ancien gradient rose (gardé pour compatibilité) */
+  .gradient-rose {
+    background-image: linear-gradient(
+      135deg,
+      hsl(38 80% 95%) 0%,
+      hsl(45 60% 92%) 50%,
+      hsl(38 70% 88%) 100%
+    );
+  }
+  
   .shadow-soft {
     box-shadow:
-      0 1px 2px hsl(24 10% 12% / 0.04),
-      0 8px 24px hsl(24 10% 12% / 0.06);
+      0 1px 2px hsl(30 15% 12% / 0.04),
+      0 8px 24px hsl(30 15% 12% / 0.06);
   }
+  
   .shadow-glow {
-    box-shadow: 0 8px 40px hsl(340 55% 62% / 0.18);
+    box-shadow: 0 8px 40px hsl(38 80% 55% / 0.25);
   }
+  
+  .shadow-glow-gold {
+    box-shadow: 0 8px 40px hsl(38 80% 55% / 0.35);
+  }
+  
   .no-scrollbar::-webkit-scrollbar {
     display: none;
   }
@@ -142,10 +173,10 @@ html {
   background: hsl(var(--muted));
 }
 ::-webkit-scrollbar-thumb {
-  background: hsl(340 25% 80%);
+  background: hsl(38 50% 70%);
   border-radius: 999px;
   border: 2px solid hsl(var(--muted));
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: hsl(340 45% 70%);
+  background: hsl(38 60% 55%);
 }
