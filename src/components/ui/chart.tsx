@@ -98,10 +98,11 @@ ${colorConfig
   );
 };
 
+// Utiliser le Tooltip de Recharts directement
 const ChartTooltip = RechartsPrimitive.Tooltip;
 
 // Type pour les payloads de Recharts
-interface TooltipPayloadItem {
+interface ChartTooltipPayload {
   dataKey?: string | number;
   name?: string;
   value?: number | string;
@@ -113,14 +114,21 @@ interface TooltipPayloadItem {
 
 const ChartTooltipContent = React.forwardRef<
   HTMLDivElement,
-  React.ComponentProps<typeof RechartsPrimitive.Tooltip> &
-    React.ComponentProps<'div'> & {
-      hideLabel?: boolean;
-      hideIndicator?: boolean;
-      indicator?: 'line' | 'dot' | 'dashed';
-      nameKey?: string;
-      labelKey?: string;
-    }
+  React.ComponentProps<'div'> & {
+    active?: boolean;
+    payload?: ChartTooltipPayload[];
+    hideLabel?: boolean;
+    hideIndicator?: boolean;
+    indicator?: 'line' | 'dot' | 'dashed';
+    nameKey?: string;
+    labelKey?: string;
+    label?: string | React.ReactNode;
+    labelFormatter?: (value: any, payload: any[]) => React.ReactNode;
+    formatter?: (value: any, name: any, item: any, index: number, payload: any) => React.ReactNode;
+    color?: string;
+    labelClassName?: string;
+    className?: string;
+  }
 >(
   (
     {
@@ -161,7 +169,7 @@ const ChartTooltipContent = React.forwardRef<
       if (labelFormatter) {
         return (
           <div className={cn('font-medium', labelClassName)}>
-            {labelFormatter(value, payloadArray as any)}
+            {labelFormatter(value, payloadArray)}
           </div>
         );
       }
@@ -197,14 +205,14 @@ const ChartTooltipContent = React.forwardRef<
       >
         {!nestLabel ? tooltipLabel : null}
         <div className="grid gap-1.5">
-          {payloadArray.map((item: any, index: number) => {
+          {payloadArray.map((item: ChartTooltipPayload, index: number) => {
             const key = `${nameKey || item.name || item.dataKey || 'value'}`;
             const itemConfig = getPayloadConfigFromPayload(config, item, key);
             const indicatorColor = color || item?.payload?.fill || item?.color;
 
             return (
               <div
-                key={item.dataKey || index}
+                key={String(item.dataKey || index)}
                 className={cn(
                   'flex w-full flex-wrap items-stretch gap-2 [&>svg]:h-2.5 [&>svg]:w-2.5 [&>svg]:text-muted-foreground',
                   indicator === 'dot' && 'items-center'
@@ -273,7 +281,7 @@ ChartTooltipContent.displayName = 'ChartTooltip';
 const ChartLegend = RechartsPrimitive.Legend;
 
 // Type pour les payloads de la légende - compatible avec Recharts
-interface LegendPayload {
+interface ChartLegendPayload {
   value?: string | number;
   dataKey?: string | number | ((obj: any) => any);
   color?: string;
@@ -285,11 +293,13 @@ interface LegendPayload {
 
 const ChartLegendContent = React.forwardRef<
   HTMLDivElement,
-  React.ComponentProps<'div'> &
-    Pick<RechartsPrimitive.LegendProps, 'payload' | 'verticalAlign'> & {
-      hideIcon?: boolean;
-      nameKey?: string;
-    }
+  React.ComponentProps<'div'> & {
+    payload?: ChartLegendPayload[];
+    verticalAlign?: 'top' | 'bottom' | 'middle';
+    hideIcon?: boolean;
+    nameKey?: string;
+    className?: string;
+  }
 >(
   (
     { className, hideIcon = false, payload, verticalAlign = 'bottom', nameKey },
@@ -308,12 +318,12 @@ const ChartLegendContent = React.forwardRef<
       <div
         ref={ref}
         className={cn(
-          'flex items-center justify-center gap-4',
+          'flex items-center justify-center gap-4 flex-wrap',
           verticalAlign === 'top' ? 'pb-3' : 'pt-3',
           className
         )}
       >
-        {payloadArray.map((item: LegendPayload, index: number) => {
+        {payloadArray.map((item: ChartLegendPayload, index: number) => {
           // Extraire la clé de manière sécurisée
           let key: string = '';
           if (typeof item.dataKey === 'string') {
@@ -348,7 +358,7 @@ const ChartLegendContent = React.forwardRef<
                   }}
                 />
               )}
-              {typeof label === 'string' ? label : String(label)}
+              {typeof label === 'string' || typeof label === 'number' ? label : String(label)}
             </div>
           );
         })}
