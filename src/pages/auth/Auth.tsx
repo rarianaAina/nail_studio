@@ -145,7 +145,7 @@ export default function Auth() {
                       <Label htmlFor="phone">Téléphone</Label>
                       <div className="relative">
                         <Phone className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                        <Input id="phone" required value={form.phone} onChange={(e) => set('phone', e.target.value)} placeholder="+261 ..." className="pl-9" />
+                        <Input id="phone" required value={form.phone} onChange={(e) => set('phone', e.target.value)} placeholder="+33 ..." className="pl-9" />
                       </div>
                     </div>
                   )}

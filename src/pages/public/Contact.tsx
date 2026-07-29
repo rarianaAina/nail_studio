@@ -132,7 +132,7 @@ export default function Contact() {
                       </div>
                       <div className="space-y-1.5">
                         <Label htmlFor="phone">Téléphone</Label>
-                        <Input id="phone" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="+261 ..." />
+                        <Input id="phone" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="+33 ..." />
                       </div>
                     </div>
                     <div className="space-y-1.5">

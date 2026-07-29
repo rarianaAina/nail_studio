@@ -301,7 +301,7 @@ export default function Settings() {
                     id="admin-phone"
                     value={reminderSettings.adminPhone ?? ''}
                     onChange={(e) => updateReminderSettings({ adminPhone: e.target.value })}
-                    placeholder="+261 ..."
+                    placeholder="+33 ..."
                   />
                 </div>
                 <div className="space-y-1.5">
