@@ -293,7 +293,7 @@ export default function Home() {
       </section>
 
       {/* AVIS */}
-      <section className="py-20 sm:py-28">
+      {/* <section className="py-20 sm:py-28">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <motion.div {...fadeUp} className="mx-auto max-w-3xl text-center">
             <p className="text-sm font-medium uppercase tracking-[0.25em] text-primary">
@@ -340,7 +340,7 @@ export default function Home() {
             ))}
           </div>
         </div>
-      </section>
+      </section> */}
 
 
       {/* COORDONNÉES + HORAIRES */}
