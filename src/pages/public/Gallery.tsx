@@ -5,8 +5,6 @@ import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/lib/supabase';
 import { cn } from '@/lib/utils';
 
-const categories = ['Toutes', 'Vernis', 'Nail Art', 'Prothèses', 'Manucure', 'Pédicure'];
-
 const fadeUp = {
   initial: { opacity: 0, y: 24 },
   whileInView: { opacity: 1, y: 0 },
