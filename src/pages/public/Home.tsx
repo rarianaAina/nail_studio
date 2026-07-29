@@ -348,38 +348,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* CTA */}
-      <section className="px-4 py-12 sm:px-6 lg:px-8">
-        <motion.div
-          {...fadeUp}
-          className="relative mx-auto max-w-6xl overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-primary to-primary/80 px-6 py-16 text-center text-primary-foreground shadow-glow sm:px-12"
-        >
-          <div className="absolute inset-0 bg-grid opacity-20" />
-          <div className="absolute -right-20 -top-20 h-72 w-72 rounded-full bg-white/10 blur-3xl" />
-          <div className="absolute -bottom-24 -left-20 h-72 w-72 rounded-full bg-accent/30 blur-3xl" />
-          <div className="relative">
-            <h2 className="font-display text-4xl font-semibold sm:text-5xl">
-              Prête à révéler votre NidaNail ?
-            </h2>
-            <p className="mx-auto mt-4 max-w-xl text-primary-foreground/90">
-              Réservez votre créneau en quelques secondes. Notre équipe vous
-              confirmera votre rendez-vous dans les meilleurs délais.
-            </p>
-            <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
-              <Button asChild size="lg" variant="secondary" className="rounded-full bg-white px-7 text-primary hover:bg-white/90">
-                <Link to="/reservation">
-                  <CalendarHeart className="mr-2 h-4 w-4" /> Prendre rendez-vous
-                </Link>
-              </Button>
-              <Button asChild size="lg" variant="outline" className="rounded-full border-white/40 bg-transparent px-7 text-white hover:bg-white/10 hover:text-white">
-                <a href={`tel:${salonInfo.phone}`}>
-                  <Phone className="mr-2 h-4 w-4" /> {salonInfo.phone}
-                </a>
-              </Button>
-            </div>
-          </div>
-        </motion.div>
-      </section>
 
       {/* COORDONNÉES + HORAIRES */}
       <section className="py-20 sm:py-28">
