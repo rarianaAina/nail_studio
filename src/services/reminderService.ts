@@ -1,7 +1,6 @@
 import { supabase } from '@/lib/supabase';
-import type { Reminder, CreateReminderDto } from '@/types/reminder';
+import type { Reminder, CreateReminderDto } from '@/types';
 
-// --- DB row shape ---
 interface ReminderRow {
   id: string;
   appointment_id: string;
@@ -14,6 +13,7 @@ interface ReminderRow {
   scheduled_at: string;
   recipients: string;
   sent: boolean;
+  sent_at: string | null;
   created_at: string | null;
 }
 
@@ -30,6 +30,7 @@ function rowToReminder(r: ReminderRow): Reminder {
     scheduledAt: r.scheduled_at,
     recipients: r.recipients as Reminder['recipients'],
     sent: r.sent,
+    sentAt: r.sent_at ?? undefined,
     createdAt: r.created_at ?? undefined,
   };
 }
@@ -42,7 +43,7 @@ function computeScheduledAt(date: string, time: string, delayHours: number): str
 }
 
 export const reminderService = {
-  getAll: async (): Promise<Reminder[]> => {
+  async getAll(): Promise<Reminder[]> {
     const { data, error } = await supabase
       .from('reminders')
       .select('*')
@@ -51,7 +52,7 @@ export const reminderService = {
     return (data as ReminderRow[]).map(rowToReminder);
   },
 
-  getByAppointmentId: async (appointmentId: string): Promise<Reminder[]> => {
+  async getByAppointmentId(appointmentId: string): Promise<Reminder[]> {
     const { data, error } = await supabase
       .from('reminders')
       .select('*')
@@ -60,7 +61,7 @@ export const reminderService = {
     return (data as ReminderRow[]).map(rowToReminder);
   },
 
-  create: async (dto: CreateReminderDto): Promise<Reminder> => {
+  async create(dto: CreateReminderDto): Promise<Reminder> {
     const scheduledAt = computeScheduledAt(dto.appointmentDate, dto.appointmentTime, dto.delayHours);
     const { data, error } = await supabase
       .from('reminders')
@@ -82,7 +83,7 @@ export const reminderService = {
     return rowToReminder(data as ReminderRow);
   },
 
-  deleteByAppointmentId: async (appointmentId: string): Promise<void> => {
+  async deleteByAppointmentId(appointmentId: string): Promise<void> {
     const { error } = await supabase
       .from('reminders')
       .delete()

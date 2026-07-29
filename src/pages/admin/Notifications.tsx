@@ -8,6 +8,9 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/utils/cn';
 import { useReminders } from '@/hooks/useReminders';
 import { useReminderSettings } from '@/hooks/useReminderSettings';
+import { supabase } from '@/lib/supabase';
+import { toast } from 'sonner';
+import { useState } from 'react';
 import type { Reminder } from '@/types/reminder';
 
 const RECIPIENT_ICON: Record<Reminder['recipients'], typeof User> = {
@@ -51,10 +54,26 @@ function formatApptDate(date: string, time: string): string {
 export default function Notifications() {
   const { reminders, pending, loading, refresh } = useReminders();
   const { reminderSettings } = useReminderSettings();
+  const [sending, setSending] = useState(false);
 
   const sent = reminders.filter((r) => r.sent);
   const upcoming = pending.filter((r) => new Date(r.scheduledAt) > new Date());
   const overdue = pending.filter((r) => new Date(r.scheduledAt) <= new Date());
+
+  const sendRemindersNow = async () => {
+    setSending(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('send-reminders');
+      if (error) throw error;
+      toast.success(data?.message || '✅ Rappels envoyés avec succès');
+      refresh();
+    } catch (error) {
+      console.error('Erreur:', error);
+      toast.error('❌ Erreur lors de l\'envoi des rappels');
+    } finally {
+      setSending(false);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -65,9 +84,20 @@ export default function Notifications() {
             Suivi des rappels automatiques programmés pour les rendez-vous.
           </p>
         </div>
-        <Button variant="outline" className="rounded-full" onClick={refresh}>
-          <RefreshCw className="mr-2 h-4 w-4" /> Actualiser
-        </Button>
+        <div className="flex gap-2">
+          <Button 
+            variant="default" 
+            className="rounded-full" 
+            onClick={sendRemindersNow}
+            disabled={sending}
+          >
+            <Bell className="mr-2 h-4 w-4" /> 
+            {sending ? 'Envoi en cours...' : 'Envoyer les rappels maintenant'}
+          </Button>
+          <Button variant="outline" className="rounded-full" onClick={refresh}>
+            <RefreshCw className="mr-2 h-4 w-4" /> Actualiser
+          </Button>
+        </div>
       </div>
 
       {/* Config active */}
@@ -115,7 +145,7 @@ export default function Notifications() {
       {/* Stats */}
       <div className="grid gap-4 sm:grid-cols-3">
         {[
-          { label: 'Rappels à envoyer', value: upcoming.length, icon: Clock, color: 'text-primary', bg: 'bg-primary/10' },
+          { label: 'Rappels à envoyer plus tard', value: upcoming.length, icon: Clock, color: 'text-primary', bg: 'bg-primary/10' },
           { label: 'En retard', value: overdue.length, icon: AlertCircle, color: 'text-rose-500', bg: 'bg-rose-100' },
           { label: 'Envoyés', value: sent.length, icon: CheckCircle2, color: 'text-emerald-600', bg: 'bg-emerald-100' },
         ].map((s, i) => (

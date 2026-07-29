@@ -1,7 +1,6 @@
 import { supabase } from '@/lib/supabase';
-import type { ReminderSettings, ReminderDelay, ReminderRecipients } from '@/types/reminder';
+import type { ReminderSettings, ReminderDelay, ReminderRecipients } from '@/types';
 
-// --- DB row shape (snake_case) ---
 interface ReminderSettingsRow {
   id: string;
   enabled: boolean;
@@ -25,14 +24,13 @@ function rowToSettings(r: ReminderSettingsRow): ReminderSettings {
 }
 
 export const reminderSettingsService = {
-  get: async (): Promise<ReminderSettings> => {
+  async get(): Promise<ReminderSettings> {
     const { data, error } = await supabase
       .from('reminder_settings')
       .select('*')
       .maybeSingle();
     if (error) throw error;
     if (!data) {
-      // Create default if missing
       const { data: created, error: err2 } = await supabase
         .from('reminder_settings')
         .insert({ enabled: true, delay_hours: 24, recipients: 'both' })
@@ -44,15 +42,18 @@ export const reminderSettingsService = {
     return rowToSettings(data as ReminderSettingsRow);
   },
 
-  update: async (patch: Partial<ReminderSettings>): Promise<ReminderSettings> => {
-    const { data: existing } = await supabase.from('reminder_settings').select('id').maybeSingle();
-    const row: Partial<ReminderSettingsRow> = {};
+  async update(patch: Partial<ReminderSettings>): Promise<ReminderSettings> {
+    const { data: existing } = await supabase
+      .from('reminder_settings')
+      .select('id')
+      .maybeSingle();
+
+    const row: Record<string, unknown> = {};
     if (patch.enabled !== undefined) row.enabled = patch.enabled;
     if (patch.delayHours !== undefined) row.delay_hours = patch.delayHours;
     if (patch.recipients !== undefined) row.recipients = patch.recipients;
     if (patch.adminPhone !== undefined) row.admin_phone = patch.adminPhone ?? null;
     if (patch.adminEmail !== undefined) row.admin_email = patch.adminEmail ?? null;
-    row.updated_at = new Date().toISOString();
 
     if (existing) {
       const { data, error } = await supabase

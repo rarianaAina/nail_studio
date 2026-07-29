@@ -1,82 +1,129 @@
-import type { Client, CreateClientDto } from '@/types';
-import { mockClients } from '@/data/mock/clients';
+import { supabase } from '@/lib/supabase';
+import type { Client, CreateClientDto, UpdateClientDto } from '@/types';
 
-let store: Client[] = [...mockClients];
+interface ClientRow {
+  id: string;
+  user_id: string | null;
+  name: string;
+  phone: string;
+  email: string | null;
+  notes: string | null;
+  visit_count: number;
+  total_spent: number;
+  last_visit: string | null;
+  created_at: string | null;
+  updated_at: string | null;
+}
+
+function rowToClient(r: ClientRow): Client {
+  return {
+    id: r.id,
+    userId: r.user_id ?? undefined,
+    name: r.name,
+    phone: r.phone,
+    email: r.email ?? undefined,
+    notes: r.notes ?? undefined,
+    visitCount: r.visit_count,
+    totalSpent: r.total_spent,
+    lastVisit: r.last_visit ?? undefined,
+    createdAt: r.created_at ?? undefined,
+    updatedAt: r.updated_at ?? undefined,
+  };
+}
 
 export const clientService = {
-  /**
-   * Fetch all clients.
-   * Firebase: getDocs(collection(db, 'clients'))
-   */
-  getAll: async (): Promise<Client[]> => {
-    return [...store];
+  async getAll(): Promise<Client[]> {
+    const { data, error } = await supabase
+      .from('clients')
+      .select('*')
+      .order('created_at', { ascending: false });
+    if (error) throw error;
+    return (data as ClientRow[]).map(rowToClient);
   },
 
-  /**
-   * Fetch a single client by id.
-   * Firebase: getDoc(doc(db, 'clients', id))
-   */
-  getById: async (id: string): Promise<Client | null> => {
-    return store.find((c) => c.id === id) ?? null;
+  async getById(id: string): Promise<Client | null> {
+    const { data, error } = await supabase
+      .from('clients')
+      .select('*')
+      .eq('id', id)
+      .maybeSingle();
+    if (error) throw error;
+    if (!data) return null;
+    return rowToClient(data as ClientRow);
   },
 
-  /**
-   * Search clients by name or phone.
-   * Firebase: query with startAt/endAt on name field
-   */
-  search: async (query: string): Promise<Client[]> => {
-    const q = query.toLowerCase();
-    return store.filter(
-      (c) =>
-        c.name.toLowerCase().includes(q) || c.phone.includes(q)
-    );
+  async getByEmail(email: string): Promise<Client | null> {
+    const { data, error } = await supabase
+      .from('clients')
+      .select('*')
+      .eq('email', email)
+      .maybeSingle();
+    if (error) throw error;
+    if (!data) return null;
+    return rowToClient(data as ClientRow);
   },
 
-  /**
-   * Create a new client.
-   * Firebase: addDoc(collection(db, 'clients'), data)
-   */
-  create: async (data: CreateClientDto): Promise<Client> => {
-    const client: Client = {
-      ...data,
-      id: 'c-' + Date.now(),
-      lastVisit: new Date().toISOString().slice(0, 10),
-      visitCount: 0,
-      totalSpent: 0,
-      createdAt: new Date().toISOString(),
+  async search(query: string): Promise<Client[]> {
+    const { data, error } = await supabase
+      .from('clients')
+      .select('*')
+      .or(`name.ilike.%${query}%,phone.ilike.%${query}%`)
+      .order('created_at', { ascending: false });
+    if (error) throw error;
+    return (data as ClientRow[]).map(rowToClient);
+  },
+
+  async create(data: CreateClientDto): Promise<Client> {
+    const row: Record<string, unknown> = {
+      name: data.name,
+      phone: data.phone,
+      email: data.email ?? null,
+      notes: data.notes ?? null,
     };
-    store.push(client);
-    return client;
+    if (data.userId) row.user_id = data.userId;
+    const { data: created, error } = await supabase
+      .from('clients')
+      .insert(row)
+      .select()
+      .single();
+    if (error) throw error;
+    return rowToClient(created as ClientRow);
   },
 
-  /**
-   * Update client fields.
-   * Firebase: updateDoc(doc(db, 'clients', id), data)
-   */
-  update: async (id: string, data: Partial<Client>): Promise<Client> => {
-    const idx = store.findIndex((c) => c.id === id);
-    if (idx === -1) throw new Error(`Client ${id} not found`);
-    store[idx] = { ...store[idx], ...data };
-    return store[idx];
+  async update(id: string, data: UpdateClientDto): Promise<Client> {
+    const row: Record<string, unknown> = {};
+    if (data.name !== undefined) row.name = data.name;
+    if (data.phone !== undefined) row.phone = data.phone;
+    if (data.email !== undefined) row.email = data.email ?? null;
+    if (data.notes !== undefined) row.notes = data.notes ?? null;
+    if (data.visitCount !== undefined) row.visit_count = data.visitCount;
+    if (data.totalSpent !== undefined) row.total_spent = data.totalSpent;
+    if (data.lastVisit !== undefined) row.last_visit = data.lastVisit;
+    const { data: updated, error } = await supabase
+      .from('clients')
+      .update(row)
+      .eq('id', id)
+      .select()
+      .single();
+    if (error) throw error;
+    return rowToClient(updated as ClientRow);
   },
 
-  /**
-   * Delete a client.
-   * Firebase: deleteDoc(doc(db, 'clients', id))
-   */
-  delete: async (id: string): Promise<void> => {
-    store = store.filter((c) => c.id !== id);
+  async delete(id: string): Promise<void> {
+    const { error } = await supabase.from('clients').delete().eq('id', id);
+    if (error) throw error;
   },
 
-  getAggregates: async (): Promise<{
-    totalClients: number;
-    totalVisits: number;
-    totalRevenue: number;
-  }> => {
+  async getAggregates(): Promise<{ totalClients: number; totalVisits: number; totalRevenue: number }> {
+    const { data, error } = await supabase
+      .from('clients')
+      .select('visit_count, total_spent');
+    if (error) throw error;
+    const rows = data as Pick<ClientRow, 'visit_count' | 'total_spent'>[];
     return {
-      totalClients: store.length,
-      totalVisits: store.reduce((s, c) => s + c.visitCount, 0),
-      totalRevenue: store.reduce((s, c) => s + c.totalSpent, 0),
+      totalClients: rows.length,
+      totalVisits: rows.reduce((s, r) => s + r.visit_count, 0),
+      totalRevenue: rows.reduce((s, r) => s + r.total_spent, 0),
     };
   },
 };

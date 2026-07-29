@@ -1,13 +1,20 @@
 import { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Search, Eye, Pencil, Check, X, CalendarPlus, Bell } from 'lucide-react';
+import { useNailServices } from '@/hooks/useNailServices';
+import { useClients } from '@/hooks/useClients';
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from '@/components/ui/select';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from '@/components/ui/dialog';
@@ -16,17 +23,32 @@ import { cn } from '@/utils/cn';
 import { useAppointments } from '@/hooks/useAppointments';
 import { useReminderSettings } from '@/hooks/useReminderSettings';
 import { reminderService } from '@/services/reminderService';
+import { supabase } from '@/lib/supabase';
 import { formatAriary, STATUS_COLORS, STATUS_LABELS } from '@/utils';
 import type { Appointment, AppointmentStatus } from '@/types';
 
 const FILTERS: ('Tous' | AppointmentStatus)[] = ['Tous', 'pending', 'confirmed', 'completed', 'cancelled'];
 
 export default function Appointments() {
-  const { appointments, updateStatus } = useAppointments();
+  const { appointments, updateStatus, createAppointment, refresh } = useAppointments();
   const { reminderSettings } = useReminderSettings();
+  const { services } = useNailServices();
+  const { clients } = useClients();
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState<'Tous' | AppointmentStatus>('Tous');
   const [viewing, setViewing] = useState<Appointment | null>(null);
+  const [showCreate, setShowCreate] = useState(false);
+  const [creating, setCreating] = useState(false);
+  const [newAppt, setNewAppt] = useState({
+    clientId: '',
+    clientName: '',
+    phone: '',
+    email: '',
+    serviceId: '',
+    date: '',
+    time: '09:00',
+    notes: '',
+  });
 
   const filtered = useMemo(
     () =>
@@ -89,7 +111,7 @@ export default function Appointments() {
             Gérez et suivez tous les rendez-vous du salon.
           </p>
         </div>
-        <Button className="rounded-full">
+        <Button className="rounded-full" onClick={() => setShowCreate(true)}>
           <CalendarPlus className="mr-2 h-4 w-4" /> Nouveau rendez-vous
         </Button>
       </div>
@@ -264,6 +286,153 @@ export default function Appointments() {
           </div>
         </CardContent>
       </Card>
+
+      <Dialog open={showCreate} onOpenChange={(o) => !o && setShowCreate(o)}>
+        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Nouveau rendez-vous</DialogTitle>
+            <DialogDescription>Créez un rendez-vous pour une cliente.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-1.5">
+              <Label>Cliente existante (optionnel)</Label>
+              <Select
+                value={newAppt.clientId}
+                onValueChange={(v) => {
+                  const c = clients.find((c) => c.id === v);
+                  setNewAppt((p) => ({
+                    ...p,
+                    clientId: v,
+                    clientName: c?.name ?? '',
+                    phone: c?.phone ?? '',
+                    email: c?.email ?? '',
+                  }));
+                }}
+              >
+                <SelectTrigger><SelectValue placeholder="Sélectionner une cliente" /></SelectTrigger>
+                <SelectContent>
+                  {clients.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>{c.name} — {c.phone}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            {!newAppt.clientId && (
+              <>
+                <div className="space-y-1.5">
+                  <Label htmlFor="na-name">Nom *</Label>
+                  <Input id="na-name" value={newAppt.clientName} onChange={(e) => setNewAppt((p) => ({ ...p, clientName: e.target.value }))} />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="na-phone">Téléphone *</Label>
+                  <Input id="na-phone" value={newAppt.phone} onChange={(e) => setNewAppt((p) => ({ ...p, phone: e.target.value }))} />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="na-email">Email (optionnel)</Label>
+                  <Input id="na-email" type="email" value={newAppt.email} onChange={(e) => setNewAppt((p) => ({ ...p, email: e.target.value }))} />
+                </div>
+              </>
+            )}
+            <div className="space-y-1.5">
+              <Label>Prestation *</Label>
+              <Select
+                value={newAppt.serviceId}
+                onValueChange={(v) => setNewAppt((p) => ({ ...p, serviceId: v }))}
+              >
+                <SelectTrigger><SelectValue placeholder="Sélectionner une prestation" /></SelectTrigger>
+                <SelectContent>
+                  {services.map((s) => (
+                    <SelectItem key={s.id} value={s.id}>{s.name} — {formatAriary(s.price)}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="na-date">Date *</Label>
+                <Input id="na-date" type="date" value={newAppt.date} onChange={(e) => setNewAppt((p) => ({ ...p, date: e.target.value }))} />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="na-time">Heure *</Label>
+                <Input id="na-time" type="time" value={newAppt.time} onChange={(e) => setNewAppt((p) => ({ ...p, time: e.target.value }))} />
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="na-notes">Notes (optionnel)</Label>
+              <Textarea id="na-notes" value={newAppt.notes} onChange={(e) => setNewAppt((p) => ({ ...p, notes: e.target.value }))} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowCreate(false)}>Annuler</Button>
+            <Button
+              disabled={creating || !newAppt.clientName || !newAppt.phone || !newAppt.serviceId || !newAppt.date}
+              onClick={async () => {
+                setCreating(true);
+                try {
+                  const svc = services.find((s) => s.id === newAppt.serviceId);
+                  if (!svc) return;
+
+                  let clientId = newAppt.clientId || undefined;
+                  let clientName = newAppt.clientName;
+                  let phone = newAppt.phone;
+                  let email = newAppt.email || undefined;
+
+                  // If admin typed a new client manually, try to reuse an
+                  // existing client by email to avoid duplicates.
+                  if (!clientId && email) {
+                    const { data: existing } = await supabase
+                      .from('clients')
+                      .select('id, name, phone')
+                      .eq('email', email)
+                      .maybeSingle();
+                    if (existing) {
+                      const row = existing as { id: string; name: string; phone: string };
+                      clientId = row.id;
+                      clientName = row.name;
+                      phone = row.phone;
+                    }
+                  }
+
+                  // If still no client and we have enough info, create one.
+                  if (!clientId && clientName && phone) {
+                    const { data: created, error: clientErr } = await supabase
+                      .from('clients')
+                      .insert({ name: clientName, phone, email: email ?? null })
+                      .select('id')
+                      .single();
+                    if (!clientErr) {
+                      clientId = (created as { id: string }).id;
+                    }
+                  }
+
+                  await createAppointment({
+                    clientId,
+                    clientName,
+                    phone,
+                    email,
+                    serviceId: svc.id,
+                    serviceName: svc.name,
+                    price: svc.price,
+                    date: newAppt.date,
+                    time: newAppt.time,
+                    notes: newAppt.notes || undefined,
+                  });
+                  toast.success('Rendez-vous créé.');
+                  setShowCreate(false);
+                  setNewAppt({ clientId: '', clientName: '', phone: '', email: '', serviceId: '', date: '', time: '09:00', notes: '' });
+                  await refresh();
+                } catch (e) {
+                  toast.error(e instanceof Error ? e.message : 'Erreur lors de la création.');
+                } finally {
+                  setCreating(false);
+                }
+              }}
+            >
+              {creating ? 'Création...' : 'Créer le rendez-vous'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={!!viewing} onOpenChange={(o) => !o && setViewing(null)}>
         <DialogContent>

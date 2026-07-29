@@ -7,11 +7,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/utils/cn';
 import { formatAriary } from '@/utils';
-import { SERVICE_CATEGORIES } from '@/utils/constants';
 import { useNailServices } from '@/hooks/useNailServices';
-import type { ServiceCategory } from '@/types';
-
-type FilterVal = 'Toutes' | ServiceCategory;
+import { useActiveConfig } from '@/hooks/useActiveConfig';
 
 const fadeUp = {
   initial: { opacity: 0, y: 24 },
@@ -22,7 +19,10 @@ const fadeUp = {
 
 export default function Services() {
   const { services } = useNailServices();
-  const [active, setActive] = useState<FilterVal>('Toutes');
+  const { categories } = useActiveConfig();
+  const [active, setActive] = useState<string>('Toutes');
+
+  const allCategories = useMemo(() => ['Toutes', ...categories], [categories]);
 
   const filtered = useMemo(
     () => (active === 'Toutes' ? services : services.filter((s) => s.category === active)),
@@ -48,10 +48,10 @@ export default function Services() {
       <section className="py-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="no-scrollbar flex flex-nowrap gap-2 overflow-x-auto pb-2">
-            {SERVICE_CATEGORIES.map((c) => (
+            {allCategories.map((c) => (
               <button
                 key={c}
-                onClick={() => setActive(c as FilterVal)}
+                onClick={() => setActive(c)}
                 className={cn(
                   'whitespace-nowrap rounded-full border px-4 py-2 text-sm font-medium transition-all',
                   active === c

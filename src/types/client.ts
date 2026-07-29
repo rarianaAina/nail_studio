@@ -1,13 +1,15 @@
 export interface Client {
   id: string;
+  userId?: string;
   name: string;
   phone: string;
   email?: string;
-  lastVisit: string; // ISO date
-  visitCount: number;
-  totalSpent: number; // Ariary
   notes?: string;
+  visitCount: number;
+  totalSpent: number;
+  lastVisit?: string;
   createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface CreateClientDto {
@@ -15,4 +17,15 @@ export interface CreateClientDto {
   phone: string;
   email?: string;
   notes?: string;
+  userId?: string;
+}
+
+export interface UpdateClientDto {
+  name?: string;
+  phone?: string;
+  email?: string;
+  notes?: string;
+  visitCount?: number;
+  totalSpent?: number;
+  lastVisit?: string;
 }

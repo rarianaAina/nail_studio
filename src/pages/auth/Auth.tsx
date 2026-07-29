@@ -63,7 +63,7 @@ export default function Auth() {
         <div className="absolute -left-24 bottom-10 h-96 w-96 rounded-full bg-accent/20 blur-3xl" />
         <div className="relative flex items-center gap-2">
           <span className="grid h-11 w-11 place-items-center rounded-full bg-primary/15 text-primary"><CalendarHeart className="h-5 w-5" /></span>
-          <div><p className="font-display text-xl font-semibold">Nida</p><p className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">Nail Studio</p></div>
+          <div><p className="font-display text-xl font-semibold">Harrys Studio</p><p className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">Nail Studio</p></div>
         </div>
         <div className="relative">
           <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7 }}
@@ -82,7 +82,7 @@ export default function Auth() {
             <div className="flex items-center gap-2 text-sm text-muted-foreground"><Sparkles className="h-4 w-4 text-primary" /> 8 ans</div>
           </div>
         </div>
-        <div className="relative text-xs text-muted-foreground">© {new Date().getFullYear()} Nida Nail Studio — Antananarivo, Madagascar</div>
+        <div className="relative text-xs text-muted-foreground">© {new Date().getFullYear()} Harrys Studio — Antananarivo, Madagascar</div>
       </div>
 
       {/* Right form */}
@@ -91,7 +91,7 @@ export default function Auth() {
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="relative w-full max-w-md">
           <div className="mb-8 flex items-center justify-center gap-2 lg:hidden">
             <span className="grid h-11 w-11 place-items-center rounded-full bg-primary/15 text-primary"><CalendarHeart className="h-5 w-5" /></span>
-            <div><p className="font-display text-xl font-semibold">Nida</p><p className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">Nail Studio</p></div>
+            <div><p className="font-display text-xl font-semibold">Harrys Studio</p><p className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">Nail Studio</p></div>
           </div>
 
           <div className="rounded-3xl border border-border/60 bg-card p-6 shadow-soft sm:p-8">
@@ -110,7 +110,7 @@ export default function Auth() {
             <AnimatePresence mode="wait">
               <motion.div key={mode} initial={{ opacity: 0, x: 12 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -12 }} transition={{ duration: 0.25 }}>
                 <h2 className="font-display text-2xl font-semibold">{mode === 'login' ? 'Bon retour parmi nous' : 'Créez votre compte'}</h2>
-                <p className="mt-1 text-sm text-muted-foreground">{mode === 'login' ? 'Connectez-vous pour accéder à votre espace.' : 'Rejoignez Nida pour réserver en ligne.'}</p>
+                <p className="mt-1 text-sm text-muted-foreground">{mode === 'login' ? 'Connectez-vous pour accéder à votre espace.' : 'Rejoignez Harrys Studio pour réserver en ligne.'}</p>
 
                 <div className="mt-5 grid grid-cols-2 gap-2">
                   {([{ v: 'client', label: 'Cliente', icon: Heart }, { v: 'admin', label: 'Administrateur', icon: ShieldCheck }] as { v: UserRole; label: string; icon: typeof Heart }[]).map((r) => (

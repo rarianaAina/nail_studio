@@ -100,12 +100,14 @@ export default function Clients() {
                   <div>
                     <p className="text-xs text-muted-foreground">Dernière</p>
                     <p className="text-xs font-medium">
-                      {new Date(c.lastVisit).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })}
+                      {c.lastVisit ? new Date(c.lastVisit).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' }) : '—'}
                     </p>
                   </div>
                   <div>
                     <p className="text-xs text-muted-foreground">Total</p>
-                    <p className="text-xs font-semibold text-primary">{Math.round(c.totalSpent / 1000)}k Ar</p>
+                    <p className="text-xs font-semibold text-primary">
+                      {c.totalSpent > 0 ? formatAriary(c.totalSpent) : '0 Ar'}
+                    </p>
                   </div>
                 </div>
               </CardContent>

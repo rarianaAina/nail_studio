@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useEffect, useMemo, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CalendarHeart, Check, Clock, ArrowLeft, ArrowRight, PartyPopper, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -8,9 +8,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/utils/cn';
-import { formatAriary, TIME_SLOTS } from '@/utils';
+import { formatAriary } from '@/utils';
 import { useNailServices } from '@/hooks/useNailServices';
 import { useAppointments } from '@/hooks/useAppointments';
+import { useAuth } from '@/hooks/useAuth';
+import { useActiveConfig } from '@/hooks/useActiveConfig';
+import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 
 type Step = 1 | 2 | 3 | 4 | 5;
@@ -26,13 +29,36 @@ const stepsMeta = [
 export default function Booking() {
   const { services } = useNailServices();
   const { createAppointment } = useAppointments();
+  const { user } = useAuth();
+  const { timeSlots: configuredSlots } = useActiveConfig();
+  const navigate = useNavigate();
+  const isLoggedIn = !!user;
 
   const [step, setStep] = useState<Step>(1);
   const [serviceId, setServiceId] = useState<string>('');
   const [date, setDate] = useState<string>('');
   const [time, setTime] = useState<string>('');
-  const [info, setInfo] = useState({ name: '', phone: '', email: '' });
+  const [info, setInfo] = useState({
+    name: user?.name ?? '',
+    phone: user?.phone ?? '',
+    email: user?.email ?? '',
+  });
   const [submitting, setSubmitting] = useState(false);
+  const [bookedSlots, setBookedSlots] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (!date) { setBookedSlots([]); return; }
+    let mounted = true;
+    (async () => {
+      const { data } = await supabase
+        .from('appointments')
+        .select('time')
+        .eq('date', date)
+        .in('status', ['pending', 'confirmed']);
+      if (mounted) setBookedSlots((data as { time: string }[] | null)?.map((r) => r.time) ?? []);
+    })();
+    return () => { mounted = false; };
+  }, [date]);
 
   const service = useMemo(() => services.find((s) => s.id === serviceId), [services, serviceId]);
   const minDate = new Date().toISOString().slice(0, 10);
@@ -48,7 +74,19 @@ export default function Booking() {
     if (step === 4) {
       setSubmitting(true);
       try {
+        // Look up the client row for the logged-in user so the appointment
+        // is linked via foreign key and appears in the client space.
+        let clientId: string | undefined;
+        if (isLoggedIn && user) {
+          const { data: clientRow } = await supabase
+            .from('clients')
+            .select('id')
+            .eq('user_id', user.id)
+            .maybeSingle();
+          clientId = (clientRow as { id: string } | null)?.id ?? undefined;
+        }
         await createAppointment({
+          clientId,
           clientName: info.name,
           phone: info.phone,
           email: info.email,
@@ -169,8 +207,8 @@ export default function Booking() {
                     Créneaux disponibles pour le {new Date(date).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}.
                   </p>
                   <div className="mt-6 grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-5">
-                    {TIME_SLOTS.map((t, i) => {
-                      const taken = i % 7 === 0;
+                    {configuredSlots.map((t) => {
+                      const taken = bookedSlots.includes(t);
                       return (
                         <button key={t} disabled={taken} onClick={() => setTime(t)}
                           className={cn('flex items-center justify-center gap-1.5 rounded-xl border py-2.5 text-sm transition-all disabled:opacity-30 disabled:line-through',
@@ -221,8 +259,16 @@ export default function Booking() {
                     a bien été enregistré.
                   </p>
                   <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
-                    <Button asChild size="lg" className="rounded-full px-8"><Link to="/">Retour à l'accueil</Link></Button>
-                    <Button asChild size="lg" variant="outline" className="rounded-full"><Link to="/mon-espace"><Sparkles className="mr-2 h-4 w-4" /> Mon espace</Link></Button>
+                    {isLoggedIn ? (
+                      <Button size="lg" className="rounded-full px-8" onClick={() => navigate('/mon-espace')}>
+                        <Sparkles className="mr-2 h-4 w-4" /> Retour à mon espace
+                      </Button>
+                    ) : (
+                      <>
+                        <Button asChild size="lg" className="rounded-full px-8"><Link to="/">Retour à l'accueil</Link></Button>
+                        <Button asChild size="lg" variant="outline" className="rounded-full"><Link to="/mon-espace"><Sparkles className="mr-2 h-4 w-4" /> Mon espace</Link></Button>
+                      </>
+                    )}
                   </div>
                 </motion.div>
               )}

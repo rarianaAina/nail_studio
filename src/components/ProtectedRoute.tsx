@@ -1,6 +1,6 @@
 import { Navigate, useLocation } from 'react-router-dom';
-import { useAuth } from '@/lib/auth';
-import type { UserRole } from '@/lib/types';
+import { useAuth } from '@/hooks/useAuth';
+import type { UserRole } from '@/types/user';
 
 export default function ProtectedRoute({
   role,
@@ -9,8 +9,19 @@ export default function ProtectedRoute({
   role: UserRole;
   children: React.ReactNode;
 }) {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const location = useLocation();
+
+  if (loading) {
+    return (
+      <div className="grid min-h-screen place-items-center bg-background">
+        <div className="flex flex-col items-center gap-3">
+          <div className="h-10 w-10 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+          <p className="text-sm text-muted-foreground">Chargement…</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!user) {
     return <Navigate to="/connexion" state={{ from: location.pathname }} replace />;

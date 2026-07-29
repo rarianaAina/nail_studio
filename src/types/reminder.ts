@@ -23,6 +23,7 @@ export interface Reminder {
   scheduledAt: string;
   recipients: ReminderRecipients;
   sent: boolean;
+  sentAt?: string;
   createdAt?: string;
 }
 

@@ -24,7 +24,7 @@ const px = (id: string, w = 800, h = 600) =>
   `https://images.pexels.com/photos/${id}/pexels-photo-${id}.jpeg?auto=compress&cs=tinysrgb&w=${w}&h=${h}&fit=crop`;
 
 export const salonInfo: SalonInfo = {
-  name: 'Nida Nail Studio',
+  name: 'Harrys Studio',
   tagline: "L'art des ongles, sublimé",
   address: '12 Rue Jean-Jaurès, Analakely, Antananarivo 101, Madagascar',
   phone: '+261 34 12 345 67',
@@ -410,7 +410,7 @@ export const timeSlots = [
 ];
 
 export const formatAriary = (n: number) =>
-  new Intl.NumberFormat('fr-FR').format(n) + ' Ar';
+  new Intl.NumberFormat('fr-FR').format(n) + ' €';
 
 export const statusLabels: Record<string, string> = {
   pending: 'En attente',

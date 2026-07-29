@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Save, Upload, Palette, Clock, Share2, Store, Bell, User, ShieldCheck, Users } from 'lucide-react';
+import { Save, Upload, Palette, Clock, Share2, Store, Bell, User, ShieldCheck, Users, Plus, Trash2, GripVertical, Tag } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,9 +12,11 @@ import { toast } from 'sonner';
 import { cn } from '@/utils/cn';
 import { useSettings } from '@/hooks/useSettings';
 import { useReminderSettings } from '@/hooks/useReminderSettings';
+import { useConfig } from '@/hooks/useConfig';
 import { COLOR_PRESETS } from '@/utils/constants';
 import type { SalonSettings, BusinessHours } from '@/types';
 import type { ReminderDelay, ReminderRecipients } from '@/types/reminder';
+
 
 const DELAYS: { value: ReminderDelay; label: string }[] = [
   { value: 24, label: '24 heures avant' },
@@ -30,7 +32,20 @@ const RECIPIENTS: { value: ReminderRecipients; label: string; icon: typeof User;
 
 export default function Settings() {
   const { settings, updateSettings } = useSettings();
-  const { reminderSettings, updateReminderSettings } = useReminderSettings();
+  const { reminderSettings, loading, error, updateReminderSettings } = useReminderSettings();
+  const {
+    categories, timeSlots,
+    createCategory, updateCategory, deleteCategory,
+    createTimeSlot, updateTimeSlot, deleteTimeSlot,
+  } = useConfig();
+  const [newCat, setNewCat] = useState('');
+  const [newSlot, setNewSlot] = useState('');
+
+  useEffect(() => {
+    console.log('📦 reminderSettings:', reminderSettings);
+    console.log('🔄 loading:', loading);
+    console.log('❌ error:', error);
+  }, [reminderSettings, loading, error]);
 
   const [info, setInfo] = useState<Omit<SalonSettings, 'hours'>>({
     name: '',
@@ -347,6 +362,119 @@ export default function Settings() {
               <p className="text-sm font-medium">Aperçu accent</p>
               <p className="text-xs text-muted-foreground">{color.accent}</p>
             </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* ===== CATÉGORIES DE PRESTATIONS ===== */}
+      <Card className="border-border/60 shadow-soft">
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <Tag className="h-5 w-5 text-primary" />
+            <CardTitle className="font-display text-lg">Catégories de prestations</CardTitle>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <p className="text-sm text-muted-foreground">
+            Gérez les catégories affichées sur votre site. Désactivez une catégorie pour la masquer sans la supprimer.
+          </p>
+          <div className="space-y-2">
+            {categories.map((c) => (
+              <div key={c.id} className="flex items-center gap-3 rounded-xl border border-border/60 p-3">
+                <GripVertical className="h-4 w-4 text-muted-foreground/40" />
+                <Input
+                  value={c.name}
+                  onChange={(e) => updateCategory(c.id, { name: e.target.value })}
+                  className="flex-1"
+                />
+                <label className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Switch checked={c.active} onCheckedChange={(v) => updateCategory(c.id, { active: v })} />
+                  {c.active ? 'Actif' : 'Masqué'}
+                </label>
+                <Button size="icon" variant="ghost" className="h-8 w-8 text-rose-600" onClick={() => deleteCategory(c.id)}>
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+            ))}
+          </div>
+          <div className="flex gap-2">
+            <Input
+              value={newCat}
+              onChange={(e) => setNewCat(e.target.value)}
+              placeholder="Nouvelle catégorie"
+              className="flex-1"
+            />
+            <Button
+              variant="outline"
+              onClick={async () => {
+                if (!newCat.trim()) return;
+                try {
+                  await createCategory({ name: newCat.trim(), sortOrder: categories.length + 1 });
+                  setNewCat('');
+                  toast.success('Catégorie ajoutée.');
+                } catch {
+                  toast.error('Cette catégorie existe déjà.');
+                }
+              }}
+            >
+              <Plus className="mr-1.5 h-4 w-4" /> Ajouter
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* ===== CRÉNEAUX HORAIRES ===== */}
+      <Card className="border-border/60 shadow-soft">
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <Clock className="h-5 w-5 text-primary" />
+            <CardTitle className="font-display text-lg">Créneaux horaires disponibles</CardTitle>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <p className="text-sm text-muted-foreground">
+            Gérez les créneaux proposés lors de la réservation. Désactivez un créneau pour le rendre indisponible.
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {timeSlots.map((s) => (
+              <div key={s.id} className={cn(
+                'flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm transition-all',
+                s.active ? 'border-primary/30 bg-primary/5 text-foreground' : 'border-border bg-secondary text-muted-foreground line-through'
+              )}>
+                <span>{s.label}</span>
+                <Switch
+                  checked={s.active}
+                  onCheckedChange={(v) => updateTimeSlot(s.id, { active: v })}
+                  className="scale-75"
+                />
+                <button onClick={() => deleteTimeSlot(s.id)} className="text-muted-foreground hover:text-rose-600">
+                  <Trash2 className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            ))}
+          </div>
+          <div className="flex gap-2">
+            <Input
+              type="time"
+              value={newSlot}
+              onChange={(e) => setNewSlot(e.target.value)}
+              className="w-32"
+            />
+            <Button
+              variant="outline"
+              onClick={async () => {
+                if (!newSlot.trim()) return;
+                try {
+                  await createTimeSlot({ label: newSlot, sortOrder: timeSlots.length + 1 });
+                  setNewSlot('');
+                  toast.success('Créneau ajouté.');
+                } catch {
+                  toast.error('Erreur lors de l\'ajout du créneau.');
+                }
+              }}
+            >
+              <Plus className="mr-1.5 h-4 w-4" /> Ajouter un créneau
+            </Button>
           </div>
         </CardContent>
       </Card>

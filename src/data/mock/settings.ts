@@ -1,7 +1,7 @@
 import type { SalonSettings } from '@/types/settings';
 
 export const mockSalonSettings: SalonSettings = {
-  name: 'Nida Nail Studio',
+  name: 'Harrys Studio',
   tagline: "L'art des ongles, sublimé",
   address: '12 Rue Jean-Jaurès, Analakely, Antananarivo 101, Madagascar',
   phone: '+261 34 12 345 67',

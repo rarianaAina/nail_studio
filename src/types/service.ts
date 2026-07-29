@@ -1,22 +1,17 @@
-export type ServiceCategory =
-  | 'Manucure'
-  | 'Pédicure'
-  | 'Vernis semi-permanent'
-  | 'Prothèses'
-  | 'Soins'
-  | 'Nail Art';
+export type ServiceCategory = string;
 
 export interface Service {
   id: string;
   name: string;
   category: ServiceCategory;
   description: string;
-  duration: number; // minutes
-  price: number; // Ariary
+  duration: number;
+  price: number;
   image: string;
   popular?: boolean;
   active?: boolean;
   createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface CreateServiceDto {
@@ -27,4 +22,15 @@ export interface CreateServiceDto {
   price: number;
   image: string;
   popular?: boolean;
+}
+
+export interface UpdateServiceDto {
+  name?: string;
+  category?: ServiceCategory;
+  description?: string;
+  duration?: number;
+  price?: number;
+  image?: string;
+  popular?: boolean;
+  active?: boolean;
 }

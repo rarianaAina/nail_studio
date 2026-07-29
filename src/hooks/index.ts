@@ -8,3 +8,5 @@ export { useGallery } from './useGallery';
 export { useReviews } from './useReviews';
 export { useReminders } from './useReminders';
 export { useReminderSettings } from './useReminderSettings';
+export { useConfig } from './useConfig';
+export { useActiveConfig } from './useActiveConfig';

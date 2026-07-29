@@ -5,3 +5,7 @@ export { reviewService } from './reviewService';
 export { galleryService } from './galleryService';
 export { settingsService } from './settingsService';
 export { statsService } from './statsService';
+export { reminderService } from './reminderService';
+export { reminderSettingsService } from './reminderSettingsService';
+export { configService } from './configService';
+export { uploadImage } from './storageService';

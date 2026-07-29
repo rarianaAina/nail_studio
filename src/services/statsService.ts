@@ -1,3 +1,4 @@
+import { supabase } from '@/lib/supabase';
 import type {
   DashboardStats,
   ChartDataPoint,
@@ -5,115 +6,248 @@ import type {
   CancellationDataPoint,
 } from '@/types';
 
-// Static mock data — will be replaced by Firestore aggregation queries
-// (e.g. Cloud Functions or client-side aggregations over the appointments collection)
+const MONTH_LABELS = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'];
+const DAY_LABELS = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
 
-const revenueByMonth: ChartDataPoint[] = [
-  { label: 'Jan', value: 1850000 },
-  { label: 'Fév', value: 2100000 },
-  { label: 'Mar', value: 1950000 },
-  { label: 'Avr', value: 2400000 },
-  { label: 'Mai', value: 2750000 },
-  { label: 'Juin', value: 2600000 },
-  { label: 'Juil', value: 2980000 },
-];
-
-const revenueByDay: ChartDataPoint[] = [
-  { label: 'Lun', value: 145000 },
-  { label: 'Mar', value: 180000 },
-  { label: 'Mer', value: 165000 },
-  { label: 'Jeu', value: 210000 },
-  { label: 'Ven', value: 245000 },
-  { label: 'Sam', value: 290000 },
-  { label: 'Dim', value: 0 },
-];
-
-const appointmentsByMonth: ChartDataPoint[] = [
-  { label: 'Jan', value: 42 },
-  { label: 'Fév', value: 48 },
-  { label: 'Mar', value: 45 },
-  { label: 'Avr', value: 55 },
-  { label: 'Mai', value: 62 },
-  { label: 'Juin', value: 58 },
-  { label: 'Juil', value: 67 },
-];
-
-const servicePopularity: ServicePopularity[] = [
-  { name: 'Vernis semi-permanent', percentage: 38 },
-  { name: 'Manucure russe', percentage: 24 },
-  { name: 'Nail Art', percentage: 18 },
-  { name: 'Pédicure spa', percentage: 12 },
-  { name: 'Prothèses', percentage: 8 },
-];
-
-const cancellationAndRetention: CancellationDataPoint[] = [
-  { label: 'Jan', value: 72, cancellation: 5, retention: 72 },
-  { label: 'Fév', value: 75, cancellation: 7, retention: 75 },
-  { label: 'Mar', value: 78, cancellation: 4, retention: 78 },
-  { label: 'Avr', value: 80, cancellation: 6, retention: 80 },
-  { label: 'Mai', value: 82, cancellation: 3, retention: 82 },
-  { label: 'Juin', value: 85, cancellation: 5, retention: 85 },
-  { label: 'Juil', value: 87, cancellation: 4, retention: 87 },
-];
+interface AppointmentRow {
+  price: number;
+  date: string;
+  status: string;
+  service_name: string;
+}
 
 export const statsService = {
-  /**
-   * Fetch KPI summary for the dashboard.
-   * Firebase: aggregate queries or Cloud Functions
-   */
-  getDashboardStats: async (): Promise<DashboardStats> => {
+  async getDashboardStats(): Promise<DashboardStats> {
+    const today = new Date().toISOString().slice(0, 10);
+    const monthStart = new Date();
+    monthStart.setDate(1);
+    const monthStartIso = monthStart.toISOString().slice(0, 10);
+
+    const { data, error } = await supabase
+      .from('appointments')
+      .select('price, date, status, service_name');
+    if (error) throw error;
+
+    const rows = (data as AppointmentRow[]) ?? [];
+
+    const dailyRevenue = rows
+      .filter((r) => r.date === today && r.status !== 'cancelled')
+      .reduce((s, r) => s + r.price, 0);
+
+    const monthlyRevenue = rows
+      .filter((r) => r.date >= monthStartIso && r.status !== 'cancelled')
+      .reduce((s, r) => s + r.price, 0);
+
+    const todayAppointmentsCount = rows.filter((r) => r.date === today && r.status !== 'cancelled').length;
+
+    const { count: totalClients } = await supabase
+      .from('clients')
+      .select('*', { count: 'exact', head: true });
+
+    const completed = rows.filter((r) => r.status === 'completed');
+    const averageBasket = completed.length > 0
+      ? Math.round(completed.reduce((s, r) => s + r.price, 0) / completed.length)
+      : 0;
+
+    const cancelled = rows.filter((r) => r.status === 'cancelled').length;
+    const total = rows.length;
+    const cancellationRate = total > 0 ? (cancelled / total) * 100 : 0;
+
+    const retentionRate = total > 0
+      ? Math.round(((total - cancelled) / total) * 100)
+      : 0;
+
     return {
-      dailyRevenue: 190000,
-      monthlyRevenue: 2980000,
-      todayAppointmentsCount: 4,
-      totalClients: 7,
-      averageBasket: 44500,
-      cancellationRate: 4.2,
-      retentionRate: 87,
-      dailyRevenueDelta: '+12%',
-      monthlyRevenueDelta: '+8%',
-      appointmentsDelta: 2,
-      clientsDelta: 3,
+      dailyRevenue,
+      monthlyRevenue,
+      todayAppointmentsCount,
+      totalClients: totalClients ?? 0,
+      averageBasket,
+      cancellationRate: Math.round(cancellationRate * 10) / 10,
+      retentionRate,
+      dailyRevenueDelta: '+0%',
+      monthlyRevenueDelta: '+0%',
+      appointmentsDelta: 0,
+      clientsDelta: 0,
     };
   },
 
-  /**
-   * Monthly revenue chart data.
-   * Firebase: aggregated from appointments collection
-   */
-  getRevenueByMonth: async (): Promise<ChartDataPoint[]> => {
-    return revenueByMonth;
+  async getRevenueByMonth(): Promise<ChartDataPoint[]> {
+    const { data, error } = await supabase
+      .from('appointments')
+      .select('price, date, status');
+    if (error) throw error;
+    const rows = (data as { price: number; date: string; status: string }[]) ?? [];
+
+    const byMonth: Record<number, number> = {};
+    rows
+      .filter((r) => r.status !== 'cancelled')
+      .forEach((r) => {
+        const m = new Date(r.date).getMonth();
+        byMonth[m] = (byMonth[m] ?? 0) + r.price;
+      });
+
+    return MONTH_LABELS.map((label, i) => ({
+      label,
+      value: byMonth[i] ?? 0,
+    }));
   },
 
-  /**
-   * Daily revenue chart data for current week.
-   * Firebase: aggregated from appointments collection
-   */
-  getRevenueByDay: async (): Promise<ChartDataPoint[]> => {
-    return revenueByDay;
+  async getRevenueByDay(): Promise<ChartDataPoint[]> {
+    const { data, error } = await supabase
+      .from('appointments')
+      .select('price, date, status');
+    if (error) throw error;
+    const rows = (data as { price: number; date: string; status: string }[]) ?? [];
+
+    const byDay: Record<number, number> = {};
+    rows
+      .filter((r) => r.status !== 'cancelled')
+      .forEach((r) => {
+        const d = new Date(r.date).getDay();
+        byDay[d] = (byDay[d] ?? 0) + r.price;
+      });
+
+    return [1, 2, 3, 4, 5, 6, 0].map((d) => ({
+      label: DAY_LABELS[d],
+      value: byDay[d] ?? 0,
+    }));
   },
 
-  /**
-   * Monthly appointments count.
-   * Firebase: count() aggregation per month
-   */
-  getAppointmentsByMonth: async (): Promise<ChartDataPoint[]> => {
-    return appointmentsByMonth;
+  async getAppointmentsByMonth(): Promise<ChartDataPoint[]> {
+    const { data, error } = await supabase
+      .from('appointments')
+      .select('date, status');
+    if (error) throw error;
+    const rows = (data as { date: string; status: string }[]) ?? [];
+
+    const byMonth: Record<number, number> = {};
+    rows
+      .filter((r) => r.status !== 'cancelled')
+      .forEach((r) => {
+        const m = new Date(r.date).getMonth();
+        byMonth[m] = (byMonth[m] ?? 0) + 1;
+      });
+
+    return MONTH_LABELS.map((label, i) => ({
+      label,
+      value: byMonth[i] ?? 0,
+    }));
   },
 
-  /**
-   * Service popularity distribution.
-   * Firebase: aggregated from appointments collection
-   */
-  getServicePopularity: async (): Promise<ServicePopularity[]> => {
-    return servicePopularity;
+  async getServicePopularity(): Promise<ServicePopularity[]> {
+    const { data, error } = await supabase
+      .from('appointments')
+      .select('service_name, status');
+    if (error) throw error;
+    const rows = (data as { service_name: string; status: string }[]) ?? [];
+
+    const counts: Record<string, number> = {};
+    rows
+      .filter((r) => r.status !== 'cancelled')
+      .forEach((r) => {
+        counts[r.service_name] = (counts[r.service_name] ?? 0) + 1;
+      });
+
+    const total = Object.values(counts).reduce((s, c) => s + c, 0);
+    const result = Object.entries(counts)
+      .map(([name, count]) => ({
+        name,
+        percentage: total > 0 ? Math.round((count / total) * 100) : 0,
+        count,
+      }))
+      .sort((a, b) => b.count! - a.count!)
+      .slice(0, 5);
+
+    return result.length > 0 ? result : [
+      { name: 'Aucune donnée', percentage: 100, count: 0 },
+    ];
+  },
+  
+  async getRevenueByClient(): Promise<{ clientId: string; clientName: string; totalSpent: number; appointmentsCount: number }[]> {
+    const { data, error } = await supabase
+      .from('appointments')
+      .select(`
+        price,
+        status,
+        client_id,
+        clients (
+          first_name,
+          last_name
+        )
+      `);
+    if (error) throw error;
+
+    // Typage correct : clients est un tableau
+    type AppointmentWithClient = {
+      price: number;
+      status: string;
+      client_id: string;
+      clients: {
+        first_name: string;
+        last_name: string;
+      }[];
+    };
+
+    const rows = data as unknown as AppointmentWithClient[] ?? [];
+
+    const clientMap = new Map<string, { 
+      totalSpent: number; 
+      count: number; 
+      firstName: string; 
+      lastName: string;
+    }>();
+
+    rows
+      .filter((r) => r.status !== 'cancelled' && r.clients && r.clients.length > 0)
+      .forEach((r) => {
+        const client = r.clients[0]; // On prend le premier client (il n'y en a qu'un)
+        const current = clientMap.get(r.client_id) ?? {
+          totalSpent: 0,
+          count: 0,
+          firstName: client.first_name,
+          lastName: client.last_name,
+        };
+        current.totalSpent += r.price;
+        current.count += 1;
+        clientMap.set(r.client_id, current);
+      });
+
+    const result = Array.from(clientMap.entries()).map(([id, data]) => ({
+      clientId: id,
+      clientName: `${data.firstName} ${data.lastName}`,
+      totalSpent: data.totalSpent,
+      appointmentsCount: data.count,
+    }));
+
+    return result.sort((a, b) => b.totalSpent - a.totalSpent);
   },
 
-  /**
-   * Combined cancellation rate + retention rate by month.
-   * Firebase: computed aggregations
-   */
-  getCancellationAndRetention: async (): Promise<CancellationDataPoint[]> => {
-    return cancellationAndRetention;
+  async getCancellationAndRetention(): Promise<CancellationDataPoint[]> {
+    const { data, error } = await supabase
+      .from('appointments')
+      .select('date, status');
+    if (error) throw error;
+    const rows = (data as { date: string; status: string }[]) ?? [];
+
+    const byMonth: Record<number, { total: number; cancelled: number }> = {};
+    rows.forEach((r) => {
+      const m = new Date(r.date).getMonth();
+      byMonth[m] ??= { total: 0, cancelled: 0 };
+      byMonth[m].total += 1;
+      if (r.status === 'cancelled') byMonth[m].cancelled += 1;
+    });
+
+    return MONTH_LABELS.map((label, i) => {
+      const stats = byMonth[i] ?? { total: 0, cancelled: 0 };
+      const cancellation = stats.total > 0 ? Math.round((stats.cancelled / stats.total) * 100) : 0;
+      const retention = stats.total > 0 ? 100 - cancellation : 0;
+      return {
+        label,
+        value: retention,
+        cancellation,
+        retention,
+      };
+    });
   },
 };

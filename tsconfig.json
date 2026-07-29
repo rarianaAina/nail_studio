@@ -9,5 +9,8 @@
     "paths": {
       "@/*": ["./src/*"]
     }
-  }
+  },
+  "exclude": [
+    "supabase/functions/**/*"  // ✅ Exclure les fonctions Supabase
+  ]
 }

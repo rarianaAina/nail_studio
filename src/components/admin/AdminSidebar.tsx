@@ -51,7 +51,7 @@ export default function AdminSidebar() {
           <CalendarHeart className="h-5 w-5" />
         </span>
         <div>
-          <p className="font-display text-lg font-semibold leading-tight">Nida</p>
+          <p className="font-display text-lg font-semibold leading-tight">Harrys Studio</p>
           <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Admin</p>
         </div>
       </Link>
@@ -119,7 +119,7 @@ export default function AdminSidebar() {
           <span className="grid h-9 w-9 place-items-center rounded-full bg-primary/10 text-primary">
             <CalendarHeart className="h-4 w-4" />
           </span>
-          <span className="font-display text-lg font-semibold">Nida Admin</span>
+          <span className="font-display text-lg font-semibold">Harrys Studio Admin</span>
         </Link>
         <div className="flex items-center gap-2">
           {pending.length > 0 && (

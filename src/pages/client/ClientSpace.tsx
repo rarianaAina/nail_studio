@@ -14,6 +14,8 @@ import { formatAriary, STATUS_COLORS, STATUS_LABELS } from '@/utils';
 import { useAuth } from '@/hooks/useAuth';
 import { useAppointments } from '@/hooks/useAppointments';
 import { useNailServices } from '@/hooks/useNailServices';
+import { supabase } from '@/lib/supabase';
+import { useEffect, useState } from 'react';
 
 const fadeUp = {
   initial: { opacity: 0, y: 20 },
@@ -33,23 +35,49 @@ export default function ClientSpace() {
   const navigate = useNavigate();
   const { appointments } = useAppointments();
   const { services } = useNailServices();
+  const [clientId, setClientId] = useState<string | null>(null);
+  const [clientData, setClientData] = useState<{ totalSpent: number; visitCount: number } | null>(null);
+
+  useEffect(() => {
+    if (!user) return;
+    let mounted = true;
+    (async () => {
+      const { data } = await supabase
+        .from('clients')
+        .select('id, total_spent, visit_count')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      if (mounted && data) {
+        setClientId((data as { id: string }).id);
+        setClientData({
+          totalSpent: (data as { total_spent: number }).total_spent || 0,
+          visitCount: (data as { visit_count: number }).visit_count || 0,
+        });
+      }
+    })();
+    return () => { mounted = false; };
+  }, [user]);
 
   const myAppointments = useMemo(
     () =>
       appointments
-        .filter((a) => a.email === user?.email || a.clientName === user?.name)
+        .filter((a) => (clientId ? a.clientId === clientId : a.email === user?.email))
         .sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time)),
-    [appointments, user]
+    [appointments, clientId, user]
   );
 
   const upcoming = myAppointments.filter((a) => a.status === 'confirmed' || a.status === 'pending');
   const past = myAppointments.filter((a) => a.status === 'completed' || a.status === 'cancelled');
-  const totalSpent = myAppointments.filter((a) => a.status === 'completed').reduce((sum, a) => sum + a.price, 0);
-  const visits = myAppointments.filter((a) => a.status === 'completed').length;
+  
+  // Utiliser les valeurs de la base de données au lieu de les recalculer
+  const totalSpent = clientData?.totalSpent ?? 0;
+  const visits = clientData?.visitCount ?? 0;
+  
   const loyaltyPoints = visits * 50;
   const popularServices = services.filter((s) => s.popular).slice(0, 3);
 
   const onLogout = () => { logout(); navigate('/'); };
+
 
   return (
     <div className="min-h-screen bg-background">
@@ -57,7 +85,7 @@ export default function ClientSpace() {
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 sm:px-6">
           <Link to="/" className="flex items-center gap-2">
             <span className="grid h-10 w-10 place-items-center rounded-full bg-primary/10 text-primary"><CalendarHeart className="h-5 w-5" /></span>
-            <div><p className="font-display text-lg font-semibold leading-tight">Nida</p><p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Mon espace</p></div>
+            <div><p className="font-display text-lg font-semibold leading-tight">Harrys Studio</p><p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Mon espace</p></div>
           </Link>
           <div className="flex items-center gap-3">
             <span className="hidden text-sm text-muted-foreground sm:block">
@@ -87,10 +115,10 @@ export default function ClientSpace() {
           </div>
         </motion.div>
 
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {[
             { label: 'Rendez-vous à venir', value: String(upcoming.length), icon: Clock, color: 'text-primary' },
-            { label: 'Visites totales', value: String(visits), icon: Heart, color: 'text-rose-500' },
+            //{ label: 'Visites totales', value: String(visits), icon: Heart, color: 'text-rose-500' },
             { label: 'Total dépensé', value: formatAriary(totalSpent), icon: Wallet, color: 'text-accent' },
             { label: 'Points fidélité', value: String(loyaltyPoints), icon: Gift, color: 'text-emerald-500' },
           ].map((s, i) => (

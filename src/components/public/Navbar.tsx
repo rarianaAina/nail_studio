@@ -42,10 +42,10 @@ export default function Navbar() {
           </span>
           <span className="flex flex-col leading-tight">
             <span className="font-display text-xl font-semibold text-foreground">
-              Nida
+              Harrys
             </span>
             <span className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">
-              Nail Studio
+              Studio
             </span>
           </span>
         </Link>

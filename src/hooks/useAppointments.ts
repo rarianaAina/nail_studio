@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import type { Appointment, AppointmentStatus, CreateAppointmentDto } from '@/types';
+import type { Appointment, AppointmentStatus, CreateAppointmentDto, UpdateAppointmentDto } from '@/types';
 import { appointmentService } from '@/services/appointmentService';
 
 interface UseAppointmentsReturn {
@@ -8,7 +8,7 @@ interface UseAppointmentsReturn {
   error: string | null;
   createAppointment: (data: CreateAppointmentDto) => Promise<Appointment>;
   updateStatus: (id: string, status: AppointmentStatus) => Promise<void>;
-  updateAppointment: (id: string, data: Partial<Appointment>) => Promise<void>;
+  updateAppointment: (id: string, data: UpdateAppointmentDto) => Promise<void>;
   deleteAppointment: (id: string) => Promise<void>;
   getByDate: (date: string) => Appointment[];
   refresh: () => Promise<void>;
@@ -45,7 +45,7 @@ export function useAppointments(): UseAppointmentsReturn {
     setAppointments((prev) => prev.map((a) => (a.id === id ? updated : a)));
   };
 
-  const updateAppointment = async (id: string, data: Partial<Appointment>) => {
+  const updateAppointment = async (id: string, data: UpdateAppointmentDto) => {
     const updated = await appointmentService.update(id, data);
     setAppointments((prev) => prev.map((a) => (a.id === id ? updated : a)));
   };

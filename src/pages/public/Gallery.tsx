@@ -32,7 +32,7 @@ export default function Gallery() {
             </Badge>
             <h1 className="font-display text-5xl font-semibold text-foreground sm:text-6xl">Nos plus belles réalisations</h1>
             <p className="mx-auto mt-4 max-w-2xl text-foreground/70">
-              Une sélection de créations signées Nida Nail Studio. Laissez-vous inspirer.
+              Une sélection de créations signées Harrys Studio. Laissez-vous inspirer.
             </p>
           </motion.div>
         </div>

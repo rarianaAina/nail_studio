@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Plus, Pencil, Trash2, Clock, Sparkles } from 'lucide-react';
+import { Plus, Pencil, Trash2, Clock, Sparkles, Upload } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,10 +14,15 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from '@/components/ui/select';
 import { toast } from 'sonner';
 import { useNailServices } from '@/hooks/useNailServices';
+import { useConfig } from '@/hooks/useConfig';
+import { uploadImage } from '@/services/storageService';
 import { formatAriary } from '@/utils';
-import type { Service, ServiceCategory } from '@/types';
+import type { Service } from '@/types';
 
 const DEFAULT_IMAGE = 'https://images.pexels.com/photos/3997389/pexels-photo-3997389.jpeg?auto=compress&cs=tinysrgb&w=800&h=600&fit=crop';
 
@@ -25,7 +30,7 @@ type DraftService = Omit<Service, 'id'> & { id?: string };
 
 const blank: DraftService = {
   name: '',
-  category: 'Manucure',
+  category: '',
   description: '',
   duration: 30,
   price: 0,
@@ -34,8 +39,12 @@ const blank: DraftService = {
 
 export default function AdminServices() {
   const { services, createService, updateService, deleteService } = useNailServices();
+  const { categories } = useConfig();
   const [editing, setEditing] = useState<DraftService | null>(null);
   const [deleting, setDeleting] = useState<Service | null>(null);
+  const [uploading, setUploading] = useState(false);
+
+  const activeCategoryNames = categories.filter((c) => c.active).map((c) => c.name);
 
   const save = async (svc: DraftService) => {
     if (svc.id) {
@@ -52,6 +61,20 @@ export default function AdminServices() {
     await deleteService(id);
     toast.success('Prestation supprimée.');
     setDeleting(null);
+  };
+
+  const handleUpload = async (file: File) => {
+    if (!editing) return;
+    setUploading(true);
+    try {
+      const url = await uploadImage(file, 'services');
+      setEditing({ ...editing, image: url });
+      toast.success('Image importée.');
+    } catch {
+      toast.error('Erreur lors de l\'import de l\'image.');
+    } finally {
+      setUploading(false);
+    }
   };
 
   return (
@@ -82,7 +105,9 @@ export default function AdminServices() {
               <CardContent className="p-4">
                 <div className="flex items-start justify-between">
                   <h3 className="font-display text-lg font-semibold">{s.name}</h3>
-                  <span className="text-sm font-semibold text-primary">{formatAriary(s.price)}</span>
+                  <span className="text-sm font-semibold text-primary">
+                    {s.price === 0 ? 'Devis' : formatAriary(s.price)}
+                  </span>
                 </div>
                 <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">{s.description}</p>
                 <p className="mt-2 flex items-center gap-1 text-xs text-muted-foreground">
@@ -117,11 +142,41 @@ export default function AdminServices() {
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-1.5">
                   <Label htmlFor="cat">Catégorie</Label>
-                  <Input id="cat" value={editing.category} onChange={(e) => setEditing({ ...editing, category: e.target.value as ServiceCategory })} />
+                  <Select
+                    value={editing.category}
+                    onValueChange={(v) => setEditing({ ...editing, category: v })}
+                  >
+                    <SelectTrigger><SelectValue placeholder="Sélectionner une catégorie" /></SelectTrigger>
+                    <SelectContent>
+                      {activeCategoryNames.map((c) => (
+                        <SelectItem key={c} value={c}>{c}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="img">Image (URL)</Label>
-                  <Input id="img" value={editing.image} onChange={(e) => setEditing({ ...editing, image: e.target.value })} />
+                  <Label htmlFor="img">Image</Label>
+                  <div className="flex gap-2">
+                    <Input id="img" value={editing.image} onChange={(e) => setEditing({ ...editing, image: e.target.value })} placeholder="URL de l'image" />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      disabled={uploading}
+                      onClick={() => {
+                        const input = document.createElement('input');
+                        input.type = 'file';
+                        input.accept = 'image/*';
+                        input.onchange = (e) => {
+                          const file = (e.target as HTMLInputElement).files?.[0];
+                          if (file) handleUpload(file);
+                        };
+                        input.click();
+                      }}
+                    >
+                      <Upload className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
               </div>
               <div className="grid gap-4 sm:grid-cols-2">
@@ -130,7 +185,7 @@ export default function AdminServices() {
                   <Input id="dur" type="number" value={editing.duration} onChange={(e) => setEditing({ ...editing, duration: Number(e.target.value) })} />
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="price">Prix (Ar)</Label>
+                  <Label htmlFor="price">Prix (€)</Label>
                   <Input id="price" type="number" value={editing.price} onChange={(e) => setEditing({ ...editing, price: Number(e.target.value) })} />
                 </div>
               </div>

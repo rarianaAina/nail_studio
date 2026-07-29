@@ -87,7 +87,7 @@ export default function Home() {
             className="relative mx-auto w-full max-w-md"
           >
             <div className="relative aspect-[4/5] overflow-hidden rounded-[2rem] shadow-glow ring-1 ring-primary/10">
-              <img src="https://images.pexels.com/photos/3997391/pexels-photo-3997391.jpeg?auto=compress&cs=tinysrgb&w=900&h=1120&fit=crop" alt="Réalisation Nida Nail Studio" className="h-full w-full object-cover" />
+              <img src="https://images.pexels.com/photos/3997391/pexels-photo-3997391.jpeg?auto=compress&cs=tinysrgb&w=900&h=1120&fit=crop" alt="Réalisation Harrys Studio" className="h-full w-full object-cover" />
               <div className="absolute inset-0 bg-gradient-to-t from-foreground/30 via-transparent to-transparent" />
             </div>
             <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.6 }} className="absolute left-2 top-12 rounded-2xl bg-white/90 p-3 shadow-soft backdrop-blur sm:-left-8">
@@ -115,7 +115,7 @@ export default function Home() {
               Un écrin dédié à la beauté de vos mains
             </h2>
             <p className="mt-5 text-foreground/70">
-              Chez Nida Nail Studio, nous croyons que des ongles soignés sont une signature de style. Notre salon vous accueille dans une ambiance raffinée et apaisante, où chaque détail est pensé pour votre bien-être.
+              Chez Harrys Studio, nous croyons que des ongles soignés sont une signature de style. Notre salon vous accueille dans une ambiance raffinée et apaisante, où chaque détail est pensé pour votre bien-être.
             </p>
           </motion.div>
           <div className="mt-16 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">

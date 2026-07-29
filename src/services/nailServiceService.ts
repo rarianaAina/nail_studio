@@ -1,71 +1,117 @@
-import type { Service, CreateServiceDto } from '@/types';
-import { mockServices } from '@/data/mock/services';
+import { supabase } from '@/lib/supabase';
+import type { Service, CreateServiceDto, UpdateServiceDto, ServiceCategory } from '@/types';
 
-let store: Service[] = [...mockServices];
+interface ServiceRow {
+  id: string;
+  name: string;
+  category: string;
+  description: string;
+  duration: number;
+  price: number;
+  image: string;
+  popular: boolean;
+  active: boolean;
+  created_at: string | null;
+  updated_at: string | null;
+}
+
+function rowToService(r: ServiceRow): Service {
+  return {
+    id: r.id,
+    name: r.name,
+    category: r.category as ServiceCategory,
+    description: r.description,
+    duration: r.duration,
+    price: r.price,
+    image: r.image,
+    popular: r.popular,
+    active: r.active,
+    createdAt: r.created_at ?? undefined,
+    updatedAt: r.updated_at ?? undefined,
+  };
+}
 
 export const nailServiceService = {
-  /**
-   * Fetch all services.
-   * Firebase: getDocs(collection(db, 'services'))
-   */
-  getAll: async (): Promise<Service[]> => {
-    return [...store];
+  async getAll(): Promise<Service[]> {
+    const { data, error } = await supabase
+      .from('services')
+      .select('*')
+      .order('created_at', { ascending: true });
+    if (error) throw error;
+    return (data as ServiceRow[]).map(rowToService);
   },
 
-  /**
-   * Fetch only active / popular services.
-   * Firebase: query(collection(db, 'services'), where('popular', '==', true))
-   */
-  getPopular: async (): Promise<Service[]> => {
-    return store.filter((s) => s.popular);
+  async getPopular(): Promise<Service[]> {
+    const { data, error } = await supabase
+      .from('services')
+      .select('*')
+      .eq('popular', true)
+      .eq('active', true);
+    if (error) throw error;
+    return (data as ServiceRow[]).map(rowToService);
   },
 
-  /**
-   * Fetch by category.
-   * Firebase: query(collection(db, 'services'), where('category', '==', category))
-   */
-  getByCategory: async (category: string): Promise<Service[]> => {
-    return store.filter((s) => s.category === category);
+  async getByCategory(category: string): Promise<Service[]> {
+    const { data, error } = await supabase
+      .from('services')
+      .select('*')
+      .eq('category', category)
+      .eq('active', true);
+    if (error) throw error;
+    return (data as ServiceRow[]).map(rowToService);
   },
 
-  /**
-   * Fetch a single service by id.
-   * Firebase: getDoc(doc(db, 'services', id))
-   */
-  getById: async (id: string): Promise<Service | null> => {
-    return store.find((s) => s.id === id) ?? null;
+  async getById(id: string): Promise<Service | null> {
+    const { data, error } = await supabase
+      .from('services')
+      .select('*')
+      .eq('id', id)
+      .maybeSingle();
+    if (error) throw error;
+    if (!data) return null;
+    return rowToService(data as ServiceRow);
   },
 
-  /**
-   * Create a new service.
-   * Firebase: addDoc(collection(db, 'services'), data)
-   */
-  create: async (data: CreateServiceDto): Promise<Service> => {
-    const service: Service = {
-      ...data,
-      id: 'svc-' + Date.now(),
-      createdAt: new Date().toISOString(),
-    };
-    store.push(service);
-    return service;
+  async create(data: CreateServiceDto): Promise<Service> {
+    const { data: row, error } = await supabase
+      .from('services')
+      .insert({
+        name: data.name,
+        category: data.category,
+        description: data.description,
+        duration: data.duration,
+        price: data.price,
+        image: data.image,
+        popular: data.popular ?? false,
+      })
+      .select()
+      .single();
+    if (error) throw error;
+    return rowToService(row as ServiceRow);
   },
 
-  /**
-   * Update a service.
-   * Firebase: updateDoc(doc(db, 'services', id), data)
-   */
-  update: async (id: string, data: Partial<Service>): Promise<Service> => {
-    const idx = store.findIndex((s) => s.id === id);
-    if (idx === -1) throw new Error(`Service ${id} not found`);
-    store[idx] = { ...store[idx], ...data };
-    return store[idx];
+  async update(id: string, data: UpdateServiceDto): Promise<Service> {
+    const row: Record<string, unknown> = {};
+    if (data.name !== undefined) row.name = data.name;
+    if (data.category !== undefined) row.category = data.category;
+    if (data.description !== undefined) row.description = data.description;
+    if (data.duration !== undefined) row.duration = data.duration;
+    if (data.price !== undefined) row.price = data.price;
+    if (data.image !== undefined) row.image = data.image;
+    if (data.popular !== undefined) row.popular = data.popular;
+    if (data.active !== undefined) row.active = data.active;
+    const { data: updated, error } = await supabase
+      .from('services')
+      .update(row)
+      .eq('id', id)
+      .select()
+      .single();
+    if (error) throw error;
+    return rowToService(updated as ServiceRow);
   },
 
-  /**
-   * Delete a service.
-   * Firebase: deleteDoc(doc(db, 'services', id))
-   */
-  delete: async (id: string): Promise<void> => {
-    store = store.filter((s) => s.id !== id);
+  async delete(id: string): Promise<void> {
+    const { error } = await supabase.from('services').delete().eq('id', id);
+    if (error) throw error;
   },
 };

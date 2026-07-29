@@ -6,6 +6,13 @@ export interface User {
   email: string;
   phone?: string;
   role: UserRole;
-  avatar?: string;
+  avatarUrl?: string;
   createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface UpdateUserDto {
+  name?: string;
+  phone?: string;
+  avatarUrl?: string;
 }
