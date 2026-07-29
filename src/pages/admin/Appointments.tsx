@@ -1,7 +1,6 @@
-// pages/admin/Appointments.tsx
 import { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Search, Eye, Pencil, Check, X, CalendarPlus, Bell, CreditCard } from 'lucide-react';
+import { Search, Eye, Pencil, Check, X, CalendarPlus, Bell } from 'lucide-react';
 import { useNailServices } from '@/hooks/useNailServices';
 import { useClients } from '@/hooks/useClients';
 import {
