@@ -14,8 +14,9 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { salonInfo, formatAriary } from '@/lib/data';
+import { formatAriary } from '@/lib/data';
 import { useNailServices } from '@/hooks/useNailServices';
+import { useSettings } from '@/hooks/useSettings';
 import { supabase } from '@/lib/supabase';
 
 const fadeUp = {
@@ -27,8 +28,30 @@ const fadeUp = {
 
 export default function Home() {
   const { services } = useNailServices();
+  const { settings } = useSettings();
   const [galleryItems, setGalleryItems] = useState<any[]>([]);
   const [loadingGallery, setLoadingGallery] = useState(true);
+
+  // Fallback si settings n'est pas encore chargé
+  const salonInfo = settings || {
+    name: 'Harrys Studio',
+    tagline: "L'art des ongles, sublimé",
+    address: '12 Rue Jean-Jaurès, Analakely, Antananarivo 101, Madagascar',
+    phone: '+261 34 12 345 67',
+    whatsapp: '+261 34 12 345 67',
+    facebook: 'https://facebook.com/nida.nail.studio',
+    instagram: 'https://instagram.com/nida.nail.studio',
+    email: 'contact@nida-nail.mg',
+    hours: [
+      { day: 'Lundi', open: '09:00', close: '18:00' },
+      { day: 'Mardi', open: '09:00', close: '18:00' },
+      { day: 'Mercredi', open: '09:00', close: '18:00' },
+      { day: 'Jeudi', open: '09:00', close: '18:00' },
+      { day: 'Vendredi', open: '09:00', close: '19:00' },
+      { day: 'Samedi', open: '09:00', close: '19:00' },
+      { day: 'Dimanche', open: '00:00', close: '00:00', closed: true },
+    ],
+  };
 
   // Récupérer les images de la galerie depuis Supabase
   useEffect(() => {
@@ -43,8 +66,6 @@ export default function Home() {
         setGalleryItems(data || []);
       } catch (error) {
         console.error('Erreur lors du chargement de la galerie:', error);
-        // Fallback sur les données statiques si erreur
-        // setGalleryItems(galleryItemsStatic);
       } finally {
         setLoadingGallery(false);
       }
@@ -76,7 +97,7 @@ export default function Home() {
             </Badge>
             <h1 className="font-display text-5xl font-semibold leading-[1.05] text-balance text-foreground sm:text-6xl lg:text-7xl">
               L'art des ongles,
-              <span className="block italic text-primary">sublimé avec Harrys Studio</span>
+              <span className="block italic text-primary">sublimé avec {salonInfo.name}</span>
             </h1>
             <p className="mx-auto mt-6 max-w-xl text-base text-foreground/70 lg:mx-0">
               Des mains soignées, des ongles sublimes. Découvrez un univers de
@@ -281,67 +302,8 @@ export default function Home() {
               ))}
             </div>
           )}
-
-          {/* <div className="mt-10 text-center">
-            <Button asChild variant="outline" className="rounded-full">
-              <Link to="/galerie">
-                Voir toute la galerie <ArrowRight className="ml-2 h-4 w-4" />
-              </Link>
-            </Button>
-          </div> */}
         </div>
       </section>
-
-      {/* AVIS */}
-      {/* <section className="py-20 sm:py-28">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <motion.div {...fadeUp} className="mx-auto max-w-3xl text-center">
-            <p className="text-sm font-medium uppercase tracking-[0.25em] text-primary">
-              Avis clientes
-            </p>
-            <h2 className="mt-3 font-display text-4xl font-semibold text-foreground sm:text-5xl">
-              Elles nous font confiance
-            </h2>
-          </motion.div>
-
-          <div className="mt-14 grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-            {reviews.map((r, i) => (
-              <motion.div
-                key={r.id}
-                {...fadeUp}
-                transition={{ duration: 0.5, delay: i * 0.08 }}
-              >
-                <Card className="h-full border-border/60 bg-card shadow-soft">
-                  <CardContent className="flex h-full flex-col p-6">
-                    <div className="flex items-center gap-1 text-accent">
-                      {[...Array(r.rating)].map((_, j) => (
-                        <Star key={j} className="h-4 w-4 fill-current" />
-                      ))}
-                    </div>
-                    <p className="mt-4 flex-1 text-sm text-foreground/80">"{r.comment}"</p>
-                    <div className="mt-5 flex items-center gap-3">
-                      <span className="grid h-10 w-10 place-items-center rounded-full bg-primary/10 font-display text-lg font-semibold text-primary">
-                        {r.name[0]}
-                      </span>
-                      <div>
-                        <p className="text-sm font-semibold">{r.name}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {new Date(r.date).toLocaleDateString('fr-FR', {
-                            day: 'numeric',
-                            month: 'long',
-                            year: 'numeric',
-                          })}
-                        </p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section> */}
-
 
       {/* COORDONNÉES + HORAIRES */}
       <section className="py-20 sm:py-28">
