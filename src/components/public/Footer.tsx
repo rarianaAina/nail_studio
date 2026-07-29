@@ -1,8 +1,21 @@
 import { Link } from 'react-router-dom';
 import { CalendarHeart, Phone, Mail, MapPin, Facebook, Instagram, MessageCircle } from 'lucide-react';
-import { salonInfo } from '@/lib/data';
+import { useSettings } from '@/hooks/useSettings';
 
 export default function Footer() {
+  const { settings } = useSettings();
+
+  // Fallback si settings n'est pas encore chargé
+  const salonInfo = settings || {
+    name: 'Harrys Studio',
+    address: '12 Rue Jean-Jaurès, Analakely, Antananarivo 101, Madagascar',
+    phone: '+261 34 12 345 67',
+    email: 'contact@nida-nail.mg',
+    whatsapp: '+261 34 12 345 67',
+    facebook: 'https://facebook.com/nida.nail.studio',
+    instagram: 'https://instagram.com/nida.nail.studio',
+  };
+
   return (
     <footer className="border-t border-border/60 bg-secondary/40">
       <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
@@ -13,7 +26,7 @@ export default function Footer() {
                 <CalendarHeart className="h-5 w-5" />
               </span>
               <div>
-                <p className="font-display text-xl font-semibold">Harrys Studio</p>
+                <p className="font-display text-xl font-semibold">{salonInfo.name}</p>
               </div>
             </div>
             <p className="mt-4 text-sm text-muted-foreground">
@@ -69,6 +82,8 @@ export default function Footer() {
                 href={salonInfo.facebook}
                 className="grid h-10 w-10 place-items-center rounded-full bg-white text-foreground shadow-soft transition-colors hover:bg-primary hover:text-primary-foreground"
                 aria-label="Facebook"
+                target="_blank"
+                rel="noopener noreferrer"
               >
                 <Facebook className="h-4 w-4" />
               </a>
@@ -76,13 +91,17 @@ export default function Footer() {
                 href={salonInfo.instagram}
                 className="grid h-10 w-10 place-items-center rounded-full bg-white text-foreground shadow-soft transition-colors hover:bg-primary hover:text-primary-foreground"
                 aria-label="Instagram"
+                target="_blank"
+                rel="noopener noreferrer"
               >
                 <Instagram className="h-4 w-4" />
               </a>
               <a
-                href={`https://wa.me/${salonInfo.whatsapp.replace(/\s/g, '')}`}
+                href={salonInfo.whatsapp ? `https://wa.me/${salonInfo.whatsapp.replace(/\s/g, '')}` : '#'}
                 className="grid h-10 w-10 place-items-center rounded-full bg-white text-foreground shadow-soft transition-colors hover:bg-primary hover:text-primary-foreground"
                 aria-label="WhatsApp"
+                target="_blank"
+                rel="noopener noreferrer"
               >
                 <MessageCircle className="h-4 w-4" />
               </a>
@@ -91,7 +110,7 @@ export default function Footer() {
         </div>
 
         <div className="mt-12 flex flex-col items-center justify-between gap-3 border-t border-border/60 pt-6 text-xs text-muted-foreground sm:flex-row">
-          <p>© {new Date().getFullYear()} Harrys Studio. Tous droits réservés.</p>
+          <p>© {new Date().getFullYear()} {salonInfo.name}. Tous droits réservés.</p>
           <p>Conçu avec soin à Antananarivo, Madagascar.</p>
         </div>
       </div>
