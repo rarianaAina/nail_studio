@@ -249,9 +249,7 @@ export default function Home() {
               {[...Array(8)].map((_, i) => (
                 <div
                   key={i}
-                  className={`aspect-square animate-pulse rounded-2xl bg-secondary ${
-                    i % 5 === 0 ? 'sm:col-span-2 sm:row-span-2' : ''
-                  }`}
+                  className="aspect-square animate-pulse rounded-2xl bg-secondary"
                 />
               ))}
             </div>
@@ -266,17 +264,13 @@ export default function Home() {
                   key={g.id}
                   {...fadeUp}
                   transition={{ duration: 0.4, delay: i * 0.05 }}
-                  className={`group relative overflow-hidden rounded-2xl shadow-soft ${
-                    i % 5 === 0 ? 'sm:col-span-2 sm:row-span-2' : ''
-                  }`}
+                  className="group relative overflow-hidden rounded-2xl shadow-soft aspect-square"
                 >
-                  <div className={`aspect-square ${i % 5 === 0 ? 'sm:aspect-auto sm:h-full' : ''}`}>
-                    <img
-                      src={g.image}
-                      alt={g.title}
-                      className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
-                    />
-                  </div>
+                  <img
+                    src={g.image}
+                    alt={g.title}
+                    className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
+                  />
                   <div className="absolute inset-0 flex items-end bg-gradient-to-t from-foreground/60 via-transparent to-transparent opacity-0 transition-opacity group-hover:opacity-100">
                     <div className="p-4 text-white">
                       <p className="text-xs uppercase tracking-wider text-white/80">{g.category}</p>
