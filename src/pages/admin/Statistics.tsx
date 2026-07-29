@@ -47,6 +47,27 @@ export default function Statistics() {
     { label: 'Fidélisation', value: `${dashboardStats?.retentionRate ?? 0}%`, icon: Heart, color: 'text-emerald-500' },
   ];
 
+  // Formatters typés correctement
+  const formatAriaryTooltip = (value: number | undefined): string => {
+    if (value === undefined) return '0 Ar';
+    return formatAriary(value);
+  };
+
+  const formatCurrencyYAxis = (value: number | undefined): string => {
+    if (value === undefined) return '0';
+    return `${value / 1000}k`;
+  };
+
+  const formatMillionsYAxis = (value: number | undefined): string => {
+    if (value === undefined) return '0';
+    return `${value / 1000000}M`;
+  };
+
+  const formatPercentageTooltip = (value: number | undefined): string => {
+    if (value === undefined) return '0%';
+    return `${value}%`;
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -79,8 +100,8 @@ export default function Statistics() {
                 <BarChart data={dailyData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
                   <XAxis dataKey="jour" tickLine={false} axisLine={false} fontSize={12} />
-                  <YAxis tickFormatter={(v) => `${v / 1000}k`} tickLine={false} axisLine={false} fontSize={12} />
-                  <Tooltip formatter={(v: number) => formatAriary(v)} contentStyle={{ borderRadius: 12, border: '1px solid hsl(var(--border))', background: 'hsl(var(--card))' }} />
+                  <YAxis tickFormatter={formatCurrencyYAxis} tickLine={false} axisLine={false} fontSize={12} />
+                  <Tooltip formatter={formatAriaryTooltip} contentStyle={{ borderRadius: 12, border: '1px solid hsl(var(--border))', background: 'hsl(var(--card))' }} />
                   <Bar dataKey="montant" radius={[8, 8, 0, 0]} fill="hsl(340 55% 62%)" />
                 </BarChart>
               </ResponsiveContainer>
@@ -96,8 +117,8 @@ export default function Statistics() {
                 <LineChart data={monthlyData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
                   <XAxis dataKey="mois" tickLine={false} axisLine={false} fontSize={12} />
-                  <YAxis tickFormatter={(v) => `${v / 1000000}M`} tickLine={false} axisLine={false} fontSize={12} />
-                  <Tooltip formatter={(v: number) => formatAriary(v)} contentStyle={{ borderRadius: 12, border: '1px solid hsl(var(--border))', background: 'hsl(var(--card))' }} />
+                  <YAxis tickFormatter={formatMillionsYAxis} tickLine={false} axisLine={false} fontSize={12} />
+                  <Tooltip formatter={formatAriaryTooltip} contentStyle={{ borderRadius: 12, border: '1px solid hsl(var(--border))', background: 'hsl(var(--card))' }} />
                   <Line type="monotone" dataKey="montant" stroke="hsl(40 55% 62%)" strokeWidth={3} dot={{ r: 4 }} />
                 </LineChart>
               </ResponsiveContainer>
@@ -114,7 +135,7 @@ export default function Statistics() {
                   <Pie data={pieData} dataKey="value" nameKey="name" innerRadius={55} outerRadius={90} paddingAngle={3}>
                     {pieData.map((_, i) => <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />)}
                   </Pie>
-                  <Tooltip formatter={(v: number) => `${v}%`} contentStyle={{ borderRadius: 12, border: '1px solid hsl(var(--border))', background: 'hsl(var(--card))' }} />
+                  <Tooltip formatter={formatPercentageTooltip} contentStyle={{ borderRadius: 12, border: '1px solid hsl(var(--border))', background: 'hsl(var(--card))' }} />
                   <Legend wrapperStyle={{ fontSize: 12 }} />
                 </PieChart>
               </ResponsiveContainer>
@@ -130,7 +151,7 @@ export default function Statistics() {
                 <LineChart data={retentionData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
                   <XAxis dataKey="mois" tickLine={false} axisLine={false} fontSize={12} />
-                  <YAxis tickFormatter={(v) => `${v}%`} tickLine={false} axisLine={false} fontSize={12} />
+                  <YAxis tickFormatter={formatPercentageTooltip} tickLine={false} axisLine={false} fontSize={12} />
                   <Tooltip contentStyle={{ borderRadius: 12, border: '1px solid hsl(var(--border))', background: 'hsl(var(--card))' }} />
                   <Legend wrapperStyle={{ fontSize: 12 }} />
                   <Line type="monotone" dataKey="taux" name="Fidélisation" stroke="hsl(160 60% 45%)" strokeWidth={3} dot={{ r: 4 }} />
