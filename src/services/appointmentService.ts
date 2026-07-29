@@ -1,5 +1,5 @@
 import { supabase } from '@/lib/supabase';
-import type { Appointment, AppointmentStatus, CreateAppointmentDto, UpdateAppointmentDto } from '@/types';
+import type { Appointment, AppointmentStatus, CreateAppointmentDto, UpdateAppointmentDto, PaymentMethod } from '@/types';
 import { reminderSettingsService } from './reminderSettingsService';
 import { reminderService } from './reminderService';
 
@@ -15,6 +15,7 @@ interface AppointmentRow {
   date: string;
   time: string;
   status: string;
+  payment_method: string | null; // ✅ Ajout
   notes: string | null;
   created_at: string | null;
   updated_at: string | null;
@@ -33,6 +34,7 @@ function rowToAppointment(r: AppointmentRow): Appointment {
     date: r.date,
     time: r.time,
     status: r.status as AppointmentStatus,
+    paymentMethod: r.payment_method as PaymentMethod ?? undefined, // ✅ Ajout
     notes: r.notes ?? undefined,
     createdAt: r.created_at ?? undefined,
     updatedAt: r.updated_at ?? undefined,
@@ -50,6 +52,7 @@ function dtoToRow(data: CreateAppointmentDto): Partial<AppointmentRow> {
     price: data.price,
     date: data.date,
     time: data.time,
+    payment_method: data.paymentMethod ?? null, // ✅ Ajout
     notes: data.notes ?? null,
   };
 }
@@ -66,6 +69,7 @@ function patchToRow(data: UpdateAppointmentDto): Partial<AppointmentRow> {
   if (data.date !== undefined) row.date = data.date;
   if (data.time !== undefined) row.time = data.time;
   if (data.status !== undefined) row.status = data.status;
+  if (data.paymentMethod !== undefined) row.payment_method = data.paymentMethod ?? null; // ✅ Ajout
   if (data.notes !== undefined) row.notes = data.notes ?? null;
   return row as Partial<AppointmentRow>;
 }

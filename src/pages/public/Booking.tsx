@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { CalendarHeart, Check, Clock, ArrowLeft, ArrowRight, PartyPopper, Sparkles } from 'lucide-react';
+import { CalendarHeart, Check, Clock, ArrowLeft, ArrowRight, PartyPopper, Sparkles, CreditCard } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/utils/cn';
 import { formatAriary } from '@/utils';
 import { useNailServices } from '@/hooks/useNailServices';
@@ -15,6 +16,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useActiveConfig } from '@/hooks/useActiveConfig';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
+import type { PaymentMethod } from '@/types';
 
 type Step = 1 | 2 | 3 | 4 | 5;
 
@@ -25,6 +27,15 @@ const stepsMeta = [
   { n: 4, label: 'Vos infos' },
   { n: 5, label: 'Confirmation' },
 ] as const;
+
+// ✅ Liste des moyens de paiement avec le bon typage
+const PAYMENT_METHODS: { value: PaymentMethod; label: string }[] = [
+  { value: 'cash', label: 'Espèces' },
+  { value: 'card', label: 'Carte bancaire' },
+  { value: 'mobile_money', label: 'Mobile Money' },
+  { value: 'bank_transfer', label: 'Virement bancaire' },
+  { value: 'check', label: 'Chèque' },
+];
 
 export default function Booking() {
   const { services } = useNailServices();
@@ -38,6 +49,7 @@ export default function Booking() {
   const [serviceId, setServiceId] = useState<string>('');
   const [date, setDate] = useState<string>('');
   const [time, setTime] = useState<string>('');
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cash');
   const [info, setInfo] = useState({
     name: user?.name ?? '',
     phone: user?.phone ?? '',
@@ -67,15 +79,18 @@ export default function Booking() {
     (step === 1 && !!serviceId) ||
     (step === 2 && !!date) ||
     (step === 3 && !!time) ||
-    (step === 4 && !!(info.name && info.phone && info.email));
+    (step === 4 && !!(info.name && info.phone && info.email && paymentMethod));
+
+  // ✅ Fonction pour gérer le changement de paiement
+  const handlePaymentChange = (value: string) => {
+    setPaymentMethod(value as PaymentMethod);
+  };
 
   const next = async () => {
     if (!canNext) return;
     if (step === 4) {
       setSubmitting(true);
       try {
-        // Look up the client row for the logged-in user so the appointment
-        // is linked via foreign key and appears in the client space.
         let clientId: string | undefined;
         if (isLoggedIn && user) {
           const { data: clientRow } = await supabase
@@ -85,6 +100,7 @@ export default function Booking() {
             .maybeSingle();
           clientId = (clientRow as { id: string } | null)?.id ?? undefined;
         }
+        
         await createAppointment({
           clientId,
           clientName: info.name,
@@ -95,6 +111,7 @@ export default function Booking() {
           price: service!.price,
           date,
           time,
+          paymentMethod,
         });
         setStep(5);
       } catch {
@@ -237,6 +254,26 @@ export default function Booking() {
                     <div className="space-y-1.5">
                       <Label htmlFor="email">Email *</Label>
                       <Input id="email" type="email" value={info.email} onChange={(e) => setInfo({ ...info, email: e.target.value })} placeholder="vous@email.com" />
+                    </div>
+                    
+                    {/* ✅ Nouveau champ : Moyen de paiement */}
+                    <div className="space-y-1.5">
+                      <Label htmlFor="payment">Moyen de paiement *</Label>
+                      <Select value={paymentMethod} onValueChange={handlePaymentChange}>
+                        <SelectTrigger className="rounded-xl">
+                          <SelectValue placeholder="Sélectionnez un moyen de paiement" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {PAYMENT_METHODS.map((method) => (
+                            <SelectItem key={method.value} value={method.value}>
+                              <div className="flex items-center gap-2">
+                                <CreditCard className="h-4 w-4 text-muted-foreground" />
+                                {method.label}
+                              </div>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
                   </div>
                 </motion.div>

@@ -9,6 +9,7 @@ export type {
   AppointmentStatus,
   CreateAppointmentDto,
   UpdateAppointmentDto,
+  PaymentMethod, // ✅ Ajout
 } from './appointment';
 export type {
   Service,
