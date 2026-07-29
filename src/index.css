@@ -4,76 +4,76 @@
 
 @layer base {
   :root {
-    /* Couleurs de base - Champagne/Beige */
-    --background: 45 30% 98%;
-    --foreground: 30 15% 15%;
+    /* Couleurs de base - Beige chaud */
+    --background: 40 25% 97%;
+    --foreground: 30 20% 15%;
 
-    --card: 45 25% 100%;
-    --card-foreground: 30 15% 15%;
+    --card: 40 20% 100%;
+    --card-foreground: 30 20% 15%;
 
-    --popover: 45 25% 100%;
-    --popover-foreground: 30 15% 15%;
+    --popover: 40 20% 100%;
+    --popover-foreground: 30 20% 15%;
 
-    /* Doré chaud - Couleur primaire */
-    --primary: 38 80% 55%;
-    --primary-foreground: 45 30% 98%;
+    /* Doré cuivré/marron - Couleur primaire */
+    --primary: 30 60% 45%;
+    --primary-foreground: 40 25% 97%;
 
     /* Beige clair */
-    --secondary: 40 25% 92%;
-    --secondary-foreground: 30 15% 20%;
+    --secondary: 35 20% 90%;
+    --secondary-foreground: 30 25% 20%;
 
     /* Champagne */
-    --muted: 40 20% 94%;
-    --muted-foreground: 30 10% 45%;
+    --muted: 35 15% 92%;
+    --muted-foreground: 30 15% 45%;
 
     /* Doré accent */
-    --accent: 38 75% 50%;
-    --accent-foreground: 45 30% 98%;
+    --accent: 35 55% 48%;
+    --accent-foreground: 40 25% 97%;
 
     --destructive: 0 75% 55%;
-    --destructive-foreground: 45 30% 98%;
+    --destructive-foreground: 40 25% 97%;
 
-    --border: 40 20% 88%;
-    --input: 40 20% 88%;
-    --ring: 38 80% 55%;
+    --border: 35 15% 85%;
+    --input: 35 15% 85%;
+    --ring: 30 60% 45%;
 
     /* Graphiques */
-    --chart-1: 38 80% 55%;
-    --chart-2: 45 70% 50%;
-    --chart-3: 30 40% 60%;
-    --chart-4: 50 60% 50%;
-    --chart-5: 15 50% 55%;
+    --chart-1: 30 60% 45%;
+    --chart-2: 40 50% 50%;
+    --chart-3: 20 40% 55%;
+    --chart-4: 45 45% 45%;
+    --chart-5: 15 50% 50%;
 
     --radius: 0.75rem;
   }
 
   .dark {
-    --background: 30 15% 10%;
-    --foreground: 45 25% 96%;
-    --card: 30 15% 13%;
-    --card-foreground: 45 25% 96%;
-    --popover: 30 15% 13%;
-    --popover-foreground: 45 25% 96%;
+    --background: 30 20% 10%;
+    --foreground: 40 25% 96%;
+    --card: 30 20% 13%;
+    --card-foreground: 40 25% 96%;
+    --popover: 30 20% 13%;
+    --popover-foreground: 40 25% 96%;
     
-    /* Doré plus lumineux pour le mode sombre */
-    --primary: 38 80% 60%;
-    --primary-foreground: 30 15% 10%;
+    /* Doré cuivré plus lumineux pour le mode sombre */
+    --primary: 30 60% 50%;
+    --primary-foreground: 30 20% 10%;
     
-    --secondary: 30 10% 18%;
-    --secondary-foreground: 45 25% 96%;
+    --secondary: 30 15% 18%;
+    --secondary-foreground: 40 25% 96%;
     
-    --muted: 30 10% 18%;
-    --muted-foreground: 45 10% 70%;
+    --muted: 30 15% 18%;
+    --muted-foreground: 40 10% 70%;
     
-    --accent: 38 75% 55%;
-    --accent-foreground: 30 15% 10%;
+    --accent: 35 55% 50%;
+    --accent-foreground: 30 20% 10%;
     
     --destructive: 0 70% 55%;
-    --destructive-foreground: 45 30% 99%;
+    --destructive-foreground: 40 30% 99%;
     
-    --border: 30 10% 22%;
-    --input: 30 10% 22%;
-    --ring: 38 80% 60%;
+    --border: 30 15% 22%;
+    --input: 30 15% 22%;
+    --ring: 30 60% 50%;
   }
 }
 
@@ -108,48 +108,48 @@
     background-size: 24px 24px;
   }
   
-  /* Dégradé doré */
+  /* Dégradé doré cuivré */
   .gradient-gold {
     background-image: linear-gradient(
       135deg,
-      hsl(38 80% 95%) 0%,
-      hsl(45 60% 92%) 50%,
-      hsl(38 70% 88%) 100%
+      hsl(35 25% 92%) 0%,
+      hsl(30 20% 88%) 50%,
+      hsl(35 30% 85%) 100%
     );
   }
   
-  /* Dégradé doré plus intense */
+  /* Dégradé doré intense */
   .gradient-gold-intense {
     background-image: linear-gradient(
       135deg,
-      hsl(38 85% 65%) 0%,
-      hsl(45 75% 55%) 50%,
-      hsl(38 80% 45%) 100%
+      hsl(30 60% 50%) 0%,
+      hsl(35 55% 45%) 50%,
+      hsl(25 55% 40%) 100%
     );
   }
   
-  /* Ancien gradient rose (gardé pour compatibilité) */
+  /* Gardé pour compatibilité avec les anciens composants */
   .gradient-rose {
     background-image: linear-gradient(
       135deg,
-      hsl(38 80% 95%) 0%,
-      hsl(45 60% 92%) 50%,
-      hsl(38 70% 88%) 100%
+      hsl(35 25% 92%) 0%,
+      hsl(30 20% 88%) 50%,
+      hsl(35 30% 85%) 100%
     );
   }
   
   .shadow-soft {
     box-shadow:
-      0 1px 2px hsl(30 15% 12% / 0.04),
-      0 8px 24px hsl(30 15% 12% / 0.06);
+      0 1px 2px hsl(30 20% 12% / 0.04),
+      0 8px 24px hsl(30 20% 12% / 0.06);
   }
   
   .shadow-glow {
-    box-shadow: 0 8px 40px hsl(38 80% 55% / 0.25);
+    box-shadow: 0 8px 40px hsl(30 60% 45% / 0.25);
   }
   
   .shadow-glow-gold {
-    box-shadow: 0 8px 40px hsl(38 80% 55% / 0.35);
+    box-shadow: 0 8px 40px hsl(30 60% 45% / 0.35);
   }
   
   .no-scrollbar::-webkit-scrollbar {
@@ -173,10 +173,10 @@ html {
   background: hsl(var(--muted));
 }
 ::-webkit-scrollbar-thumb {
-  background: hsl(38 50% 70%);
+  background: hsl(30 40% 60%);
   border-radius: 999px;
   border: 2px solid hsl(var(--muted));
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: hsl(38 60% 55%);
+  background: hsl(30 50% 45%);
 }
