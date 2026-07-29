@@ -29,6 +29,11 @@ export default function Services() {
     [services, active]
   );
 
+  // Fonction pour afficher le prix ou "Devis"
+  const displayPrice = (price: number) => {
+    return price === 0 ? 'Devis' : formatAriary(price);
+  };
+
   return (
     <div>
       <section className="gradient-rose pt-32 pb-16">
@@ -81,7 +86,9 @@ export default function Services() {
                   <CardContent className="p-6">
                     <div className="flex items-start justify-between gap-3">
                       <h3 className="font-display text-xl font-semibold">{s.name}</h3>
-                      <span className="whitespace-nowrap text-lg font-semibold text-primary">{formatAriary(s.price)}</span>
+                      <span className="whitespace-nowrap text-lg font-semibold text-primary">
+                        {displayPrice(s.price)}
+                      </span>
                     </div>
                     <p className="mt-2 text-sm text-muted-foreground">{s.description}</p>
                     <div className="mt-5 flex items-center justify-between">

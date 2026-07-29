@@ -93,7 +93,7 @@ export default function Home() {
               variant="secondary"
               className="mb-6 gap-1.5 rounded-full border border-primary/20 bg-white/70 px-4 py-1.5 text-xs font-medium text-primary backdrop-blur"
             >
-              <Sparkles className="h-3.5 w-3.5" /> Salon d'onglerie haut de gamme • Antananarivo
+              <Sparkles className="h-3.5 w-3.5" /> Salon d'onglerie haut de gamme
             </Badge>
             <h1 className="font-display text-5xl font-semibold leading-[1.05] text-balance text-foreground sm:text-6xl lg:text-7xl">
               L'art des ongles,
