@@ -37,7 +37,7 @@ export const supabase = createClient(
 // Optionnel : Exporter une fonction de vérification pour le débogage
 export const checkSupabaseConnection = async () => {
   try {
-    const { data, error } = await supabase.from('users').select('count').limit(1);
+    const { error } = await supabase.from('users').select('count').limit(1);
     if (error) {
       console.error('❌ Erreur de connexion Supabase:', error.message);
       return false;
