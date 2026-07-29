@@ -16,7 +16,8 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { services, reviews, galleryItems, salonInfo, formatAriary } from '@/lib/data';
+import { reviews, galleryItems, salonInfo, formatAriary } from '@/lib/data';
+import { useNailServices } from '@/hooks/useNailServices';
 
 const fadeUp = {
   initial: { opacity: 0, y: 24 },
@@ -26,6 +27,8 @@ const fadeUp = {
 };
 
 export default function Home() {
+  const { services } = useNailServices();
+
   return (
     <div className="overflow-hidden">
       {/* HERO */}
@@ -49,7 +52,7 @@ export default function Home() {
             </Badge>
             <h1 className="font-display text-5xl font-semibold leading-[1.05] text-balance text-foreground sm:text-6xl lg:text-7xl">
               L'art des ongles,
-              <span className="block italic text-primary">sublimé avec NidaNail</span>
+              <span className="block italic text-primary">sublimé avec Harrys Studio</span>
             </h1>
             <p className="mx-auto mt-6 max-w-xl text-base text-foreground/70 lg:mx-0">
               Des mains soignées, des ongles sublimes. Découvrez un univers de
@@ -83,7 +86,7 @@ export default function Home() {
                   ))}
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  +450 clientes satisfaites
+                  Plusieurs clientes satisfaites
                 </p>
               </div>
             </div>
@@ -98,7 +101,7 @@ export default function Home() {
             <div className="relative aspect-[4/5] overflow-hidden rounded-[2rem] shadow-glow ring-1 ring-primary/10">
               <img
                 src="https://images.pexels.com/photos/3997391/pexels-photo-3997391.jpeg?auto=compress&cs=tinysrgb&w=900&h=1120&fit=crop"
-                alt="Réalisation NidaNail Nail Studio"
+                alt="Réalisation Harrys Studio"
                 className="h-full w-full object-cover"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-foreground/30 via-transparent to-transparent" />
@@ -150,7 +153,7 @@ export default function Home() {
               Un écrin dédié à la beauté de vos mains
             </h2>
             <p className="mt-5 text-foreground/70">
-              Chez NidaNail Nail Studio, nous croyons que des ongles soignés sont
+              Chez Harrys Studio, nous croyons que des ongles soignés sont
               une signature de style. Notre salon vous accueille dans une ambiance
               raffinée et apaisante, où chaque détail est pensé pour votre
               bien-être. Notre équipe de prothésistes ongulaires diplômées allie
@@ -287,7 +290,7 @@ export default function Home() {
                     <div className="flex items-center justify-between">
                       <h3 className="font-display text-xl font-semibold">{s.name}</h3>
                       <span className="text-sm font-semibold text-primary">
-                        {formatAriary(s.price)}
+                        {s.price === 0 ? 'Devis' : formatAriary(s.price)}
                       </span>
                     </div>
                     <p className="mt-2 line-clamp-2 text-sm text-muted-foreground">
@@ -472,30 +475,6 @@ export default function Home() {
                   </div>
                 </div>
               </div>
-            </motion.div>
-
-            <motion.div {...fadeUp} transition={{ delay: 0.1 }}>
-              <p className="text-sm font-medium uppercase tracking-[0.25em] text-primary">
-                Horaires
-              </p>
-              <h2 className="mt-3 font-display text-4xl font-semibold text-foreground">
-                Heures d'ouverture
-              </h2>
-              <Card className="mt-8 border-border/60 shadow-soft">
-                <CardContent className="divide-y divide-border/60 p-2">
-                  {salonInfo.hours.map((h) => (
-                    <div
-                      key={h.day}
-                      className="flex items-center justify-between px-4 py-3 text-sm"
-                    >
-                      <span className="font-medium">{h.day}</span>
-                      <span className={h.closed ? 'text-destructive' : 'text-muted-foreground'}>
-                        {h.closed ? 'Fermé' : `${h.open} — ${h.close}`}
-                      </span>
-                    </div>
-                  ))}
-                </CardContent>
-              </Card>
             </motion.div>
           </div>
         </div>
