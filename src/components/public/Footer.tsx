@@ -30,7 +30,7 @@ export default function Footer() {
               </div>
             </div>
             <p className="mt-4 text-sm text-muted-foreground">
-              Salon d'onglerie haut de gamme à Antananarivo. Sublimez vos mains
+              Salon d'onglerie haut de gamme. Sublimez vos mains
               dans un cadre raffiné et apaisant.
             </p>
           </div>
@@ -111,7 +111,7 @@ export default function Footer() {
 
         <div className="mt-12 flex flex-col items-center justify-between gap-3 border-t border-border/60 pt-6 text-xs text-muted-foreground sm:flex-row">
           <p>© {new Date().getFullYear()} {salonInfo.name}. Tous droits réservés.</p>
-          <p>Conçu avec soin à Antananarivo, Madagascar.</p>
+          <p>Conçu avec soin à Paris, France.</p>
         </div>
       </div>
     </footer>
