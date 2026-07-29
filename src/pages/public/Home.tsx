@@ -4,15 +4,12 @@ import { useEffect, useState } from 'react';
 import {
   CalendarHeart,
   Sparkles,
-  Heart,
   Award,
-  Leaf,
   Clock,
   Phone,
   MapPin,
   Star,
   ArrowRight,
-  Check,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
