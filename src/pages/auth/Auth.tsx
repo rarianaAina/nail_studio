@@ -166,7 +166,7 @@ export default function Auth() {
                   </Button>
                 </form>
 
-                <div className="mt-6 border-t border-border/60 pt-5">
+                {/* <div className="mt-6 border-t border-border/60 pt-5">
                   <p className="mb-3 text-center text-xs text-muted-foreground">Accès démo rapide</p>
                   <div className="grid grid-cols-2 gap-2">
                     <Button size="sm" variant="outline" className="rounded-full text-xs" onClick={() => fillDemo('client')}>
@@ -176,7 +176,7 @@ export default function Auth() {
                       <ShieldCheck className="mr-1.5 h-3.5 w-3.5" /> Admin démo
                     </Button>
                   </div>
-                </div>
+                </div> */}
               </motion.div>
             </AnimatePresence>
           </div>
