@@ -1,3 +1,4 @@
+// pages/Booking.tsx
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -14,9 +15,9 @@ import { useNailServices } from '@/hooks/useNailServices';
 import { useAppointments } from '@/hooks/useAppointments';
 import { useAuth } from '@/hooks/useAuth';
 import { useActiveConfig } from '@/hooks/useActiveConfig';
+import { usePaymentMethods } from '@/hooks/usePaymentMethods';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
-import type { PaymentMethod } from '@/types';
 
 type Step = 1 | 2 | 3 | 4 | 5;
 
@@ -28,20 +29,12 @@ const stepsMeta = [
   { n: 5, label: 'Confirmation' },
 ] as const;
 
-// ✅ Liste des moyens de paiement avec le bon typage
-const PAYMENT_METHODS: { value: PaymentMethod; label: string }[] = [
-  { value: 'cash', label: 'Espèces' },
-  { value: 'card', label: 'Carte bancaire' },
-  { value: 'mobile_money', label: 'Mobile Money' },
-  { value: 'bank_transfer', label: 'Virement bancaire' },
-  { value: 'check', label: 'Chèque' },
-];
-
 export default function Booking() {
   const { services } = useNailServices();
   const { createAppointment } = useAppointments();
   const { user } = useAuth();
   const { timeSlots: configuredSlots } = useActiveConfig();
+  const { paymentMethods, loading: loadingPayments } = usePaymentMethods();
   const navigate = useNavigate();
   const isLoggedIn = !!user;
 
@@ -49,7 +42,7 @@ export default function Booking() {
   const [serviceId, setServiceId] = useState<string>('');
   const [date, setDate] = useState<string>('');
   const [time, setTime] = useState<string>('');
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cash');
+  const [paymentMethodId, setPaymentMethodId] = useState<string>('');
   const [info, setInfo] = useState({
     name: user?.name ?? '',
     phone: user?.phone ?? '',
@@ -57,6 +50,11 @@ export default function Booking() {
   });
   const [submitting, setSubmitting] = useState(false);
   const [bookedSlots, setBookedSlots] = useState<string[]>([]);
+
+  const activePaymentMethods = useMemo(
+    () => paymentMethods.filter(m => m.active),
+    [paymentMethods]
+  );
 
   useEffect(() => {
     if (!date) { setBookedSlots([]); return; }
@@ -79,12 +77,7 @@ export default function Booking() {
     (step === 1 && !!serviceId) ||
     (step === 2 && !!date) ||
     (step === 3 && !!time) ||
-    (step === 4 && !!(info.name && info.phone && info.email && paymentMethod));
-
-  // ✅ Fonction pour gérer le changement de paiement
-  const handlePaymentChange = (value: string) => {
-    setPaymentMethod(value as PaymentMethod);
-  };
+    (step === 4 && !!(info.name && info.phone && info.email && paymentMethodId));
 
   const next = async () => {
     if (!canNext) return;
@@ -111,7 +104,7 @@ export default function Booking() {
           price: service!.price,
           date,
           time,
-          paymentMethod,
+          paymentMethodId,
         });
         setStep(5);
       } catch {
@@ -256,22 +249,30 @@ export default function Booking() {
                       <Input id="email" type="email" value={info.email} onChange={(e) => setInfo({ ...info, email: e.target.value })} placeholder="vous@email.com" />
                     </div>
                     
-                    {/* ✅ Nouveau champ : Moyen de paiement */}
+                    {/* Moyen de paiement */}
                     <div className="space-y-1.5">
                       <Label htmlFor="payment">Moyen de paiement *</Label>
-                      <Select value={paymentMethod} onValueChange={handlePaymentChange}>
+                      <Select value={paymentMethodId} onValueChange={setPaymentMethodId}>
                         <SelectTrigger className="rounded-xl">
                           <SelectValue placeholder="Sélectionnez un moyen de paiement" />
                         </SelectTrigger>
                         <SelectContent>
-                          {PAYMENT_METHODS.map((method) => (
-                            <SelectItem key={method.value} value={method.value}>
-                              <div className="flex items-center gap-2">
-                                <CreditCard className="h-4 w-4 text-muted-foreground" />
-                                {method.label}
-                              </div>
-                            </SelectItem>
-                          ))}
+                          {loadingPayments ? (
+                            <div className="flex justify-center py-4">
+                              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary" />
+                            </div>
+                          ) : activePaymentMethods.length === 0 ? (
+                            <SelectItem value="" disabled>Aucun moyen de paiement disponible</SelectItem>
+                          ) : (
+                            activePaymentMethods.map((method) => (
+                              <SelectItem key={method.id} value={method.id}>
+                                <div className="flex items-center gap-2">
+                                  <span className="text-lg">{method.icon || '💳'}</span>
+                                  {method.label}
+                                </div>
+                              </SelectItem>
+                            ))
+                          )}
                         </SelectContent>
                       </Select>
                     </div>

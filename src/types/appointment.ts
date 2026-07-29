@@ -1,9 +1,4 @@
-// types/appointment.ts
-
 export type AppointmentStatus = 'pending' | 'confirmed' | 'completed' | 'cancelled';
-
-// ✅ Ajout du type PaymentMethod
-export type PaymentMethod = 'cash' | 'card' | 'mobile_money' | 'bank_transfer' | 'check';
 
 export interface Appointment {
   id: string;
@@ -17,7 +12,13 @@ export interface Appointment {
   date: string;
   time: string;
   status: AppointmentStatus;
-  paymentMethod?: PaymentMethod; // ✅ Ajout
+  paymentMethodId?: string; // ✅ FK vers payment_methods
+  paymentMethod?: {          // ✅ Relation (optionnel)
+    id: string;
+    name: string;
+    label: string;
+    icon?: string;
+  };
   notes?: string;
   createdAt?: string;
   updatedAt?: string;
@@ -33,7 +34,7 @@ export interface CreateAppointmentDto {
   price: number;
   date: string;
   time: string;
-  paymentMethod?: PaymentMethod; // ✅ Ajout
+  paymentMethodId?: string; // ✅ FK vers payment_methods
   notes?: string;
 }
 
@@ -48,6 +49,6 @@ export interface UpdateAppointmentDto {
   date?: string;
   time?: string;
   status?: AppointmentStatus;
-  paymentMethod?: PaymentMethod; // ✅ Ajout
+  paymentMethodId?: string; // ✅ FK vers payment_methods
   notes?: string;
 }

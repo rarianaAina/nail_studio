@@ -9,8 +9,7 @@ export type {
   AppointmentStatus,
   CreateAppointmentDto,
   UpdateAppointmentDto,
-  PaymentMethod, // ✅ Ajout
-} from './appointment';
+} from './appointment'; // ✅ Suppression de PaymentMethod (déplacé)
 export type {
   Service,
   ServiceCategory,
@@ -41,3 +40,8 @@ export type {
   CreateCategoryDto,
   CreateTimeSlotDto,
 } from './config';
+export type {
+  PaymentMethod,
+  CreatePaymentMethodDto,
+  UpdatePaymentMethodDto,
+} from './payment'; // ✅ Ajout des types de paiement

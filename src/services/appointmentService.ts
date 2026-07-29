@@ -1,5 +1,6 @@
+// services/appointmentService.ts
 import { supabase } from '@/lib/supabase';
-import type { Appointment, AppointmentStatus, CreateAppointmentDto, UpdateAppointmentDto, PaymentMethod } from '@/types';
+import type { Appointment, AppointmentStatus, CreateAppointmentDto, UpdateAppointmentDto } from '@/types';
 import { reminderSettingsService } from './reminderSettingsService';
 import { reminderService } from './reminderService';
 
@@ -15,7 +16,7 @@ interface AppointmentRow {
   date: string;
   time: string;
   status: string;
-  payment_method: string | null; // ✅ Ajout
+  payment_method_id: string | null;
   notes: string | null;
   created_at: string | null;
   updated_at: string | null;
@@ -34,7 +35,7 @@ function rowToAppointment(r: AppointmentRow): Appointment {
     date: r.date,
     time: r.time,
     status: r.status as AppointmentStatus,
-    paymentMethod: r.payment_method as PaymentMethod ?? undefined, // ✅ Ajout
+    paymentMethodId: r.payment_method_id ?? undefined,
     notes: r.notes ?? undefined,
     createdAt: r.created_at ?? undefined,
     updatedAt: r.updated_at ?? undefined,
@@ -52,7 +53,7 @@ function dtoToRow(data: CreateAppointmentDto): Partial<AppointmentRow> {
     price: data.price,
     date: data.date,
     time: data.time,
-    payment_method: data.paymentMethod ?? null, // ✅ Ajout
+    payment_method_id: data.paymentMethodId ?? null,
     notes: data.notes ?? null,
   };
 }
@@ -69,7 +70,7 @@ function patchToRow(data: UpdateAppointmentDto): Partial<AppointmentRow> {
   if (data.date !== undefined) row.date = data.date;
   if (data.time !== undefined) row.time = data.time;
   if (data.status !== undefined) row.status = data.status;
-  if (data.paymentMethod !== undefined) row.payment_method = data.paymentMethod ?? null; // ✅ Ajout
+  if (data.paymentMethodId !== undefined) row.payment_method_id = data.paymentMethodId ?? null;
   if (data.notes !== undefined) row.notes = data.notes ?? null;
   return row as Partial<AppointmentRow>;
 }
@@ -78,7 +79,15 @@ export const appointmentService = {
   async getAll(): Promise<Appointment[]> {
     const { data, error } = await supabase
       .from('appointments')
-      .select('*')
+      .select(`
+        *,
+        payment_method:payment_method_id (
+          id,
+          name,
+          label,
+          icon
+        )
+      `)
       .order('date', { ascending: true })
       .order('time', { ascending: true });
     if (error) throw error;
@@ -88,7 +97,15 @@ export const appointmentService = {
   async getById(id: string): Promise<Appointment | null> {
     const { data, error } = await supabase
       .from('appointments')
-      .select('*')
+      .select(`
+        *,
+        payment_method:payment_method_id (
+          id,
+          name,
+          label,
+          icon
+        )
+      `)
       .eq('id', id)
       .maybeSingle();
     if (error) throw error;
@@ -99,7 +116,15 @@ export const appointmentService = {
   async getByDate(date: string): Promise<Appointment[]> {
     const { data, error } = await supabase
       .from('appointments')
-      .select('*')
+      .select(`
+        *,
+        payment_method:payment_method_id (
+          id,
+          name,
+          label,
+          icon
+        )
+      `)
       .eq('date', date)
       .order('time', { ascending: true });
     if (error) throw error;
@@ -109,7 +134,15 @@ export const appointmentService = {
   async getByClientEmail(email: string): Promise<Appointment[]> {
     const { data, error } = await supabase
       .from('appointments')
-      .select('*')
+      .select(`
+        *,
+        payment_method:payment_method_id (
+          id,
+          name,
+          label,
+          icon
+        )
+      `)
       .eq('email', email)
       .order('date', { ascending: true });
     if (error) throw error;
@@ -154,7 +187,15 @@ export const appointmentService = {
     // Read-back: try to fetch the just-created appointment.
     const { data: rows, error: selError } = await supabase
       .from('appointments')
-      .select('*')
+      .select(`
+        *,
+        payment_method:payment_method_id (
+          id,
+          name,
+          label,
+          icon
+        )
+      `)
       .eq('client_name', data.clientName)
       .eq('phone', data.phone)
       .eq('date', data.date)
@@ -212,7 +253,15 @@ export const appointmentService = {
       .from('appointments')
       .update(patchToRow(data))
       .eq('id', id)
-      .select()
+      .select(`
+        *,
+        payment_method:payment_method_id (
+          id,
+          name,
+          label,
+          icon
+        )
+      `)
       .single();
     if (error) throw error;
     
@@ -277,9 +326,6 @@ export const appointmentService = {
 
   async updateStatus(id: string, status: AppointmentStatus): Promise<Appointment> {
     const appointment = await appointmentService.update(id, { status });
-    
-    // Si le statut est 'cancelled', les rappels sont déjà supprimés dans update()
-    
     return appointment;
   },
 

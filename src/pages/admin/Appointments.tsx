@@ -1,6 +1,7 @@
+// pages/admin/Appointments.tsx
 import { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Search, Eye, Pencil, Check, X, CalendarPlus, Bell } from 'lucide-react';
+import { Search, Eye, Pencil, Check, X, CalendarPlus, Bell, CreditCard } from 'lucide-react';
 import { useNailServices } from '@/hooks/useNailServices';
 import { useClients } from '@/hooks/useClients';
 import {
@@ -22,6 +23,7 @@ import { toast } from 'sonner';
 import { cn } from '@/utils/cn';
 import { useAppointments } from '@/hooks/useAppointments';
 import { useReminderSettings } from '@/hooks/useReminderSettings';
+import { usePaymentMethods } from '@/hooks/usePaymentMethods';
 import { reminderService } from '@/services/reminderService';
 import { supabase } from '@/lib/supabase';
 import { formatAriary, STATUS_COLORS, STATUS_LABELS } from '@/utils';
@@ -29,28 +31,12 @@ import type { Appointment, AppointmentStatus } from '@/types';
 
 const FILTERS: ('Tous' | AppointmentStatus)[] = ['Tous', 'pending', 'confirmed', 'completed', 'cancelled'];
 
-// ✅ Mapping des moyens de paiement
-const PAYMENT_METHOD_LABELS: Record<string, string> = {
-  cash: 'Espèces',
-  card: 'Carte bancaire',
-  mobile_money: 'Mobile Money',
-  bank_transfer: 'Virement bancaire',
-  check: 'Chèque',
-};
-
-const PAYMENT_METHOD_ICONS: Record<string, React.ReactNode> = {
-  cash: '💵',
-  card: '💳',
-  mobile_money: '📱',
-  bank_transfer: '🏦',
-  check: '📝',
-};
-
 export default function Appointments() {
   const { appointments, updateStatus, createAppointment, refresh } = useAppointments();
   const { reminderSettings } = useReminderSettings();
   const { services } = useNailServices();
   const { clients } = useClients();
+  const { paymentMethods, loading: loadingPayments } = usePaymentMethods();
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState<'Tous' | AppointmentStatus>('Tous');
   const [viewing, setViewing] = useState<Appointment | null>(null);
@@ -64,6 +50,7 @@ export default function Appointments() {
     serviceId: '',
     date: '',
     time: '09:00',
+    paymentMethodId: '',
     notes: '',
   });
 
@@ -79,6 +66,19 @@ export default function Appointments() {
       }),
     [appointments, query, filter]
   );
+
+  // Récupérer le libellé du moyen de paiement
+  const getPaymentMethodLabel = (paymentMethodId?: string) => {
+    if (!paymentMethodId) return 'Non renseigné';
+    const method = paymentMethods.find(m => m.id === paymentMethodId);
+    return method?.label || paymentMethodId;
+  };
+
+  const getPaymentMethodIcon = (paymentMethodId?: string) => {
+    if (!paymentMethodId) return '💳';
+    const method = paymentMethods.find(m => m.id === paymentMethodId);
+    return method?.icon || '💳';
+  };
 
   const handleStatus = async (id: string, status: AppointmentStatus) => {
     await updateStatus(id, status);
@@ -374,6 +374,34 @@ export default function Appointments() {
                 <Input id="na-time" type="time" value={newAppt.time} onChange={(e) => setNewAppt((p) => ({ ...p, time: e.target.value }))} />
               </div>
             </div>
+            
+            {/* Moyen de paiement */}
+            <div className="space-y-1.5">
+              <Label>Moyen de paiement</Label>
+              <Select
+                value={newAppt.paymentMethodId}
+                onValueChange={(v) => setNewAppt((p) => ({ ...p, paymentMethodId: v }))}
+              >
+                <SelectTrigger><SelectValue placeholder="Sélectionner un moyen de paiement" /></SelectTrigger>
+                <SelectContent>
+                  {loadingPayments ? (
+                    <SelectItem value="" disabled>Chargement...</SelectItem>
+                  ) : paymentMethods.length === 0 ? (
+                    <SelectItem value="" disabled>Aucun moyen de paiement</SelectItem>
+                  ) : (
+                    paymentMethods.filter(m => m.active).map((m) => (
+                      <SelectItem key={m.id} value={m.id}>
+                        <div className="flex items-center gap-2">
+                          <span className="text-lg">{m.icon || '💳'}</span>
+                          {m.label}
+                        </div>
+                      </SelectItem>
+                    ))
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
+
             <div className="space-y-1.5">
               <Label htmlFor="na-notes">Notes (optionnel)</Label>
               <Textarea id="na-notes" value={newAppt.notes} onChange={(e) => setNewAppt((p) => ({ ...p, notes: e.target.value }))} />
@@ -429,11 +457,12 @@ export default function Appointments() {
                     price: svc.price,
                     date: newAppt.date,
                     time: newAppt.time,
+                    paymentMethodId: newAppt.paymentMethodId || undefined,
                     notes: newAppt.notes || undefined,
                   });
                   toast.success('Rendez-vous créé.');
                   setShowCreate(false);
-                  setNewAppt({ clientId: '', clientName: '', phone: '', email: '', serviceId: '', date: '', time: '09:00', notes: '' });
+                  setNewAppt({ clientId: '', clientName: '', phone: '', email: '', serviceId: '', date: '', time: '09:00', paymentMethodId: '', notes: '' });
                   await refresh();
                 } catch (e) {
                   toast.error(e instanceof Error ? e.message : 'Erreur lors de la création.');
@@ -465,18 +494,11 @@ export default function Appointments() {
               <div className="flex justify-between"><span className="text-muted-foreground">Heure</span><span>{viewing.time}</span></div>
               <div className="flex justify-between"><span className="text-muted-foreground">Statut</span><Badge className={cn('border', STATUS_COLORS[viewing.status])}>{STATUS_LABELS[viewing.status]}</Badge></div>
               
-              {/* ✅ Affichage du moyen de paiement */}
               <div className="flex justify-between items-center">
                 <span className="text-muted-foreground">Moyen de paiement</span>
                 <span className="font-medium flex items-center gap-2">
-                  {viewing.paymentMethod ? (
-                    <>
-                      <span>{PAYMENT_METHOD_ICONS[viewing.paymentMethod]}</span>
-                      {PAYMENT_METHOD_LABELS[viewing.paymentMethod] || viewing.paymentMethod}
-                    </>
-                  ) : (
-                    <span className="text-muted-foreground">Non renseigné</span>
-                  )}
+                  <span className="text-lg">{getPaymentMethodIcon(viewing.paymentMethodId)}</span>
+                  {getPaymentMethodLabel(viewing.paymentMethodId)}
                 </span>
               </div>
               
