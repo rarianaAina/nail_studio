@@ -1,10 +1,8 @@
 import { Link } from 'react-router-dom';
 import { CalendarHeart, Phone, Mail, MapPin, Facebook, Instagram, MessageCircle } from 'lucide-react';
-import { useSettings } from '@/hooks/useSettings';
+import { salonInfo } from '@/lib/data';
 
 export default function Footer() {
-  const { settings } = useSettings();
-
   return (
     <footer className="border-t border-border/60 bg-secondary/40">
       <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
@@ -15,7 +13,7 @@ export default function Footer() {
                 <CalendarHeart className="h-5 w-5" />
               </span>
               <div>
-                <p className="font-display text-xl font-semibold">Harrys Studio</p>
+                <p className="font-display text-xl font-semibold">NidaNail</p>
                 <p className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">
                   Nail Studio
                 </p>
@@ -54,15 +52,15 @@ export default function Footer() {
             <ul className="mt-4 space-y-3 text-sm text-muted-foreground">
               <li className="flex items-start gap-2">
                 <MapPin className="mt-0.5 h-4 w-4 text-primary" />
-                <span>{settings?.address ?? ''}</span>
+                <span>{salonInfo.address}</span>
               </li>
               <li className="flex items-center gap-2">
                 <Phone className="h-4 w-4 text-primary" />
-                <span>{settings?.phone ?? ''}</span>
+                <span>{salonInfo.phone}</span>
               </li>
               <li className="flex items-center gap-2">
                 <Mail className="h-4 w-4 text-primary" />
-                <span>{settings?.email ?? ''}</span>
+                <span>{salonInfo.email}</span>
               </li>
             </ul>
           </div>
@@ -71,21 +69,21 @@ export default function Footer() {
             <h4 className="font-display text-lg font-semibold">Suivez-nous</h4>
             <div className="mt-4 flex gap-3">
               <a
-                href={settings?.facebook ?? '#'}
+                href={salonInfo.facebook}
                 className="grid h-10 w-10 place-items-center rounded-full bg-white text-foreground shadow-soft transition-colors hover:bg-primary hover:text-primary-foreground"
                 aria-label="Facebook"
               >
                 <Facebook className="h-4 w-4" />
               </a>
               <a
-                href={settings?.instagram ?? '#'}
+                href={salonInfo.instagram}
                 className="grid h-10 w-10 place-items-center rounded-full bg-white text-foreground shadow-soft transition-colors hover:bg-primary hover:text-primary-foreground"
                 aria-label="Instagram"
               >
                 <Instagram className="h-4 w-4" />
               </a>
               <a
-                href={`https://wa.me/${(settings?.whatsapp ?? '').replace(/\s/g, '')}`}
+                href={`https://wa.me/${salonInfo.whatsapp.replace(/\s/g, '')}`}
                 className="grid h-10 w-10 place-items-center rounded-full bg-white text-foreground shadow-soft transition-colors hover:bg-primary hover:text-primary-foreground"
                 aria-label="WhatsApp"
               >
@@ -96,7 +94,7 @@ export default function Footer() {
         </div>
 
         <div className="mt-12 flex flex-col items-center justify-between gap-3 border-t border-border/60 pt-6 text-xs text-muted-foreground sm:flex-row">
-          <p>© {new Date().getFullYear()} Harrys Studio. Tous droits réservés.</p>
+          <p>© {new Date().getFullYear()} NidaNail Nail Studio. Tous droits réservés.</p>
           <p>Conçu avec soin à Antananarivo, Madagascar.</p>
         </div>
       </div>

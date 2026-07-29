@@ -2,20 +2,28 @@ import { useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
-  CalendarHeart, CalendarPlus, Clock, Sparkles, Heart,
-  Wallet, Gift, LogOut, ChevronRight, Star,
-  CheckCircle2, XCircle, Hourglass,
+  CalendarHeart,
+  CalendarPlus,
+  Clock,
+  Sparkles,
+  Heart,
+  Wallet,
+  Gift,
+  LogOut,
+  ChevronRight,
+  Star,
+  CheckCircle2,
+  XCircle,
+  Hourglass,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { cn } from '@/utils/cn';
-import { formatAriary, STATUS_COLORS, STATUS_LABELS } from '@/utils';
-import { useAuth } from '@/hooks/useAuth';
-import { useAppointments } from '@/hooks/useAppointments';
-import { useNailServices } from '@/hooks/useNailServices';
-import { supabase } from '@/lib/supabase';
-import { useEffect, useState } from 'react';
+import { useAuth } from '@/lib/auth';
+import { appointments, services, formatAriary, statusColors, statusLabels } from '@/lib/data';
+import { cn } from '@/lib/utils';
+// Import du type depuis le fichier types
+import type { Appointment } from '@/lib/types';
 
 const fadeUp = {
   initial: { opacity: 0, y: 20 },
@@ -33,92 +41,112 @@ const statusIcon: Record<string, typeof CheckCircle2> = {
 export default function ClientSpace() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const { appointments } = useAppointments();
-  const { services } = useNailServices();
-  const [clientId, setClientId] = useState<string | null>(null);
-  const [clientData, setClientData] = useState<{ totalSpent: number; visitCount: number } | null>(null);
 
-  useEffect(() => {
-    if (!user) return;
-    let mounted = true;
-    (async () => {
-      const { data } = await supabase
-        .from('clients')
-        .select('id, total_spent, visit_count')
-        .eq('user_id', user.id)
-        .maybeSingle();
-      if (mounted && data) {
-        setClientId((data as { id: string }).id);
-        setClientData({
-          totalSpent: (data as { total_spent: number }).total_spent || 0,
-          visitCount: (data as { visit_count: number }).visit_count || 0,
-        });
-      }
-    })();
-    return () => { mounted = false; };
+  // Filtrer les rendez-vous avec une vérification safe
+  const myAppointments = useMemo(() => {
+    if (!user) return [];
+    
+    return appointments
+      .filter((a: Appointment) => a.email === 'hanta.r@email.mg' || a.clientName === user.name)
+      .sort((a: Appointment, b: Appointment) => (a.date + a.time).localeCompare(b.date + b.time));
   }, [user]);
 
-  const myAppointments = useMemo(
-    () =>
-      appointments
-        .filter((a) => (clientId ? a.clientId === clientId : a.email === user?.email))
-        .sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time)),
-    [appointments, clientId, user]
+  // Filtrer avec des vérifications de type
+  const upcoming = myAppointments.filter(
+    (a: Appointment) => a.status === 'confirmed' || a.status === 'pending'
+  );
+  const past = myAppointments.filter(
+    (a: Appointment) => a.status === 'completed' || a.status === 'cancelled'
   );
 
-  const upcoming = myAppointments.filter((a) => a.status === 'confirmed' || a.status === 'pending');
-  const past = myAppointments.filter((a) => a.status === 'completed' || a.status === 'cancelled');
-  
-  // Utiliser les valeurs de la base de données au lieu de les recalculer
-  const totalSpent = clientData?.totalSpent ?? 0;
-  const visits = clientData?.visitCount ?? 0;
-  
+  // Calculs avec vérifications
+  const totalSpent = myAppointments
+    .filter((a: Appointment) => a.status === 'completed')
+    .reduce((sum: number, a: Appointment) => sum + (a.price || 0), 0);
+    
+  const visits = myAppointments.filter((a: Appointment) => a.status === 'completed').length;
   const loyaltyPoints = visits * 50;
-  const popularServices = services.filter((s) => s.popular).slice(0, 3);
 
-  const onLogout = () => { logout(); navigate('/'); };
+  const onLogout = () => {
+    logout();
+    navigate('/');
+  };
 
+  // Vérifier si user existe
+  if (!user) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <Card className="max-w-md p-6">
+          <p className="text-center text-muted-foreground">
+            Veuillez vous connecter pour accéder à votre espace.
+          </p>
+          <Button asChild className="mt-4 w-full">
+            <Link to="/login">Se connecter</Link>
+          </Button>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Top bar */}
       <header className="sticky top-0 z-40 border-b border-border/60 bg-card/80 backdrop-blur-xl">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 sm:px-6">
           <Link to="/" className="flex items-center gap-2">
-            <span className="grid h-10 w-10 place-items-center rounded-full bg-primary/10 text-primary"><CalendarHeart className="h-5 w-5" /></span>
-            <div><p className="font-display text-lg font-semibold leading-tight">Harrys Studio</p><p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Mon espace</p></div>
+            <span className="grid h-10 w-10 place-items-center rounded-full bg-primary/10 text-primary">
+              <CalendarHeart className="h-5 w-5" />
+            </span>
+            <div>
+              <p className="font-display text-lg font-semibold leading-tight">NidaNail</p>
+              <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+                Mon espace
+              </p>
+            </div>
           </Link>
           <div className="flex items-center gap-3">
             <span className="hidden text-sm text-muted-foreground sm:block">
-              Bonjour, <span className="font-medium text-foreground">{user?.name.split(' ')[0]}</span>
+              Bonjour, <span className="font-medium text-foreground">{user.name.split(' ')[0]}</span>
             </span>
-            <span className="grid h-9 w-9 place-items-center rounded-full bg-primary font-display text-sm font-semibold text-primary-foreground">{user?.name[0]}</span>
-            <Button size="icon" variant="ghost" className="rounded-full" onClick={onLogout} title="Déconnexion"><LogOut className="h-4 w-4" /></Button>
+            <span className="grid h-9 w-9 place-items-center rounded-full bg-primary font-display text-sm font-semibold text-primary-foreground">
+              {user.name[0]}
+            </span>
+            <Button size="icon" variant="ghost" className="rounded-full" onClick={onLogout} title="Déconnexion">
+              <LogOut className="h-4 w-4" />
+            </Button>
           </div>
         </div>
       </header>
 
       <main className="mx-auto max-w-6xl space-y-6 px-4 py-8 sm:px-6 lg:px-8">
-        <motion.div {...fadeUp} className="relative overflow-hidden rounded-3xl gradient-rose p-6 sm:p-8">
+        {/* Hero */}
+        <motion.div
+          {...fadeUp}
+          className="relative overflow-hidden rounded-3xl gradient-rose p-6 sm:p-8"
+        >
           <div className="absolute inset-0 bg-grid opacity-30" />
           <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-primary/20 blur-3xl" />
           <div className="relative flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
             <div>
               <p className="text-sm text-muted-foreground">Bienvenue,</p>
-              <h1 className="font-display text-3xl font-semibold sm:text-4xl">{user?.name}</h1>
+              <h1 className="font-display text-3xl font-semibold sm:text-4xl">{user.name}</h1>
               <p className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
-                <Sparkles className="h-4 w-4 text-primary" /> Cliente fidèle
+                <Sparkles className="h-4 w-4 text-primary" /> Membre depuis juillet 2024
               </p>
             </div>
             <Button asChild size="lg" className="rounded-full shadow-glow">
-              <Link to="/reservation"><CalendarPlus className="mr-2 h-4 w-4" /> Prendre rendez-vous</Link>
+              <Link to="/reservation">
+                <CalendarPlus className="mr-2 h-4 w-4" /> Prendre rendez-vous
+              </Link>
             </Button>
           </div>
         </motion.div>
 
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {/* Stats */}
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {[
             { label: 'Rendez-vous à venir', value: String(upcoming.length), icon: Clock, color: 'text-primary' },
-            //{ label: 'Visites totales', value: String(visits), icon: Heart, color: 'text-rose-500' },
+            { label: 'Visites totales', value: String(visits), icon: Heart, color: 'text-rose-500' },
             { label: 'Total dépensé', value: formatAriary(totalSpent), icon: Wallet, color: 'text-accent' },
             { label: 'Points fidélité', value: String(loyaltyPoints), icon: Gift, color: 'text-emerald-500' },
           ].map((s, i) => (
@@ -136,18 +164,25 @@ export default function ClientSpace() {
           ))}
         </div>
 
+        {/* Loyalty progress */}
         <motion.div {...fadeUp} transition={{ delay: 0.2 }}>
           <Card className="overflow-hidden border-border/60 bg-gradient-to-br from-primary/5 to-accent/5 shadow-soft">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <span className="grid h-12 w-12 place-items-center rounded-2xl bg-primary/10 text-primary"><Gift className="h-6 w-6" /></span>
+                  <span className="grid h-12 w-12 place-items-center rounded-2xl bg-primary/10 text-primary">
+                    <Gift className="h-6 w-6" />
+                  </span>
                   <div>
                     <p className="font-display text-lg font-semibold">Programme fidélité</p>
-                    <p className="text-sm text-muted-foreground">{loyaltyPoints} points • Plus que {Math.max(0, 500 - loyaltyPoints)} points avant votre soin offert</p>
+                    <p className="text-sm text-muted-foreground">
+                      {loyaltyPoints} points • Plus que {Math.max(0, 500 - loyaltyPoints)} points avant votre soin offert
+                    </p>
                   </div>
                 </div>
-                <Badge className="gap-1 rounded-full bg-primary text-primary-foreground"><Star className="h-3 w-3 fill-current" /> Gold</Badge>
+                <Badge className="gap-1 rounded-full bg-primary text-primary-foreground">
+                  <Star className="h-3 w-3 fill-current" /> Gold
+                </Badge>
               </div>
               <div className="mt-4 h-2 overflow-hidden rounded-full bg-secondary">
                 <motion.div
@@ -161,11 +196,14 @@ export default function ClientSpace() {
           </Card>
         </motion.div>
 
+        {/* Upcoming appointments */}
         <motion.div {...fadeUp} transition={{ delay: 0.25 }}>
           <div className="flex items-center justify-between">
             <h2 className="font-display text-2xl font-semibold">Mes rendez-vous à venir</h2>
             <Button asChild variant="ghost" size="sm" className="rounded-full">
-              <Link to="/reservation">Réserver <ChevronRight className="ml-1 h-4 w-4" /></Link>
+              <Link to="/reservation">
+                Réserver <ChevronRight className="ml-1 h-4 w-4" />
+              </Link>
             </Button>
           </div>
           <div className="mt-4 space-y-3">
@@ -173,28 +211,40 @@ export default function ClientSpace() {
               <Card className="border-dashed border-border/60">
                 <CardContent className="py-10 text-center">
                   <CalendarPlus className="mx-auto h-8 w-8 text-muted-foreground" />
-                  <p className="mt-3 text-sm text-muted-foreground">Aucun rendez-vous à venir.</p>
-                  <Button asChild className="mt-4 rounded-full"><Link to="/reservation">Prendre rendez-vous</Link></Button>
+                  <p className="mt-3 text-sm text-muted-foreground">
+                    Aucun rendez-vous à venir. Réservez votre prochain soin !
+                  </p>
+                  <Button asChild className="mt-4 rounded-full">
+                    <Link to="/reservation">Prendre rendez-vous</Link>
+                  </Button>
                 </CardContent>
               </Card>
             ) : (
-              upcoming.map((a) => {
-                const Icon = statusIcon[a.status];
+              upcoming.map((a: Appointment) => {
+                const Icon = statusIcon[a.status] || CheckCircle2;
                 return (
                   <Card key={a.id} className="border-border/60 shadow-soft transition-all hover:shadow-glow">
                     <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
                       <div className="flex items-center gap-3">
-                        <span className="grid h-12 w-12 place-items-center rounded-2xl bg-primary/10 text-primary"><Icon className="h-5 w-5" /></span>
+                        <span className="grid h-12 w-12 place-items-center rounded-2xl bg-primary/10 text-primary">
+                          <Icon className="h-5 w-5" />
+                        </span>
                         <div>
                           <p className="font-medium">{a.serviceName}</p>
                           <p className="text-xs text-muted-foreground">
-                            {new Date(a.date).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })} à {a.time}
+                            {new Date(a.date).toLocaleDateString('fr-FR', {
+                              weekday: 'long',
+                              day: 'numeric',
+                              month: 'long',
+                            })} à {a.time}
                           </p>
                         </div>
                       </div>
                       <div className="flex items-center justify-between gap-3 sm:justify-end">
                         <span className="text-sm font-semibold text-primary">{formatAriary(a.price)}</span>
-                        <span className={cn('rounded-full border px-2.5 py-0.5 text-xs', STATUS_COLORS[a.status])}>{STATUS_LABELS[a.status]}</span>
+                        <span className={cn('rounded-full border px-2.5 py-0.5 text-xs', statusColors[a.status])}>
+                          {statusLabels[a.status]}
+                        </span>
                       </div>
                     </CardContent>
                   </Card>
@@ -204,25 +254,34 @@ export default function ClientSpace() {
           </div>
         </motion.div>
 
+        {/* History */}
         <motion.div {...fadeUp} transition={{ delay: 0.3 }}>
           <h2 className="font-display text-2xl font-semibold">Historique</h2>
           <Card className="mt-4 border-border/60 shadow-soft">
             <CardContent className="p-0">
               <div className="divide-y divide-border/60">
                 {past.length === 0 ? (
-                  <p className="py-10 text-center text-sm text-muted-foreground">Aucun historique pour le moment.</p>
+                  <p className="py-10 text-center text-sm text-muted-foreground">
+                    Aucun historique pour le moment.
+                  </p>
                 ) : (
-                  past.map((a) => (
+                  past.map((a: Appointment) => (
                     <div key={a.id} className="flex items-center justify-between p-4">
                       <div>
                         <p className="text-sm font-medium">{a.serviceName}</p>
                         <p className="text-xs text-muted-foreground">
-                          {new Date(a.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })} à {a.time}
+                          {new Date(a.date).toLocaleDateString('fr-FR', {
+                            day: 'numeric',
+                            month: 'long',
+                            year: 'numeric',
+                          })} à {a.time}
                         </p>
                       </div>
                       <div className="flex items-center gap-3">
                         <span className="text-sm font-medium text-primary">{formatAriary(a.price)}</span>
-                        <span className={cn('rounded-full border px-2.5 py-0.5 text-xs', STATUS_COLORS[a.status])}>{STATUS_LABELS[a.status]}</span>
+                        <span className={cn('rounded-full border px-2.5 py-0.5 text-xs', statusColors[a.status])}>
+                          {statusLabels[a.status]}
+                        </span>
                       </div>
                     </div>
                   ))
@@ -232,16 +291,19 @@ export default function ClientSpace() {
           </Card>
         </motion.div>
 
+        {/* Recommended services */}
         <motion.div {...fadeUp} transition={{ delay: 0.35 }}>
           <h2 className="font-display text-2xl font-semibold">Recommandé pour vous</h2>
           <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {popularServices.map((s) => (
+            {services.filter((s) => s.popular).slice(0, 3).map((s) => (
               <Card key={s.id} className="group overflow-hidden border-border/60 shadow-soft transition-all hover:-translate-y-1 hover:shadow-glow">
                 <div className="relative aspect-[4/3] overflow-hidden">
                   <img src={s.image} alt={s.name} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />
-                  <Badge className="absolute left-3 top-3 gap-1 rounded-full bg-primary text-primary-foreground shadow">
-                    <Sparkles className="h-3 w-3" /> Populaire
-                  </Badge>
+                  {s.popular && (
+                    <Badge className="absolute left-3 top-3 gap-1 rounded-full bg-primary text-primary-foreground shadow">
+                      <Sparkles className="h-3 w-3" /> Populaire
+                    </Badge>
+                  )}
                 </div>
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">

@@ -95,6 +95,28 @@ export default function Dashboard() {
   const apptChartData = appointmentsByMonth.map((d) => ({ mois: d.label, rdv: d.value }));
   const pieData = servicePopularity.map((s) => ({ name: s.name, value: s.percentage }));
 
+  // Formatters avec typage permissif pour Recharts
+  const formatCurrencyTooltip = (value: any): string => {
+    if (typeof value === 'number') {
+      return formatAriary(value);
+    }
+    return String(value ?? '0');
+  };
+
+  const formatMillionsYAxis = (value: any): string => {
+    if (typeof value === 'number') {
+      return `${value / 1000000}M`;
+    }
+    return String(value ?? '0');
+  };
+
+  const formatPercentageTooltip = (value: any): string => {
+    if (typeof value === 'number') {
+      return `${value}%`;
+    }
+    return String(value ?? '0%');
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -159,10 +181,19 @@ export default function Dashboard() {
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
                   <XAxis dataKey="mois" tickLine={false} axisLine={false} fontSize={12} />
-                  <YAxis tickFormatter={(v) => `${v / 1000000}M`} tickLine={false} axisLine={false} fontSize={12} />
+                  <YAxis 
+                    tickFormatter={formatMillionsYAxis} 
+                    tickLine={false} 
+                    axisLine={false} 
+                    fontSize={12} 
+                  />
                   <Tooltip
-                    formatter={(v: number) => formatAriary(v)}
-                    contentStyle={{ borderRadius: 12, border: '1px solid hsl(var(--border))', background: 'hsl(var(--card))' }}
+                    formatter={formatCurrencyTooltip}
+                    contentStyle={{ 
+                      borderRadius: 12, 
+                      border: '1px solid hsl(var(--border))', 
+                      background: 'hsl(var(--card))' 
+                    }}
                   />
                   <Area type="monotone" dataKey="montant" stroke="hsl(340 55% 62%)" strokeWidth={2} fill="url(#rev)" />
                 </AreaChart>
@@ -184,7 +215,14 @@ export default function Dashboard() {
                       <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
                     ))}
                   </Pie>
-                  <Tooltip formatter={(v: number) => `${v}%`} contentStyle={{ borderRadius: 12, border: '1px solid hsl(var(--border))', background: 'hsl(var(--card))' }} />
+                  <Tooltip 
+                    formatter={formatPercentageTooltip} 
+                    contentStyle={{ 
+                      borderRadius: 12, 
+                      border: '1px solid hsl(var(--border))', 
+                      background: 'hsl(var(--card))' 
+                    }} 
+                  />
                   <Legend wrapperStyle={{ fontSize: 12 }} />
                 </PieChart>
               </ResponsiveContainer>
@@ -204,7 +242,13 @@ export default function Dashboard() {
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
                 <XAxis dataKey="mois" tickLine={false} axisLine={false} fontSize={12} />
                 <YAxis tickLine={false} axisLine={false} fontSize={12} />
-                <Tooltip contentStyle={{ borderRadius: 12, border: '1px solid hsl(var(--border))', background: 'hsl(var(--card))' }} />
+                <Tooltip 
+                  contentStyle={{ 
+                    borderRadius: 12, 
+                    border: '1px solid hsl(var(--border))', 
+                    background: 'hsl(var(--card))' 
+                  }} 
+                />
                 <Bar dataKey="rdv" radius={[8, 8, 0, 0]} fill="hsl(40 55% 62%)" />
               </BarChart>
             </ResponsiveContainer>
