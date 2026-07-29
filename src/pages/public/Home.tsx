@@ -14,7 +14,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { reviews, salonInfo, formatAriary } from '@/lib/data';
+import { salonInfo, formatAriary } from '@/lib/data';
 import { useNailServices } from '@/hooks/useNailServices';
 import { supabase } from '@/lib/supabase';
 
