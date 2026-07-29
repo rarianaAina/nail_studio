@@ -63,7 +63,7 @@ export default function Auth() {
         <div className="absolute -left-24 bottom-10 h-96 w-96 rounded-full bg-accent/20 blur-3xl" />
         <div className="relative flex items-center gap-2">
           <span className="grid h-11 w-11 place-items-center rounded-full bg-primary/15 text-primary"><CalendarHeart className="h-5 w-5" /></span>
-          <div><p className="font-display text-xl font-semibold">Harrys Studio</p><p className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">Nail Studio</p></div>
+          <div><p className="font-display text-xl font-semibold">Harrys Studio</p></div>
         </div>
         <div className="relative">
           <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7 }}
