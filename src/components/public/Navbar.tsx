@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, X, CalendarHeart } from 'lucide-react';
+import { Menu, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+
+const LOGO_URL = 'https://tzgcyehdjgqxljjttflj.supabase.co/storage/v1/object/public/Galerie%20v2/WhatsApp%20Image%202026-07-23%20at%2010.41.28%20(1).jpeg';
 
 const links = [
   { to: '/', label: 'Accueil' },
@@ -37,9 +39,11 @@ export default function Navbar() {
     >
       <nav className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
         <Link to="/" className="flex items-center gap-2">
-          <span className="grid h-10 w-10 place-items-center rounded-full bg-primary/10 text-primary">
-            <CalendarHeart className="h-5 w-5" />
-          </span>
+          <img 
+            src={LOGO_URL} 
+            alt="Harrys Studio Logo" 
+            className="h-10 w-10 rounded-full object-cover border-2 border-primary/20"
+          />
           <span className="flex flex-col leading-tight">
             <span className="font-display text-xl font-semibold text-foreground">
               Harrys Studio

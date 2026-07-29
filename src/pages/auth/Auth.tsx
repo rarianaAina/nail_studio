@@ -2,8 +2,8 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  CalendarHeart, Sparkles, Mail, Lock, User as UserIcon,
-  Phone, ArrowRight, Eye, EyeOff, ShieldCheck, Heart, Star,
+  Mail, Lock, User as UserIcon,
+  Phone, ArrowRight, Eye, EyeOff, ShieldCheck, Heart,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,6 +14,8 @@ import { useAuth } from '@/hooks/useAuth';
 import type { UserRole } from '@/types/user';
 
 type Mode = 'login' | 'register';
+
+const LOGO_URL = 'https://tzgcyehdjgqxljjttflj.supabase.co/storage/v1/object/public/Galerie%20v2/WhatsApp%20Image%202026-07-23%20at%2010.41.28%20(1).jpeg';
 
 export default function Auth() {
   const { login, register } = useAuth();
@@ -47,13 +49,6 @@ export default function Auth() {
     }
   };
 
-  // const fillDemo = (r: UserRole) => {
-  //   setRole(r);
-  //   setMode('login');
-  //   set('email', r === 'admin' ? 'admin@nida.mg' : 'cliente@nida.mg');
-  //   set('password', r === 'admin' ? 'admin123' : 'cliente123');
-  // };
-
   return (
     <div className="grid min-h-screen lg:grid-cols-2">
       {/* Left panel */}
@@ -61,9 +56,15 @@ export default function Auth() {
         <div className="absolute inset-0 bg-grid opacity-30" />
         <div className="absolute -right-24 top-10 h-96 w-96 rounded-full bg-primary/20 blur-3xl" />
         <div className="absolute -left-24 bottom-10 h-96 w-96 rounded-full bg-accent/20 blur-3xl" />
-        <div className="relative flex items-center gap-2">
-          <span className="grid h-11 w-11 place-items-center rounded-full bg-primary/15 text-primary"><CalendarHeart className="h-5 w-5" /></span>
-          <div><p className="font-display text-xl font-semibold">Harrys Studio</p></div>
+        <div className="relative flex items-center gap-3">
+          <img 
+            src={LOGO_URL} 
+            alt="Harrys Studio Logo" 
+            className="h-12 w-12 rounded-full object-cover border-2 border-white/20"
+          />
+          <div>
+            <p className="font-display text-xl font-semibold">Harrys Studio</p>
+          </div>
         </div>
         <div className="relative">
           <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7 }}
@@ -82,9 +83,16 @@ export default function Auth() {
       <div className="relative flex items-center justify-center overflow-y-auto bg-background px-4 py-10 sm:px-6 lg:px-8">
         <div className="absolute inset-0 bg-grid opacity-[0.15] lg:hidden" />
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="relative w-full max-w-md">
-          <div className="mb-8 flex items-center justify-center gap-2 lg:hidden">
-            <span className="grid h-11 w-11 place-items-center rounded-full bg-primary/15 text-primary"><CalendarHeart className="h-5 w-5" /></span>
-            <div><p className="font-display text-xl font-semibold">Harrys Studio</p><p className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">Nail Studio</p></div>
+          <div className="mb-8 flex items-center justify-center gap-3 lg:hidden">
+            <img 
+              src={LOGO_URL} 
+              alt="Harrys Studio Logo" 
+              className="h-12 w-12 rounded-full object-cover border-2 border-primary/20"
+            />
+            <div>
+              <p className="font-display text-xl font-semibold">Harrys Studio</p>
+              <p className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">Nail Studio</p>
+            </div>
           </div>
 
           <div className="rounded-3xl border border-border/60 bg-card p-6 shadow-soft sm:p-8">
@@ -158,18 +166,6 @@ export default function Auth() {
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
                 </form>
-
-                {/* <div className="mt-6 border-t border-border/60 pt-5">
-                  <p className="mb-3 text-center text-xs text-muted-foreground">Accès démo rapide</p>
-                  <div className="grid grid-cols-2 gap-2">
-                    <Button size="sm" variant="outline" className="rounded-full text-xs" onClick={() => fillDemo('client')}>
-                      <Heart className="mr-1.5 h-3.5 w-3.5" /> Cliente démo
-                    </Button>
-                    <Button size="sm" variant="outline" className="rounded-full text-xs" onClick={() => fillDemo('admin')}>
-                      <ShieldCheck className="mr-1.5 h-3.5 w-3.5" /> Admin démo
-                    </Button>
-                  </div>
-                </div> */}
               </motion.div>
             </AnimatePresence>
           </div>

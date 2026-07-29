@@ -19,6 +19,8 @@ import { useNailServices } from '@/hooks/useNailServices';
 import { useSettings } from '@/hooks/useSettings';
 import { supabase } from '@/lib/supabase';
 
+const LOGO_URL = 'https://tzgcyehdjgqxljjttflj.supabase.co/storage/v1/object/public/Galerie%20v2/WhatsApp%20Image%202026-07-23%20at%2010.41.28%20(1).jpeg';
+
 const fadeUp = {
   initial: { opacity: 0, y: 24 },
   whileInView: { opacity: 1, y: 0 },
@@ -115,6 +117,13 @@ export default function Home() {
             </div>
             <div className="mt-10 flex items-center justify-center gap-6 lg:justify-start">
               <div className="flex -space-x-3">
+                <Link to="/">
+                  <img
+                    src={LOGO_URL}
+                    alt="Harrys Studio Logo"
+                    className="h-10 w-10 rounded-full border-2 border-white object-cover cursor-pointer transition-transform hover:scale-105"
+                  />
+                </Link>
                 {[3997389, 3997391, 704815].map((id) => (
                   <img
                     key={id}
