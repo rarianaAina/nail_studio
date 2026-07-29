@@ -74,15 +74,8 @@ export default function Auth() {
             className="mt-5 max-w-md text-foreground/70">
             Connectez-vous pour réserver vos rendez-vous, suivre votre historique et profiter d'offres exclusives.
           </motion.p>
-          <div className="mt-10 flex items-center gap-6">
-            <div className="flex items-center gap-2"><Star className="h-4 w-4 fill-accent text-accent" /><span className="text-sm font-medium">4.9/5</span></div>
-            <div className="h-6 w-px bg-border" />
-            <div className="flex items-center gap-2 text-sm text-muted-foreground"><Heart className="h-4 w-4 text-primary" /> +450 clientes</div>
-            <div className="h-6 w-px bg-border" />
-            <div className="flex items-center gap-2 text-sm text-muted-foreground"><Sparkles className="h-4 w-4 text-primary" /> 8 ans</div>
-          </div>
         </div>
-        <div className="relative text-xs text-muted-foreground">© {new Date().getFullYear()} Harrys Studio — Antananarivo, Madagascar</div>
+        <div className="relative text-xs text-muted-foreground">© {new Date().getFullYear()} Harrys Studio — Paris, France</div>
       </div>
 
       {/* Right form */}
