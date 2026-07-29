@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Search, Eye, Pencil, Check, X, CalendarPlus, Bell } from 'lucide-react';
+import { Search, Eye, Pencil, Check, X, CalendarPlus, Bell, CreditCard } from 'lucide-react';
 import { useNailServices } from '@/hooks/useNailServices';
 import { useClients } from '@/hooks/useClients';
 import {
@@ -28,6 +28,23 @@ import { formatAriary, STATUS_COLORS, STATUS_LABELS } from '@/utils';
 import type { Appointment, AppointmentStatus } from '@/types';
 
 const FILTERS: ('Tous' | AppointmentStatus)[] = ['Tous', 'pending', 'confirmed', 'completed', 'cancelled'];
+
+// ✅ Mapping des moyens de paiement
+const PAYMENT_METHOD_LABELS: Record<string, string> = {
+  cash: 'Espèces',
+  card: 'Carte bancaire',
+  mobile_money: 'Mobile Money',
+  bank_transfer: 'Virement bancaire',
+  check: 'Chèque',
+};
+
+const PAYMENT_METHOD_ICONS: Record<string, React.ReactNode> = {
+  cash: '💵',
+  card: '💳',
+  mobile_money: '📱',
+  bank_transfer: '🏦',
+  check: '📝',
+};
 
 export default function Appointments() {
   const { appointments, updateStatus, createAppointment, refresh } = useAppointments();
@@ -377,8 +394,6 @@ export default function Appointments() {
                   let phone = newAppt.phone;
                   let email = newAppt.email || undefined;
 
-                  // If admin typed a new client manually, try to reuse an
-                  // existing client by email to avoid duplicates.
                   if (!clientId && email) {
                     const { data: existing } = await supabase
                       .from('clients')
@@ -393,7 +408,6 @@ export default function Appointments() {
                     }
                   }
 
-                  // If still no client and we have enough info, create one.
                   if (!clientId && clientName && phone) {
                     const { data: created, error: clientErr } = await supabase
                       .from('clients')
@@ -450,6 +464,22 @@ export default function Appointments() {
               <div className="flex justify-between"><span className="text-muted-foreground">Date</span><span>{new Date(viewing.date).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</span></div>
               <div className="flex justify-between"><span className="text-muted-foreground">Heure</span><span>{viewing.time}</span></div>
               <div className="flex justify-between"><span className="text-muted-foreground">Statut</span><Badge className={cn('border', STATUS_COLORS[viewing.status])}>{STATUS_LABELS[viewing.status]}</Badge></div>
+              
+              {/* ✅ Affichage du moyen de paiement */}
+              <div className="flex justify-between items-center">
+                <span className="text-muted-foreground">Moyen de paiement</span>
+                <span className="font-medium flex items-center gap-2">
+                  {viewing.paymentMethod ? (
+                    <>
+                      <span>{PAYMENT_METHOD_ICONS[viewing.paymentMethod]}</span>
+                      {PAYMENT_METHOD_LABELS[viewing.paymentMethod] || viewing.paymentMethod}
+                    </>
+                  ) : (
+                    <span className="text-muted-foreground">Non renseigné</span>
+                  )}
+                </span>
+              </div>
+              
               {viewing.status === 'confirmed' && reminderSettings?.enabled && (
                 <div className="mt-1 flex items-center gap-2 rounded-xl border border-primary/20 bg-primary/5 px-3 py-2">
                   <Bell className="h-4 w-4 text-primary" />
