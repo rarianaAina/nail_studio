@@ -47,25 +47,40 @@ export default function Statistics() {
     { label: 'Fidélisation', value: `${dashboardStats?.retentionRate ?? 0}%`, icon: Heart, color: 'text-emerald-500' },
   ];
 
-  // Formatters typés correctement
-  const formatAriaryTooltip = (value: number | undefined): string => {
-    if (value === undefined) return '0 Ar';
-    return formatAriary(value);
+  // Formatters avec un typage permissif
+  const formatAriaryTooltip = (value: any): string => {
+    if (typeof value === 'number') {
+      return formatAriary(value);
+    }
+    return String(value ?? '0');
   };
 
-  const formatCurrencyYAxis = (value: number | undefined): string => {
-    if (value === undefined) return '0';
-    return `${value / 1000}k`;
+  const formatCurrencyYAxis = (value: any): string => {
+    if (typeof value === 'number') {
+      return `${value / 1000}k`;
+    }
+    return String(value ?? '0');
   };
 
-  const formatMillionsYAxis = (value: number | undefined): string => {
-    if (value === undefined) return '0';
-    return `${value / 1000000}M`;
+  const formatMillionsYAxis = (value: any): string => {
+    if (typeof value === 'number') {
+      return `${value / 1000000}M`;
+    }
+    return String(value ?? '0');
   };
 
-  const formatPercentageTooltip = (value: number | undefined): string => {
-    if (value === undefined) return '0%';
-    return `${value}%`;
+  const formatPercentageYAxis = (value: any): string => {
+    if (typeof value === 'number') {
+      return `${value}%`;
+    }
+    return String(value ?? '0%');
+  };
+
+  const formatPercentageTooltip = (value: any): string => {
+    if (typeof value === 'number') {
+      return `${value}%`;
+    }
+    return String(value ?? '0%');
   };
 
   return (
@@ -151,8 +166,11 @@ export default function Statistics() {
                 <LineChart data={retentionData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
                   <XAxis dataKey="mois" tickLine={false} axisLine={false} fontSize={12} />
-                  <YAxis tickFormatter={formatPercentageTooltip} tickLine={false} axisLine={false} fontSize={12} />
-                  <Tooltip contentStyle={{ borderRadius: 12, border: '1px solid hsl(var(--border))', background: 'hsl(var(--card))' }} />
+                  <YAxis tickFormatter={formatPercentageYAxis} tickLine={false} axisLine={false} fontSize={12} />
+                  <Tooltip 
+                    formatter={formatPercentageTooltip}
+                    contentStyle={{ borderRadius: 12, border: '1px solid hsl(var(--border))', background: 'hsl(var(--card))' }} 
+                  />
                   <Legend wrapperStyle={{ fontSize: 12 }} />
                   <Line type="monotone" dataKey="taux" name="Fidélisation" stroke="hsl(160 60% 45%)" strokeWidth={3} dot={{ r: 4 }} />
                   <Line type="monotone" dataKey="annul" name="Annulation" stroke="hsl(0 70% 60%)" strokeWidth={3} dot={{ r: 4 }} />
