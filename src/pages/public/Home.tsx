@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { useEffect, useState } from 'react';
 import {
   CalendarHeart,
   Sparkles,
@@ -16,8 +17,9 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { reviews, galleryItems, salonInfo, formatAriary } from '@/lib/data';
+import { reviews, salonInfo, formatAriary } from '@/lib/data';
 import { useNailServices } from '@/hooks/useNailServices';
+import { supabase } from '@/lib/supabase';
 
 const fadeUp = {
   initial: { opacity: 0, y: 24 },
@@ -28,6 +30,31 @@ const fadeUp = {
 
 export default function Home() {
   const { services } = useNailServices();
+  const [galleryItems, setGalleryItems] = useState<any[]>([]);
+  const [loadingGallery, setLoadingGallery] = useState(true);
+
+  // Récupérer les images de la galerie depuis Supabase
+  useEffect(() => {
+    const fetchGallery = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('gallery')
+          .select('*')
+          .order('created_at', { ascending: false });
+
+        if (error) throw error;
+        setGalleryItems(data || []);
+      } catch (error) {
+        console.error('Erreur lors du chargement de la galerie:', error);
+        // Fallback sur les données statiques si erreur
+        // setGalleryItems(galleryItemsStatic);
+      } finally {
+        setLoadingGallery(false);
+      }
+    };
+
+    fetchGallery();
+  }, []);
 
   return (
     <div className="overflow-hidden">
@@ -312,7 +339,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* GALERIE */}
+      {/* GALERIE - Utilise les données de la base de données */}
       <section className="bg-secondary/40 py-20 sm:py-28">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <motion.div {...fadeUp} className="mx-auto max-w-3xl text-center">
@@ -324,32 +351,49 @@ export default function Home() {
             </h2>
           </motion.div>
 
-          <div className="mt-14 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-            {galleryItems.slice(0, 8).map((g, i) => (
-              <motion.div
-                key={g.id}
-                {...fadeUp}
-                transition={{ duration: 0.4, delay: i * 0.05 }}
-                className={`group relative overflow-hidden rounded-2xl shadow-soft ${
-                  i % 5 === 0 ? 'sm:col-span-2 sm:row-span-2' : ''
-                }`}
-              >
-                <div className={`aspect-square ${i % 5 === 0 ? 'sm:aspect-auto sm:h-full' : ''}`}>
-                  <img
-                    src={g.image}
-                    alt={g.title}
-                    className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
-                  />
-                </div>
-                <div className="absolute inset-0 flex items-end bg-gradient-to-t from-foreground/60 via-transparent to-transparent opacity-0 transition-opacity group-hover:opacity-100">
-                  <div className="p-4 text-white">
-                    <p className="text-xs uppercase tracking-wider text-white/80">{g.category}</p>
-                    <p className="font-display text-lg font-semibold">{g.title}</p>
+          {loadingGallery ? (
+            <div className="mt-14 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+              {[...Array(8)].map((_, i) => (
+                <div
+                  key={i}
+                  className={`aspect-square animate-pulse rounded-2xl bg-secondary ${
+                    i % 5 === 0 ? 'sm:col-span-2 sm:row-span-2' : ''
+                  }`}
+                />
+              ))}
+            </div>
+          ) : galleryItems.length === 0 ? (
+            <div className="mt-14 text-center text-muted-foreground">
+              <p>Aucune image dans la galerie pour le moment.</p>
+            </div>
+          ) : (
+            <div className="mt-14 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+              {galleryItems.slice(0, 8).map((g, i) => (
+                <motion.div
+                  key={g.id}
+                  {...fadeUp}
+                  transition={{ duration: 0.4, delay: i * 0.05 }}
+                  className={`group relative overflow-hidden rounded-2xl shadow-soft ${
+                    i % 5 === 0 ? 'sm:col-span-2 sm:row-span-2' : ''
+                  }`}
+                >
+                  <div className={`aspect-square ${i % 5 === 0 ? 'sm:aspect-auto sm:h-full' : ''}`}>
+                    <img
+                      src={g.image}
+                      alt={g.title}
+                      className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
+                    />
                   </div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
+                  <div className="absolute inset-0 flex items-end bg-gradient-to-t from-foreground/60 via-transparent to-transparent opacity-0 transition-opacity group-hover:opacity-100">
+                    <div className="p-4 text-white">
+                      <p className="text-xs uppercase tracking-wider text-white/80">{g.category}</p>
+                      <p className="font-display text-lg font-semibold">{g.title}</p>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          )}
 
           <div className="mt-10 text-center">
             <Button asChild variant="outline" className="rounded-full">
@@ -421,6 +465,9 @@ export default function Home() {
           <div className="absolute -right-20 -top-20 h-72 w-72 rounded-full bg-white/10 blur-3xl" />
           <div className="absolute -bottom-24 -left-20 h-72 w-72 rounded-full bg-accent/30 blur-3xl" />
           <div className="relative">
+            <h2 className="font-display text-4xl font-semibold sm:text-5xl">
+              Prête à révéler votre NidaNail ?
+            </h2>
             <p className="mx-auto mt-4 max-w-xl text-primary-foreground/90">
               Réservez votre créneau en quelques secondes. Notre équipe vous
               confirmera votre rendez-vous dans les meilleurs délais.
@@ -472,6 +519,30 @@ export default function Home() {
                   </div>
                 </div>
               </div>
+            </motion.div>
+
+            <motion.div {...fadeUp} transition={{ delay: 0.1 }}>
+              <p className="text-sm font-medium uppercase tracking-[0.25em] text-primary">
+                Horaires
+              </p>
+              <h2 className="mt-3 font-display text-4xl font-semibold text-foreground">
+                Heures d'ouverture
+              </h2>
+              <Card className="mt-8 border-border/60 shadow-soft">
+                <CardContent className="divide-y divide-border/60 p-2">
+                  {salonInfo.hours.map((h) => (
+                    <div
+                      key={h.day}
+                      className="flex items-center justify-between px-4 py-3 text-sm"
+                    >
+                      <span className="font-medium">{h.day}</span>
+                      <span className={h.closed ? 'text-destructive' : 'text-muted-foreground'}>
+                        {h.closed ? 'Fermé' : `${h.open} — ${h.close}`}
+                      </span>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
             </motion.div>
           </div>
         </div>
