@@ -421,9 +421,6 @@ export default function Home() {
           <div className="absolute -right-20 -top-20 h-72 w-72 rounded-full bg-white/10 blur-3xl" />
           <div className="absolute -bottom-24 -left-20 h-72 w-72 rounded-full bg-accent/30 blur-3xl" />
           <div className="relative">
-            <h2 className="font-display text-4xl font-semibold sm:text-5xl">
-              Prête à révéler votre NidaNail ?
-            </h2>
             <p className="mx-auto mt-4 max-w-xl text-primary-foreground/90">
               Réservez votre créneau en quelques secondes. Notre équipe vous
               confirmera votre rendez-vous dans les meilleurs délais.

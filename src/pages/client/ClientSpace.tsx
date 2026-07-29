@@ -98,7 +98,7 @@ export default function ClientSpace() {
               <CalendarHeart className="h-5 w-5" />
             </span>
             <div>
-              <p className="font-display text-lg font-semibold leading-tight">NidaNail</p>
+              <p className="font-display text-lg font-semibold leading-tight">Harrys Studio</p>
               <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
                 Mon espace
               </p>

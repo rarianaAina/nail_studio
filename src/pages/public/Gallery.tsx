@@ -40,7 +40,7 @@ export default function Gallery() {
               Nos plus belles réalisations
             </h1>
             <p className="mx-auto mt-4 max-w-2xl text-foreground/70">
-              Une sélection de créations signées NidaNail Nail Studio. Laissez-vous
+              Une sélection de créations signées Harrys Studio. Laissez-vous
               inspirer pour votre prochain rendez-vous.
             </p>
           </motion.div>

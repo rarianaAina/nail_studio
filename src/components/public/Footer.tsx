@@ -13,10 +13,7 @@ export default function Footer() {
                 <CalendarHeart className="h-5 w-5" />
               </span>
               <div>
-                <p className="font-display text-xl font-semibold">NidaNail</p>
-                <p className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">
-                  Nail Studio
-                </p>
+                <p className="font-display text-xl font-semibold">Harrys Studio</p>
               </div>
             </div>
             <p className="mt-4 text-sm text-muted-foreground">
@@ -94,7 +91,7 @@ export default function Footer() {
         </div>
 
         <div className="mt-12 flex flex-col items-center justify-between gap-3 border-t border-border/60 pt-6 text-xs text-muted-foreground sm:flex-row">
-          <p>© {new Date().getFullYear()} NidaNail Nail Studio. Tous droits réservés.</p>
+          <p>© {new Date().getFullYear()} Harrys Studio. Tous droits réservés.</p>
           <p>Conçu avec soin à Antananarivo, Madagascar.</p>
         </div>
       </div>
