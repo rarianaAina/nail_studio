@@ -40,16 +40,25 @@ function rowToSettings(r: BusinessSettingsRow): SalonSettings {
 
 export const settingsService = {
   async get(): Promise<SalonSettings> {
+    console.log('🔄 Récupération des settings depuis business_settings...');
+    
     const { data, error } = await supabase
       .from('business_settings')
       .select('*')
       .maybeSingle();
-    if (error) throw error;
-    console.log('📦 Data brut:', data);
-    console.log('❌ Error:', error);
+    
+    // ✅ AJOUTEZ CE LOG
+    console.log('🔍 Résultat de la requête:', { data, error });
+    
+    if (error) {
+      console.error('❌ Erreur Supabase:', error);
+      throw error;
+    }
+    
     if (!data) {
-      // Fallback defaults if no settings row exists yet
+      console.warn('⚠️ Aucune donnée trouvée');
       return {
+        id: 'default',
         name: 'Harrys Studio',
         tagline: "L'art des ongles, sublimé",
         address: '',
@@ -61,6 +70,8 @@ export const settingsService = {
         hours: [],
       };
     }
+    
+    console.log('✅ Données trouvées:', data);
     return rowToSettings(data as BusinessSettingsRow);
   },
 
