@@ -45,6 +45,8 @@ export const settingsService = {
       .select('*')
       .maybeSingle();
     if (error) throw error;
+    console.log('📦 Data brut:', data);
+    console.log('❌ Error:', error);
     if (!data) {
       // Fallback defaults if no settings row exists yet
       return {
