@@ -19,6 +19,7 @@ export function useSettings(): UseSettingsReturn {
     try {
       setLoading(true);
       const data = await settingsService.get();
+      console.log('✅ Settings chargés:', data);
       setSettings(data);
       setError(null);
     } catch (e) {
