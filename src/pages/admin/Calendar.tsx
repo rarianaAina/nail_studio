@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/utils/cn';
 import { useAppointments } from '@/hooks/useAppointments';
 import { formatAriary, STATUS_COLORS, STATUS_LABELS } from '@/utils';
+import { getTotalPrice, getServiceNames } from '@/types';
 import type { AppointmentStatus } from '@/types';
 
 const weekdays = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
@@ -93,11 +94,14 @@ export default function CalendarPage() {
                       )}
                     </div>
                     <div className="mt-1 hidden space-y-0.5 sm:block">
-                      {appts.slice(0, 2).map((a) => (
-                        <div key={a.id} className="truncate rounded-md bg-primary/10 px-1.5 py-0.5 text-[10px] text-primary">
-                          {a.time} {a.clientName.split(' ')[0]}
-                        </div>
-                      ))}
+                      {appts.slice(0, 2).map((a) => {
+                        const serviceNames = getServiceNames(a);
+                        return (
+                          <div key={a.id} className="truncate rounded-md bg-primary/10 px-1.5 py-0.5 text-[10px] text-primary">
+                            {a.time} {a.clientName.split(' ')[0]} - {serviceNames}
+                          </div>
+                        );
+                      })}
                       {appts.length > 2 && (
                         <div className="px-1.5 text-[10px] text-muted-foreground">+{appts.length - 2} autres</div>
                       )}
@@ -127,26 +131,30 @@ export default function CalendarPage() {
               {selectedAppointments.length === 0 ? (
                 <p className="py-8 text-center text-sm text-muted-foreground">Aucun rendez-vous ce jour.</p>
               ) : (
-                selectedAppointments.map((a) => (
-                  <motion.div
-                    key={a.id}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="rounded-xl border border-border/60 bg-secondary/30 p-3"
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="flex items-center gap-1.5 text-sm font-medium">
-                        <Clock className="h-3.5 w-3.5 text-primary" /> {a.time}
-                      </span>
-                      <Badge className={cn('border', STATUS_COLORS[a.status as AppointmentStatus])}>
-                        {STATUS_LABELS[a.status]}
-                      </Badge>
-                    </div>
-                    <p className="mt-2 text-sm font-medium">{a.clientName}</p>
-                    <p className="text-xs text-muted-foreground">{a.serviceName}</p>
-                    <p className="mt-1 text-xs font-medium text-primary">{formatAriary(a.price)}</p>
-                  </motion.div>
-                ))
+                selectedAppointments.map((a) => {
+                  const totalPrice = getTotalPrice(a);
+                  const serviceNames = getServiceNames(a);
+                  return (
+                    <motion.div
+                      key={a.id}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="rounded-xl border border-border/60 bg-secondary/30 p-3"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="flex items-center gap-1.5 text-sm font-medium">
+                          <Clock className="h-3.5 w-3.5 text-primary" /> {a.time}
+                        </span>
+                        <Badge className={cn('border', STATUS_COLORS[a.status as AppointmentStatus])}>
+                          {STATUS_LABELS[a.status]}
+                        </Badge>
+                      </div>
+                      <p className="mt-2 text-sm font-medium">{a.clientName}</p>
+                      <p className="text-xs text-muted-foreground line-clamp-2">{serviceNames}</p>
+                      <p className="mt-1 text-xs font-medium text-primary">{formatAriary(totalPrice)}</p>
+                    </motion.div>
+                  );
+                })
               )}
             </div>
           </CardContent>

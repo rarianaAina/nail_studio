@@ -41,19 +41,19 @@ function rowToAppointment(r: AppointmentRow): Appointment {
   };
 }
 
-function dtoToRow(data: CreateAppointmentDto): Partial<AppointmentRow> {
-  return {
-    client_id: data.clientId ?? null,
-    client_name: data.clientName,
-    phone: data.phone,
-    email: data.email ?? null,
-    services: [], // Sera rempli après récupération des services
-    date: data.date,
-    time: data.time,
-    payment_method_id: data.paymentMethodId ?? null,
-    notes: data.notes ?? null,
-  };
-}
+// function dtoToRow(data: CreateAppointmentDto): Partial<AppointmentRow> {
+//   return {
+//     client_id: data.clientId ?? null,
+//     client_name: data.clientName,
+//     phone: data.phone,
+//     email: data.email ?? null,
+//     services: [], // Sera rempli après récupération des services
+//     date: data.date,
+//     time: data.time,
+//     payment_method_id: data.paymentMethodId ?? null,
+//     notes: data.notes ?? null,
+//   };
+// }
 
 function patchToRow(data: UpdateAppointmentDto): Partial<AppointmentRow> {
   const row: Record<string, unknown> = {};

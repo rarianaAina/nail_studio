@@ -29,6 +29,7 @@ import { useClients } from '@/hooks/useClients';
 import { useStats } from '@/hooks/useStats';
 import { formatAriary, STATUS_COLORS, STATUS_LABELS } from '@/utils';
 import { todayISO } from '@/utils/formatters';
+import { getServiceNames, getTotalPrice } from '@/types';
 
 const PIE_COLORS = [
   'hsl(340 55% 62%)',
@@ -105,7 +106,7 @@ export default function Dashboard() {
 
   const formatMillionsYAxis = (value: any): string => {
     if (typeof value === 'number') {
-      return `${value / 1000000}M`;
+      return `${(value / 1000000).toFixed(1)}M`;
     }
     return String(value ?? '0');
   };
@@ -262,30 +263,37 @@ export default function Dashboard() {
             <CardTitle className="font-display text-lg">Rendez-vous à venir</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
-            {upcomingAppointments.map((a) => (
-              <div
-                key={a.id}
-                className="flex flex-col gap-3 rounded-xl border border-border/60 bg-secondary/30 p-3 sm:flex-row sm:items-center sm:justify-between"
-              >
-                <div className="flex min-w-0 items-center gap-3">
-                  <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-primary/10 font-display text-sm font-semibold text-primary">
-                    {a.clientName[0]}
-                  </span>
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-medium">{a.clientName}</p>
-                    <p className="truncate text-xs text-muted-foreground">{a.serviceName}</p>
+            {upcomingAppointments.map((a) => {
+              const serviceNames = getServiceNames(a);
+              const totalPrice = getTotalPrice(a);
+              return (
+                <div
+                  key={a.id}
+                  className="flex flex-col gap-3 rounded-xl border border-border/60 bg-secondary/30 p-3 sm:flex-row sm:items-center sm:justify-between"
+                >
+                  <div className="flex min-w-0 items-center gap-3">
+                    <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-primary/10 font-display text-sm font-semibold text-primary">
+                      {a.clientName[0]}
+                    </span>
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium">{a.clientName}</p>
+                      <p className="truncate text-xs text-muted-foreground">{serviceNames}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between gap-3 sm:justify-end">
+                    <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                      <Clock className="h-3 w-3" /> {a.time}
+                    </span>
+                    <span className="shrink-0 text-xs font-medium text-primary">
+                      {formatAriary(totalPrice)}
+                    </span>
+                    <span className={`shrink-0 rounded-full border px-2.5 py-0.5 text-xs ${STATUS_COLORS[a.status]}`}>
+                      {STATUS_LABELS[a.status]}
+                    </span>
                   </div>
                 </div>
-                <div className="flex items-center justify-between gap-3 sm:justify-end">
-                  <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                    <Clock className="h-3 w-3" /> {a.time}
-                  </span>
-                  <span className={`shrink-0 rounded-full border px-2.5 py-0.5 text-xs ${STATUS_COLORS[a.status]}`}>
-                    {STATUS_LABELS[a.status]}
-                  </span>
-                </div>
-              </div>
-            ))}
+              );
+            })}
             {upcomingAppointments.length === 0 && (
               <p className="py-6 text-center text-sm text-muted-foreground">Aucun rendez-vous à venir.</p>
             )}
