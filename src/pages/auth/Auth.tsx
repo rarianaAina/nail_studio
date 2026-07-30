@@ -38,9 +38,10 @@ export default function Auth() {
         toast.success(`Bienvenue, ${u.name.split(' ')[0]} !`);
         navigate(u.role === 'admin' ? '/admin' : '/mon-espace');
       } else {
-        const u = await register({ ...form, role });
+        // ✅ En inscription, le rôle est toujours 'client'
+        const u = await register({ ...form, role: 'client' });
         toast.success(`Compte créé. Bienvenue, ${u.name.split(' ')[0]} !`);
-        navigate(u.role === 'admin' ? '/admin' : '/mon-espace');
+        navigate('/mon-espace');
       }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Une erreur est survenue.');
@@ -113,15 +114,26 @@ export default function Auth() {
                 <h2 className="font-display text-2xl font-semibold">{mode === 'login' ? 'Bon retour parmi nous' : 'Créez votre compte'}</h2>
                 <p className="mt-1 text-sm text-muted-foreground">{mode === 'login' ? 'Connectez-vous pour accéder à votre espace.' : 'Rejoignez Harrys Studio pour réserver en ligne.'}</p>
 
-                <div className="mt-5 grid grid-cols-2 gap-2">
-                  {([{ v: 'client', label: 'Cliente', icon: Heart }, { v: 'admin', label: 'Administrateur', icon: ShieldCheck }] as { v: UserRole; label: string; icon: typeof Heart }[]).map((r) => (
-                    <button key={r.v} type="button" onClick={() => setRole(r.v)}
-                      className={cn('flex items-center justify-center gap-2 rounded-xl border py-2.5 text-sm font-medium transition-all',
-                        role === r.v ? 'border-primary bg-primary/5 text-primary shadow-glow' : 'border-border text-muted-foreground hover:border-primary/40 hover:text-foreground')}>
-                      <r.icon className="h-4 w-4" /> {r.label}
-                    </button>
-                  ))}
-                </div>
+                {/* ✅ Sélecteur de rôle : affiché uniquement en mode connexion */}
+                {mode === 'login' && (
+                  <div className="mt-5 grid grid-cols-2 gap-2">
+                    {([{ v: 'client', label: 'Cliente', icon: Heart }, { v: 'admin', label: 'Administrateur', icon: ShieldCheck }] as { v: UserRole; label: string; icon: typeof Heart }[]).map((r) => (
+                      <button key={r.v} type="button" onClick={() => setRole(r.v)}
+                        className={cn('flex items-center justify-center gap-2 rounded-xl border py-2.5 text-sm font-medium transition-all',
+                          role === r.v ? 'border-primary bg-primary/5 text-primary shadow-glow' : 'border-border text-muted-foreground hover:border-primary/40 hover:text-foreground')}>
+                        <r.icon className="h-4 w-4" /> {r.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {/* ✅ En inscription, on indique que le compte sera client */}
+                {mode === 'register' && (
+                  <div className="mt-4 rounded-xl bg-secondary/50 p-3 text-center text-sm text-muted-foreground">
+                    <Heart className="inline h-4 w-4 text-primary mr-1.5" />
+                    Vous créez un compte <span className="font-medium text-foreground">cliente</span>
+                  </div>
+                )}
 
                 <form onSubmit={submit} className="mt-5 space-y-4">
                   {mode === 'register' && (
