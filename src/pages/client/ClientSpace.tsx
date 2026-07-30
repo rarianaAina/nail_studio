@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
@@ -15,27 +15,14 @@ import {
   CheckCircle2,
   XCircle,
   Hourglass,
-  Trash2,
-  AlertCircle,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-import { toast } from 'sonner';
 import { useAuth } from '@/lib/auth';
-import { useAppointmentSettings } from '@/hooks/useAppointmentSettings';
 import { appointments, services, formatAriary, statusColors, statusLabels } from '@/lib/data';
 import { cn } from '@/lib/utils';
+// Import du type depuis le fichier types
 import type { Appointment } from '@/lib/types';
 
 const fadeUp = {
@@ -54,9 +41,6 @@ const statusIcon: Record<string, typeof CheckCircle2> = {
 export default function ClientSpace() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const { settings: appointmentSettings } = useAppointmentSettings();
-  const [cancellingAppointment, setCancellingAppointment] = useState<Appointment | null>(null);
-  const [isCancelling, setIsCancelling] = useState(false);
 
   // Filtrer les rendez-vous avec une vérification safe
   const myAppointments = useMemo(() => {
@@ -82,63 +66,6 @@ export default function ClientSpace() {
     
   const visits = myAppointments.filter((a: Appointment) => a.status === 'completed').length;
   const loyaltyPoints = visits * 50;
-
-  // ✅ Vérifier si un rendez-vous peut être annulé avec les paramètres de la base
-  const canCancelAppointment = (appointment: Appointment): { allowed: boolean; reason?: string } => {
-    // Vérifier si les annulations sont autorisées
-    if (appointmentSettings?.allowCancellation === false) {
-      return { allowed: false, reason: 'Les annulations ne sont pas autorisées pour le moment.' };
-    }
-
-    const now = new Date();
-    const appointmentDate = new Date(`${appointment.date}T${appointment.time}`);
-    const hoursUntilAppointment = (appointmentDate.getTime() - now.getTime()) / (1000 * 60 * 60);
-    
-    const deadlineHours = appointmentSettings?.cancellationDeadlineHours ?? 24;
-    
-    if (appointment.status === 'cancelled') {
-      return { allowed: false, reason: 'Ce rendez-vous est déjà annulé.' };
-    }
-    if (appointment.status === 'completed') {
-      return { allowed: false, reason: 'Ce rendez-vous est déjà terminé.' };
-    }
-    if (hoursUntilAppointment < deadlineHours) {
-      const label = appointmentSettings?.cancellationDeadlineLabel || `${deadlineHours} heures avant`;
-      return { 
-        allowed: false, 
-        reason: `L'annulation n'est plus possible moins de ${label}.` 
-      };
-    }
-    return { allowed: true };
-  };
-
-  // ✅ Fonction d'annulation
-  const handleCancelAppointment = async (appointment: Appointment) => {
-    setIsCancelling(true);
-    try {
-      // Dans une vraie application, on appellerait le service pour mettre à jour le statut
-      // await updateAppointmentStatus(appointment.id, 'cancelled');
-      
-      // Simulation pour l'exemple
-      const updatedAppointment = { ...appointment, status: 'cancelled' as const };
-      
-      // Mettre à jour localement (dans une vraie app, on rafraîchirait les données)
-      const index = appointments.findIndex((a: Appointment) => a.id === appointment.id);
-      if (index !== -1) {
-        appointments[index] = updatedAppointment;
-      }
-      
-      toast.success(`Rendez-vous "${appointment.serviceName}" annulé avec succès.`);
-      setCancellingAppointment(null);
-      
-      // Rafraîchir la page pour mettre à jour l'affichage (optionnel)
-      // window.location.reload();
-    } catch (error) {
-      toast.error('Une erreur est survenue lors de l\'annulation.');
-    } finally {
-      setIsCancelling(false);
-    }
-  };
 
   const onLogout = () => {
     logout();
@@ -295,9 +222,6 @@ export default function ClientSpace() {
             ) : (
               upcoming.map((a: Appointment) => {
                 const Icon = statusIcon[a.status] || CheckCircle2;
-                const cancelInfo = canCancelAppointment(a);
-                const isCancellable = cancelInfo.allowed;
-
                 return (
                   <Card key={a.id} className="border-border/60 shadow-soft transition-all hover:shadow-glow">
                     <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
@@ -314,12 +238,6 @@ export default function ClientSpace() {
                               month: 'long',
                             })} à {a.time}
                           </p>
-                          {!isCancellable && a.status !== 'cancelled' && (
-                            <p className="mt-1 text-xs text-rose-500 flex items-center gap-1">
-                              <AlertCircle className="h-3 w-3" />
-                              {cancelInfo.reason}
-                            </p>
-                          )}
                         </div>
                       </div>
                       <div className="flex items-center justify-between gap-3 sm:justify-end">
@@ -327,16 +245,6 @@ export default function ClientSpace() {
                         <span className={cn('rounded-full border px-2.5 py-0.5 text-xs', statusColors[a.status])}>
                           {statusLabels[a.status]}
                         </span>
-                        {isCancellable && (
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="text-rose-600 hover:text-rose-700 hover:bg-rose-50"
-                            onClick={() => setCancellingAppointment(a)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        )}
                       </div>
                     </CardContent>
                   </Card>
@@ -412,39 +320,6 @@ export default function ClientSpace() {
           </div>
         </motion.div>
       </main>
-
-      {/* ✅ Dialog de confirmation d'annulation */}
-      <AlertDialog open={!!cancellingAppointment} onOpenChange={(open) => !open && setCancellingAppointment(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Annuler le rendez-vous ?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Vous êtes sur le point d'annuler votre rendez-vous pour{' '}
-              <span className="font-medium text-foreground">{cancellingAppointment?.serviceName}</span>{' '}
-              le{' '}
-              <span className="font-medium text-foreground">
-                {cancellingAppointment && new Date(cancellingAppointment.date).toLocaleDateString('fr-FR', {
-                  weekday: 'long',
-                  day: 'numeric',
-                  month: 'long',
-                })} à {cancellingAppointment?.time}
-              </span>.
-              <br /><br />
-              Cette action est irréversible. Souhaitez-vous continuer ?
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={isCancelling}>Retour</AlertDialogCancel>
-            <AlertDialogAction
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              onClick={() => cancellingAppointment && handleCancelAppointment(cancellingAppointment)}
-              disabled={isCancelling}
-            >
-              {isCancelling ? 'Annulation en cours...' : 'Oui, annuler'}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 }
