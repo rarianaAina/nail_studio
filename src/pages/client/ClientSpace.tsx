@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
@@ -15,15 +15,31 @@ import {
   CheckCircle2,
   XCircle,
   Hourglass,
+  Trash2,
+  AlertCircle,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { useAuth } from '@/lib/auth';
-import { appointments, services, formatAriary, statusColors, statusLabels } from '@/lib/data';
-import { cn } from '@/lib/utils';
-// Import du type depuis le fichier types
-import type { Appointment } from '@/lib/types';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { toast } from 'sonner';
+import { useAuth } from '@/hooks/useAuth';
+import { useAppointments } from '@/hooks/useAppointments';
+import { useNailServices } from '@/hooks/useNailServices';
+import { useAppointmentSettings } from '@/hooks/useAppointmentSettings';
+import { formatAriary, STATUS_COLORS, STATUS_LABELS } from '@/utils';
+import { getTotalPrice, getTotalDuration, getServiceNames } from '@/types';
+import { cn } from '@/utils/cn';
+import type { Appointment } from '@/types';
 
 const fadeUp = {
   initial: { opacity: 0, y: 20 },
@@ -41,31 +57,79 @@ const statusIcon: Record<string, typeof CheckCircle2> = {
 export default function ClientSpace() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const { appointments, updateStatus, refresh } = useAppointments();
+  const { services } = useNailServices();
+  const { settings: appointmentSettings } = useAppointmentSettings();
+  const [cancellingAppointment, setCancellingAppointment] = useState<Appointment | null>(null);
+  const [isCancelling, setIsCancelling] = useState(false);
 
-  // Filtrer les rendez-vous avec une vérification safe
+  // Filtrer les rendez-vous du client connecté
   const myAppointments = useMemo(() => {
-    if (!user) return [];
+    if (!user || !appointments) return [];
     
     return appointments
-      .filter((a: Appointment) => a.email === 'hanta.r@email.mg' || a.clientName === user.name)
-      .sort((a: Appointment, b: Appointment) => (a.date + a.time).localeCompare(b.date + b.time));
-  }, [user]);
+      .filter((a) => {
+        // Filtrer par email ou par nom
+        return a.email === user.email || a.clientName === user.name;
+      })
+      .sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time));
+  }, [appointments, user]);
 
-  // Filtrer avec des vérifications de type
   const upcoming = myAppointments.filter(
-    (a: Appointment) => a.status === 'confirmed' || a.status === 'pending'
+    (a) => a.status === 'confirmed' || a.status === 'pending'
   );
   const past = myAppointments.filter(
-    (a: Appointment) => a.status === 'completed' || a.status === 'cancelled'
+    (a) => a.status === 'completed' || a.status === 'cancelled'
   );
 
-  // Calculs avec vérifications
   const totalSpent = myAppointments
-    .filter((a: Appointment) => a.status === 'completed')
-    .reduce((sum: number, a: Appointment) => sum + (a.price || 0), 0);
+    .filter((a) => a.status === 'completed')
+    .reduce((sum, a) => sum + getTotalPrice(a), 0);
     
-  const visits = myAppointments.filter((a: Appointment) => a.status === 'completed').length;
+  const visits = myAppointments.filter((a) => a.status === 'completed').length;
   const loyaltyPoints = visits * 50;
+
+  // Vérifier si un rendez-vous peut être annulé
+  const canCancelAppointment = (appointment: Appointment): { allowed: boolean; reason?: string } => {
+    if (appointmentSettings?.allowCancellation === false) {
+      return { allowed: false, reason: 'Les annulations ne sont pas autorisées pour le moment.' };
+    }
+
+    const now = new Date();
+    const appointmentDate = new Date(`${appointment.date}T${appointment.time}`);
+    const hoursUntilAppointment = (appointmentDate.getTime() - now.getTime()) / (1000 * 60 * 60);
+    
+    const deadlineHours = appointmentSettings?.cancellationDeadlineHours ?? 24;
+    
+    if (appointment.status === 'cancelled') {
+      return { allowed: false, reason: 'Ce rendez-vous est déjà annulé.' };
+    }
+    if (appointment.status === 'completed') {
+      return { allowed: false, reason: 'Ce rendez-vous est déjà terminé.' };
+    }
+    if (hoursUntilAppointment < deadlineHours) {
+      const label = appointmentSettings?.cancellationDeadlineLabel || `${deadlineHours} heures avant`;
+      return { 
+        allowed: false, 
+        reason: `L'annulation n'est plus possible moins de ${label}.` 
+      };
+    }
+    return { allowed: true };
+  };
+
+  const handleCancelAppointment = async (appointment: Appointment) => {
+    setIsCancelling(true);
+    try {
+      await updateStatus(appointment.id, 'cancelled');
+      toast.success(`Rendez-vous "${getServiceNames(appointment)}" annulé avec succès.`);
+      setCancellingAppointment(null);
+      await refresh();
+    } catch (error) {
+      toast.error('Une erreur est survenue lors de l\'annulation.');
+    } finally {
+      setIsCancelling(false);
+    }
+  };
 
   const onLogout = () => {
     logout();
@@ -81,7 +145,7 @@ export default function ClientSpace() {
             Veuillez vous connecter pour accéder à votre espace.
           </p>
           <Button asChild className="mt-4 w-full">
-            <Link to="/login">Se connecter</Link>
+            <Link to="/connexion">Se connecter</Link>
           </Button>
         </Card>
       </div>
@@ -131,7 +195,7 @@ export default function ClientSpace() {
               <p className="text-sm text-muted-foreground">Bienvenue,</p>
               <h1 className="font-display text-3xl font-semibold sm:text-4xl">{user.name}</h1>
               <p className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
-                <Sparkles className="h-4 w-4 text-primary" /> Membre depuis juillet 2024
+                <Sparkles className="h-4 w-4 text-primary" /> Cliente fidèle
               </p>
             </div>
             <Button asChild size="lg" className="rounded-full shadow-glow">
@@ -220,8 +284,13 @@ export default function ClientSpace() {
                 </CardContent>
               </Card>
             ) : (
-              upcoming.map((a: Appointment) => {
+              upcoming.map((a) => {
                 const Icon = statusIcon[a.status] || CheckCircle2;
+                const cancelInfo = canCancelAppointment(a);
+                const isCancellable = cancelInfo.allowed;
+                const serviceNames = getServiceNames(a);
+                const totalPrice = getTotalPrice(a);
+
                 return (
                   <Card key={a.id} className="border-border/60 shadow-soft transition-all hover:shadow-glow">
                     <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
@@ -230,7 +299,7 @@ export default function ClientSpace() {
                           <Icon className="h-5 w-5" />
                         </span>
                         <div>
-                          <p className="font-medium">{a.serviceName}</p>
+                          <p className="font-medium">{serviceNames}</p>
                           <p className="text-xs text-muted-foreground">
                             {new Date(a.date).toLocaleDateString('fr-FR', {
                               weekday: 'long',
@@ -238,13 +307,29 @@ export default function ClientSpace() {
                               month: 'long',
                             })} à {a.time}
                           </p>
+                          {!isCancellable && a.status !== 'cancelled' && (
+                            <p className="mt-1 text-xs text-rose-500 flex items-center gap-1">
+                              <AlertCircle className="h-3 w-3" />
+                              {cancelInfo.reason}
+                            </p>
+                          )}
                         </div>
                       </div>
                       <div className="flex items-center justify-between gap-3 sm:justify-end">
-                        <span className="text-sm font-semibold text-primary">{formatAriary(a.price)}</span>
-                        <span className={cn('rounded-full border px-2.5 py-0.5 text-xs', statusColors[a.status])}>
-                          {statusLabels[a.status]}
+                        <span className="text-sm font-semibold text-primary">{formatAriary(totalPrice)}</span>
+                        <span className={cn('rounded-full border px-2.5 py-0.5 text-xs', STATUS_COLORS[a.status])}>
+                          {STATUS_LABELS[a.status]}
                         </span>
+                        {isCancellable && (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="text-rose-600 hover:text-rose-700 hover:bg-rose-50"
+                            onClick={() => setCancellingAppointment(a)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        )}
                       </div>
                     </CardContent>
                   </Card>
@@ -265,26 +350,30 @@ export default function ClientSpace() {
                     Aucun historique pour le moment.
                   </p>
                 ) : (
-                  past.map((a: Appointment) => (
-                    <div key={a.id} className="flex items-center justify-between p-4">
-                      <div>
-                        <p className="text-sm font-medium">{a.serviceName}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {new Date(a.date).toLocaleDateString('fr-FR', {
-                            day: 'numeric',
-                            month: 'long',
-                            year: 'numeric',
-                          })} à {a.time}
-                        </p>
+                  past.map((a) => {
+                    const serviceNames = getServiceNames(a);
+                    const totalPrice = getTotalPrice(a);
+                    return (
+                      <div key={a.id} className="flex items-center justify-between p-4">
+                        <div>
+                          <p className="text-sm font-medium">{serviceNames}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {new Date(a.date).toLocaleDateString('fr-FR', {
+                              day: 'numeric',
+                              month: 'long',
+                              year: 'numeric',
+                            })} à {a.time}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <span className="text-sm font-medium text-primary">{formatAriary(totalPrice)}</span>
+                          <span className={cn('rounded-full border px-2.5 py-0.5 text-xs', STATUS_COLORS[a.status])}>
+                            {STATUS_LABELS[a.status]}
+                          </span>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-3">
-                        <span className="text-sm font-medium text-primary">{formatAriary(a.price)}</span>
-                        <span className={cn('rounded-full border px-2.5 py-0.5 text-xs', statusColors[a.status])}>
-                          {statusLabels[a.status]}
-                        </span>
-                      </div>
-                    </div>
-                  ))
+                    );
+                  })
                 )}
               </div>
             </CardContent>
@@ -295,31 +384,69 @@ export default function ClientSpace() {
         <motion.div {...fadeUp} transition={{ delay: 0.35 }}>
           <h2 className="font-display text-2xl font-semibold">Recommandé pour vous</h2>
           <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {services.filter((s) => s.popular).slice(0, 3).map((s) => (
-              <Card key={s.id} className="group overflow-hidden border-border/60 shadow-soft transition-all hover:-translate-y-1 hover:shadow-glow">
-                <div className="relative aspect-[4/3] overflow-hidden">
-                  <img src={s.image} alt={s.name} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />
-                  {s.popular && (
-                    <Badge className="absolute left-3 top-3 gap-1 rounded-full bg-primary text-primary-foreground shadow">
-                      <Sparkles className="h-3 w-3" /> Populaire
-                    </Badge>
-                  )}
-                </div>
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <h3 className="font-display text-lg font-semibold">{s.name}</h3>
-                    <span className="text-sm font-semibold text-primary">{formatAriary(s.price)}</span>
+            {services.filter((s) => s.popular).slice(0, 3).map((s) => {
+              const displayPrice = s.price === 0 ? 'Devis' : formatAriary(s.price);
+              return (
+                <Card key={s.id} className="group overflow-hidden border-border/60 shadow-soft transition-all hover:-translate-y-1 hover:shadow-glow">
+                  <div className="relative aspect-[4/3] overflow-hidden">
+                    <img src={s.image} alt={s.name} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                    {s.popular && (
+                      <Badge className="absolute left-3 top-3 gap-1 rounded-full bg-primary text-primary-foreground shadow">
+                        <Sparkles className="h-3 w-3" /> Populaire
+                      </Badge>
+                    )}
                   </div>
-                  <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">{s.description}</p>
-                  <Button asChild size="sm" variant="secondary" className="mt-3 w-full rounded-full">
-                    <Link to="/reservation">Réserver</Link>
-                  </Button>
-                </CardContent>
-              </Card>
-            ))}
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between">
+                      <h3 className="font-display text-lg font-semibold">{s.name}</h3>
+                      <span className="text-sm font-semibold text-primary">{displayPrice}</span>
+                    </div>
+                    <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">{s.description}</p>
+                    <Button asChild size="sm" variant="secondary" className="mt-3 w-full rounded-full">
+                      <Link to="/reservation">Réserver</Link>
+                    </Button>
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
         </motion.div>
       </main>
+
+      {/* AlertDialog de confirmation d'annulation */}
+      <AlertDialog open={!!cancellingAppointment} onOpenChange={(open) => !open && setCancellingAppointment(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Annuler le rendez-vous ?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Vous êtes sur le point d'annuler votre rendez-vous pour{' '}
+              <span className="font-medium text-foreground">
+                {cancellingAppointment && getServiceNames(cancellingAppointment)}
+              </span>{' '}
+              le{' '}
+              <span className="font-medium text-foreground">
+                {cancellingAppointment && new Date(cancellingAppointment.date).toLocaleDateString('fr-FR', {
+                  weekday: 'long',
+                  day: 'numeric',
+                  month: 'long',
+                })} à {cancellingAppointment?.time}
+              </span>.
+              <br /><br />
+              Cette action est irréversible. Souhaitez-vous continuer ?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isCancelling}>Retour</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => cancellingAppointment && handleCancelAppointment(cancellingAppointment)}
+              disabled={isCancelling}
+            >
+              {isCancelling ? 'Annulation en cours...' : 'Oui, annuler'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
