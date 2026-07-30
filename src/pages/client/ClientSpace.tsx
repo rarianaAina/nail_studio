@@ -37,7 +37,7 @@ import { useAppointments } from '@/hooks/useAppointments';
 import { useNailServices } from '@/hooks/useNailServices';
 import { useAppointmentSettings } from '@/hooks/useAppointmentSettings';
 import { formatAriary, STATUS_COLORS, STATUS_LABELS } from '@/utils';
-import { getTotalPrice, getTotalDuration, getServiceNames } from '@/types';
+import { getTotalPrice, getServiceNames } from '@/types';
 import { cn } from '@/utils/cn';
 import type { Appointment } from '@/types';
 
