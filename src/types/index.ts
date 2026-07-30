@@ -1,3 +1,4 @@
+// types/index.ts
 export type { User, UserRole, UpdateUserDto } from './user';
 export type {
   Client,
@@ -9,7 +10,14 @@ export type {
   AppointmentStatus,
   CreateAppointmentDto,
   UpdateAppointmentDto,
-} from './appointment'; // ✅ Suppression de PaymentMethod (déplacé)
+  ServiceItem,
+} from './appointment';
+// ✅ Export des fonctions (pas avec 'type')
+export {
+  getTotalPrice,
+  getTotalDuration,
+  getServiceNames,
+} from './appointment';
 export type {
   Service,
   ServiceCategory,

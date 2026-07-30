@@ -2,7 +2,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { CalendarHeart, Check, Clock, ArrowLeft, ArrowRight, PartyPopper, Sparkles } from 'lucide-react';
+import { CalendarHeart, Check, Clock, ArrowLeft, ArrowRight, PartyPopper, Sparkles, CreditCard } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -22,7 +22,7 @@ import { toast } from 'sonner';
 type Step = 1 | 2 | 3 | 4 | 5;
 
 const stepsMeta = [
-  { n: 1, label: 'Prestation' },
+  { n: 1, label: 'Prestation(s)' },
   { n: 2, label: 'Date' },
   { n: 3, label: 'Créneau' },
   { n: 4, label: 'Vos infos' },
@@ -39,7 +39,7 @@ export default function Booking() {
   const isLoggedIn = !!user;
 
   const [step, setStep] = useState<Step>(1);
-  const [serviceId, setServiceId] = useState<string>('');
+  const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>([]); // ✅ Changé de serviceId à selectedServiceIds
   const [date, setDate] = useState<string>('');
   const [time, setTime] = useState<string>('');
   const [paymentMethodId, setPaymentMethodId] = useState<string>('');
@@ -56,6 +56,23 @@ export default function Booking() {
     [paymentMethods]
   );
 
+  // ✅ Récupérer les services sélectionnés
+  const selectedServices = useMemo(
+    () => services.filter(s => selectedServiceIds.includes(s.id)),
+    [services, selectedServiceIds]
+  );
+
+  // ✅ Calculer le total
+  const totalPrice = useMemo(
+    () => selectedServices.reduce((sum, s) => sum + s.price, 0),
+    [selectedServices]
+  );
+
+  const totalDuration = useMemo(
+    () => selectedServices.reduce((sum, s) => sum + s.duration, 0),
+    [selectedServices]
+  );
+
   useEffect(() => {
     if (!date) { setBookedSlots([]); return; }
     let mounted = true;
@@ -70,11 +87,10 @@ export default function Booking() {
     return () => { mounted = false; };
   }, [date]);
 
-  const service = useMemo(() => services.find((s) => s.id === serviceId), [services, serviceId]);
   const minDate = new Date().toISOString().slice(0, 10);
 
   const canNext =
-    (step === 1 && !!serviceId) ||
+    (step === 1 && selectedServiceIds.length > 0) || // ✅ Au moins un service
     (step === 2 && !!date) ||
     (step === 3 && !!time) ||
     (step === 4 && !!(info.name && info.phone && info.email && paymentMethodId));
@@ -94,20 +110,20 @@ export default function Booking() {
           clientId = (clientRow as { id: string } | null)?.id ?? undefined;
         }
         
+        // ✅ Envoyer les IDs des services sélectionnés
         await createAppointment({
           clientId,
           clientName: info.name,
           phone: info.phone,
           email: info.email,
-          serviceId: service!.id,
-          serviceName: service!.name,
-          price: service!.price,
+          serviceIds: selectedServiceIds, // ✅ Changé de serviceId à serviceIds
           date,
           time,
           paymentMethodId,
         });
         setStep(5);
-      } catch {
+      } catch (error) {
+        console.error(error);
         toast.error('Une erreur est survenue. Veuillez réessayer.');
       } finally {
         setSubmitting(false);
@@ -117,6 +133,15 @@ export default function Booking() {
     }
   };
   const prev = () => setStep((s) => Math.max(1, s - 1) as Step);
+
+  // ✅ Fonction pour basculer la sélection d'un service
+  const toggleService = (serviceId: string) => {
+    setSelectedServiceIds(prev =>
+      prev.includes(serviceId)
+        ? prev.filter(id => id !== serviceId)
+        : [...prev, serviceId]
+    );
+  };
 
   return (
     <div className="min-h-screen gradient-rose pt-24 pb-20">
@@ -158,29 +183,70 @@ export default function Booking() {
             <AnimatePresence mode="wait">
               {step === 1 && (
                 <motion.div key="s1" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
-                  <h2 className="font-display text-2xl font-semibold">Choisissez une prestation</h2>
-                  <p className="mt-1 text-sm text-muted-foreground">Sélectionnez le soin que vous souhaitez réserver.</p>
+                  <h2 className="font-display text-2xl font-semibold">Choisissez vos prestations</h2>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Sélectionnez une ou plusieurs prestations. Vous pouvez en choisir plusieurs.
+                  </p>
                   <div className="mt-6 grid gap-3 sm:grid-cols-2">
-                    {services.map((s) => (
-                      <button key={s.id} onClick={() => setServiceId(s.id)}
-                        className={cn('flex items-center gap-4 rounded-2xl border p-3 text-left transition-all',
-                          serviceId === s.id ? 'border-primary bg-primary/5 shadow-glow' : 'border-border hover:border-primary/40')}>
-                        <img src={s.image} alt={s.name} className="h-16 w-16 rounded-xl object-cover" />
-                        <div className="flex-1">
-                          <div className="flex items-center justify-between">
-                            <p className="font-medium">{s.name}</p>
-                            {serviceId === s.id && (
-                              <span className="grid h-5 w-5 place-items-center rounded-full bg-primary text-primary-foreground">
-                                <Check className="h-3 w-3" />
-                              </span>
-                            )}
+                    {services.map((s) => {
+                      const isSelected = selectedServiceIds.includes(s.id);
+                      return (
+                        <button
+                          key={s.id}
+                          onClick={() => toggleService(s.id)}
+                          className={cn(
+                            'flex items-center gap-4 rounded-2xl border p-3 text-left transition-all',
+                            isSelected
+                              ? 'border-primary bg-primary/5 shadow-glow'
+                              : 'border-border hover:border-primary/40'
+                          )}
+                        >
+                          <img src={s.image} alt={s.name} className="h-16 w-16 rounded-xl object-cover" />
+                          <div className="flex-1">
+                            <div className="flex items-center justify-between">
+                              <p className="font-medium">{s.name}</p>
+                              {isSelected && (
+                                <span className="grid h-5 w-5 place-items-center rounded-full bg-primary text-primary-foreground">
+                                  <Check className="h-3 w-3" />
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-xs text-muted-foreground">{s.duration} min</p>
+                            <p className="mt-1 text-sm font-semibold text-primary">{formatAriary(s.price)}</p>
                           </div>
-                          <p className="text-xs text-muted-foreground">{s.duration} min</p>
-                          <p className="mt-1 text-sm font-semibold text-primary">{formatAriary(s.price)}</p>
-                        </div>
-                      </button>
-                    ))}
+                        </button>
+                      );
+                    })}
                   </div>
+
+                  {/* ✅ Récapitulatif des services sélectionnés */}
+                  {selectedServices.length > 0 && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      className="mt-6 rounded-2xl border border-primary/20 bg-primary/5 p-4"
+                    >
+                      <p className="font-medium text-sm">Récapitulatif</p>
+                      <div className="mt-2 space-y-1">
+                        {selectedServices.map(s => (
+                          <div key={s.id} className="flex justify-between text-sm">
+                            <span>{s.name}</span>
+                            <span>{formatAriary(s.price)}</span>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="mt-2 border-t border-primary/20 pt-2">
+                        <div className="flex justify-between font-semibold">
+                          <span>Total</span>
+                          <span className="text-primary">{formatAriary(totalPrice)}</span>
+                        </div>
+                        <div className="flex justify-between text-sm text-muted-foreground">
+                          <span>Durée totale</span>
+                          <span>{totalDuration} min</span>
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
                 </motion.div>
               )}
 
@@ -276,6 +342,21 @@ export default function Booking() {
                         </SelectContent>
                       </Select>
                     </div>
+
+                    {/* ✅ Récapitulatif de la commande */}
+                    <div className="rounded-xl bg-secondary/50 p-3 text-sm">
+                      <p className="font-medium">Récapitulatif de votre commande</p>
+                      {selectedServices.map(s => (
+                        <div key={s.id} className="flex justify-between text-xs">
+                          <span>{s.name}</span>
+                          <span>{formatAriary(s.price)}</span>
+                        </div>
+                      ))}
+                      <div className="mt-1 border-t border-border/60 pt-1 flex justify-between font-semibold">
+                        <span>Total</span>
+                        <span className="text-primary">{formatAriary(totalPrice)}</span>
+                      </div>
+                    </div>
                   </div>
                 </motion.div>
               )}
@@ -289,12 +370,18 @@ export default function Booking() {
                   <h2 className="mt-6 font-display text-3xl font-semibold">Rendez-vous confirmé !</h2>
                   <p className="mx-auto mt-3 max-w-sm text-muted-foreground">
                     Votre rendez-vous pour{' '}
-                    <span className="font-medium text-foreground">{service?.name}</span>{' '}
+                    <span className="font-medium text-foreground">
+                      {selectedServices.map(s => s.name).join(' + ')}
+                    </span>{' '}
                     le{' '}
                     <span className="font-medium text-foreground">
                       {new Date(date).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })} à {time}
                     </span>{' '}
                     a bien été enregistré.
+                  </p>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Total : <span className="font-medium text-primary">{formatAriary(totalPrice)}</span> • 
+                    Durée : <span className="font-medium">{totalDuration} min</span>
                   </p>
                   <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
                     {isLoggedIn ? (

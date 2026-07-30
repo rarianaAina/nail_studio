@@ -1,4 +1,12 @@
+// types/appointment.ts
 export type AppointmentStatus = 'pending' | 'confirmed' | 'completed' | 'cancelled';
+
+export interface ServiceItem {
+  id: string;
+  name: string;
+  price: number;
+  duration: number;
+}
 
 export interface Appointment {
   id: string;
@@ -6,14 +14,12 @@ export interface Appointment {
   clientName: string;
   phone: string;
   email?: string;
-  serviceId: string;
-  serviceName: string;
-  price: number;
+  services: ServiceItem[];
   date: string;
   time: string;
   status: AppointmentStatus;
-  paymentMethodId?: string; // ✅ FK vers payment_methods
-  paymentMethod?: {          // ✅ Relation (optionnel)
+  paymentMethodId?: string;
+  paymentMethod?: {
     id: string;
     name: string;
     label: string;
@@ -29,12 +35,10 @@ export interface CreateAppointmentDto {
   clientName: string;
   phone: string;
   email?: string;
-  serviceId: string;
-  serviceName: string;
-  price: number;
+  serviceIds: string[];
   date: string;
   time: string;
-  paymentMethodId?: string; // ✅ FK vers payment_methods
+  paymentMethodId?: string;
   notes?: string;
 }
 
@@ -43,12 +47,20 @@ export interface UpdateAppointmentDto {
   clientName?: string;
   phone?: string;
   email?: string;
-  serviceId?: string;
-  serviceName?: string;
-  price?: number;
+  serviceIds?: string[];
   date?: string;
   time?: string;
   status?: AppointmentStatus;
-  paymentMethodId?: string; // ✅ FK vers payment_methods
+  paymentMethodId?: string;
   notes?: string;
 }
+
+// ✅ EXPORT NORMAL (pas export type) pour les fonctions
+export const getTotalPrice = (appointment: Appointment): number => 
+  appointment.services.reduce((sum, s) => sum + s.price, 0);
+
+export const getTotalDuration = (appointment: Appointment): number => 
+  appointment.services.reduce((sum, s) => sum + s.duration, 0);
+
+export const getServiceNames = (appointment: Appointment): string => 
+  appointment.services.map(s => s.name).join(' + ');
