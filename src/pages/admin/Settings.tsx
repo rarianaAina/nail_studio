@@ -17,6 +17,7 @@ import { usePaymentMethods } from '@/hooks/usePaymentMethods';
 import { COLOR_PRESETS } from '@/utils/constants';
 import type { SalonSettings, BusinessHours } from '@/types';
 import type { ReminderDelay, ReminderRecipients } from '@/types/reminder';
+import { useAppointmentSettings } from '@/hooks/useAppointmentSettings';
 
 const DELAYS: { value: ReminderDelay; label: string }[] = [
   { value: 24, label: '24 heures avant' },
@@ -33,6 +34,7 @@ const RECIPIENTS: { value: ReminderRecipients; label: string; icon: typeof User;
 export default function Settings() {
   const { settings, updateSettings } = useSettings();
   const { reminderSettings, loading, error, updateReminderSettings } = useReminderSettings();
+  const { settings: appointmentSettings, updateSettings: updateAppointmentSettings } = useAppointmentSettings();
   const {
     categories, timeSlots,
     createCategory, updateCategory, deleteCategory,
@@ -386,6 +388,73 @@ export default function Settings() {
               ))}
             </div>
           )}
+        </CardContent>
+      </Card>
+
+                {/* ===== ANNULATION ===== */}
+      <Card className="border-border/60 shadow-soft">
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <Clock className="h-5 w-5 text-primary" />
+            <CardTitle className="font-display text-lg">Annulation de rendez-vous</CardTitle>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <p className="text-sm text-muted-foreground">
+            Configurez les règles d'annulation pour vos clientes.
+          </p>
+
+          <div className="flex items-center justify-between">
+            <div>
+              <Label className="font-medium">Autoriser les annulations</Label>
+              <p className="text-sm text-muted-foreground">
+                Si désactivé, les clientes ne pourront pas annuler leurs rendez-vous.
+              </p>
+            </div>
+            <Switch
+              checked={appointmentSettings?.allowCancellation ?? true}
+              onCheckedChange={(v) => updateAppointmentSettings({ allowCancellation: v })}
+            />
+          </div>
+
+          <Separator />
+
+          <div className="space-y-2">
+            <Label htmlFor="cancel-deadline">Délai d'annulation minimum</Label>
+            <div className="flex items-center gap-4">
+              <Input
+                id="cancel-deadline"
+                type="number"
+                min={1}
+                max={72}
+                value={appointmentSettings?.cancellationDeadlineHours ?? 24}
+                onChange={(e) => updateAppointmentSettings({ 
+                  cancellationDeadlineHours: Number(e.target.value) 
+                })}
+                className="w-24"
+              />
+              <span className="text-sm text-muted-foreground">heures avant le rendez-vous</span>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Les clientes ne pourront pas annuler après ce délai.
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="cancel-label">Libellé affiché</Label>
+            <Input
+              id="cancel-label"
+              value={appointmentSettings?.cancellationDeadlineLabel ?? '24 heures avant'}
+              onChange={(e) => updateAppointmentSettings({ 
+                cancellationDeadlineLabel: e.target.value 
+              })}
+              placeholder="Ex: 24 heures avant"
+            />
+          </div>
+
+          <Button variant="outline" className="w-full rounded-full sm:w-auto">
+            <Save className="mr-2 h-4 w-4" /> Enregistrer les paramètres d'annulation
+          </Button>
         </CardContent>
       </Card>
 

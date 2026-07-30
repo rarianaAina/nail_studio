@@ -44,4 +44,8 @@ export type {
   PaymentMethod,
   CreatePaymentMethodDto,
   UpdatePaymentMethodDto,
-} from './payment'; // ✅ Ajout des types de paiement
+} from './payment';
+export type {
+  AppointmentSettings,
+  UpdateAppointmentSettingsDto,
+} from './appointmentSettings';
