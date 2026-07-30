@@ -1,4 +1,3 @@
-// pages/Booking.tsx
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -29,6 +28,11 @@ const stepsMeta = [
   { n: 5, label: 'Confirmation' },
 ] as const;
 
+// ✅ Fonction pour afficher le prix ou "Devis"
+const displayPrice = (price: number): string => {
+  return price === 0 ? 'Devis' : formatAriary(price);
+};
+
 export default function Booking() {
   const { services } = useNailServices();
   const { createAppointment } = useAppointments();
@@ -39,7 +43,7 @@ export default function Booking() {
   const isLoggedIn = !!user;
 
   const [step, setStep] = useState<Step>(1);
-  const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>([]); // ✅ Changé de serviceId à selectedServiceIds
+  const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>([]);
   const [date, setDate] = useState<string>('');
   const [time, setTime] = useState<string>('');
   const [paymentMethodId, setPaymentMethodId] = useState<string>('');
@@ -56,13 +60,11 @@ export default function Booking() {
     [paymentMethods]
   );
 
-  // ✅ Récupérer les services sélectionnés
   const selectedServices = useMemo(
     () => services.filter(s => selectedServiceIds.includes(s.id)),
     [services, selectedServiceIds]
   );
 
-  // ✅ Calculer le total
   const totalPrice = useMemo(
     () => selectedServices.reduce((sum, s) => sum + s.price, 0),
     [selectedServices]
@@ -90,7 +92,7 @@ export default function Booking() {
   const minDate = new Date().toISOString().slice(0, 10);
 
   const canNext =
-    (step === 1 && selectedServiceIds.length > 0) || // ✅ Au moins un service
+    (step === 1 && selectedServiceIds.length > 0) ||
     (step === 2 && !!date) ||
     (step === 3 && !!time) ||
     (step === 4 && !!(info.name && info.phone && info.email && paymentMethodId));
@@ -110,13 +112,12 @@ export default function Booking() {
           clientId = (clientRow as { id: string } | null)?.id ?? undefined;
         }
         
-        // ✅ Envoyer les IDs des services sélectionnés
         await createAppointment({
           clientId,
           clientName: info.name,
           phone: info.phone,
           email: info.email,
-          serviceIds: selectedServiceIds, // ✅ Changé de serviceId à serviceIds
+          serviceIds: selectedServiceIds,
           date,
           time,
           paymentMethodId,
@@ -134,7 +135,6 @@ export default function Booking() {
   };
   const prev = () => setStep((s) => Math.max(1, s - 1) as Step);
 
-  // ✅ Fonction pour basculer la sélection d'un service
   const toggleService = (serviceId: string) => {
     setSelectedServiceIds(prev =>
       prev.includes(serviceId)
@@ -212,14 +212,13 @@ export default function Booking() {
                               )}
                             </div>
                             <p className="text-xs text-muted-foreground">{s.duration} min</p>
-                            <p className="mt-1 text-sm font-semibold text-primary">{formatAriary(s.price)}</p>
+                            <p className="mt-1 text-sm font-semibold text-primary">{displayPrice(s.price)}</p>
                           </div>
                         </button>
                       );
                     })}
                   </div>
 
-                  {/* ✅ Récapitulatif des services sélectionnés */}
                   {selectedServices.length > 0 && (
                     <motion.div
                       initial={{ opacity: 0, height: 0 }}
@@ -231,14 +230,14 @@ export default function Booking() {
                         {selectedServices.map(s => (
                           <div key={s.id} className="flex justify-between text-sm">
                             <span>{s.name}</span>
-                            <span>{formatAriary(s.price)}</span>
+                            <span>{displayPrice(s.price)}</span>
                           </div>
                         ))}
                       </div>
                       <div className="mt-2 border-t border-primary/20 pt-2">
                         <div className="flex justify-between font-semibold">
                           <span>Total</span>
-                          <span className="text-primary">{formatAriary(totalPrice)}</span>
+                          <span className="text-primary">{displayPrice(totalPrice)}</span>
                         </div>
                         <div className="flex justify-between text-sm text-muted-foreground">
                           <span>Durée totale</span>
@@ -343,18 +342,18 @@ export default function Booking() {
                       </Select>
                     </div>
 
-                    {/* ✅ Récapitulatif de la commande */}
+                    {/* Récapitulatif de la commande */}
                     <div className="rounded-xl bg-secondary/50 p-3 text-sm">
                       <p className="font-medium">Récapitulatif de votre commande</p>
                       {selectedServices.map(s => (
                         <div key={s.id} className="flex justify-between text-xs">
                           <span>{s.name}</span>
-                          <span>{formatAriary(s.price)}</span>
+                          <span>{displayPrice(s.price)}</span>
                         </div>
                       ))}
                       <div className="mt-1 border-t border-border/60 pt-1 flex justify-between font-semibold">
                         <span>Total</span>
-                        <span className="text-primary">{formatAriary(totalPrice)}</span>
+                        <span className="text-primary">{displayPrice(totalPrice)}</span>
                       </div>
                     </div>
                   </div>
@@ -380,7 +379,7 @@ export default function Booking() {
                     a bien été enregistré.
                   </p>
                   <p className="mt-1 text-sm text-muted-foreground">
-                    Total : <span className="font-medium text-primary">{formatAriary(totalPrice)}</span> • 
+                    Total : <span className="font-medium text-primary">{displayPrice(totalPrice)}</span> • 
                     Durée : <span className="font-medium">{totalDuration} min</span>
                   </p>
                   <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
