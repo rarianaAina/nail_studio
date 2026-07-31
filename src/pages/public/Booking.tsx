@@ -15,10 +15,10 @@ import { useAppointments } from '@/hooks/useAppointments';
 import { useAuth } from '@/hooks/useAuth';
 import { useActiveConfig } from '@/hooks/useActiveConfig';
 import { usePaymentMethods } from '@/hooks/usePaymentMethods';
-import { useSettings } from '@/hooks/useSettings'; // ✅ Ajout
+import { useSettings } from '@/hooks/useSettings';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
-import type { BusinessHours } from '@/types'; // ✅ Ajout
+import type { BusinessHours } from '@/types';
 
 type Step = 1 | 2 | 3 | 4 | 5;
 
@@ -50,7 +50,7 @@ export default function Booking() {
   const { user } = useAuth();
   const { getActiveTimeSlotsByDay } = useActiveConfig();
   const { paymentMethods, loading: loadingPayments } = usePaymentMethods();
-  const { settings } = useSettings(); // ✅ Récupérer les horaires
+  const { settings } = useSettings();
   const navigate = useNavigate();
   const isLoggedIn = !!user;
 
@@ -94,12 +94,14 @@ export default function Booking() {
     return getActiveTimeSlotsByDay(dayOfWeek);
   }, [date, getActiveTimeSlotsByDay]);
 
-  // ✅ Vérifier si un jour est disponible
+  // ✅ Vérifier si un jour est disponible (avec fallback)
   const isDayAvailable = (dateStr: string): boolean => {
-    if (!settings?.hours) return true;
     const dayName = new Date(dateStr).toLocaleDateString('fr-FR', { weekday: 'long' });
-    const dayHours = settings.hours.find((h: BusinessHours) => h.day === dayName);
-    if (!dayHours) return false;
+    const dayHours = settings?.hours?.find((h: BusinessHours) => h.day === dayName);
+    
+    // Si settings n'est pas chargé ou que le jour n'existe pas, on autorise
+    if (!settings?.hours || !dayHours) return true;
+    
     return !dayHours.closed;
   };
 
