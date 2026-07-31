@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Mail, Lock, User as UserIcon,
@@ -171,6 +171,15 @@ export default function Auth() {
                         {showPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                       </button>
                     </div>
+                  </div>
+
+                  <div className="text-right">
+                    <Link
+                      to="/mot-de-passe-oublie"
+                      className="text-xs text-muted-foreground hover:text-primary transition-colors"
+                    >
+                      Mot de passe oublié ?
+                    </Link>
                   </div>
 
                   <Button type="submit" size="lg" className="w-full rounded-full" disabled={loading}>

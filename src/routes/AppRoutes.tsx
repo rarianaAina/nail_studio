@@ -24,8 +24,10 @@ import CalendarPage from '@/pages/admin/Calendar';
 import Clients from '@/pages/admin/Clients';
 import AdminServices from '@/pages/admin/AdminServices';
 import Statistics from '@/pages/admin/Statistics';
-import SettingsLayout from '@/pages/admin/settings';
+import SettingsLayout from '@/pages/admin/settings/index';
 import Notifications from '@/pages/admin/Notifications';
+import ForgotPassword from '@/pages/auth/ForgotPassword';
+import ResetPassword from '@/pages/auth/ResetPassword';
 
 // ✅ Sous-pages des paramètres
 import GeneralSettings from '@/pages/admin/settings/General';
@@ -54,6 +56,8 @@ export default function AppRoutes() {
 
       {/* Auth */}
       <Route path="/connexion" element={<Auth />} />
+      <Route path="/mot-de-passe-oublie" element={<ForgotPassword />} />
+      <Route path="/reinitialisation" element={<ResetPassword />} />
 
       {/* Client (protected) */}
       <Route
