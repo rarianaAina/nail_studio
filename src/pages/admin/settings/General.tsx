@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import { useSettings } from '@/hooks/useSettings';
-import type { SalonSettings, BusinessHours } from '@/types';
+import type { SalonSettings } from '@/types';
 
 export default function GeneralSettings() {
   const { settings, updateSettings } = useSettings();

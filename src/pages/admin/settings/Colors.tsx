@@ -10,7 +10,7 @@ import { COLOR_PRESETS } from '@/utils/constants';
 import { useSettings } from '@/hooks/useSettings';
 
 export default function ColorsSettings() {
-  const { settings, updateSettings } = useSettings();
+  const { updateSettings } = useSettings();
   const [color, setColor] = useState<{ name: string; primary: string; accent: string }>(COLOR_PRESETS[0]);
 
   const save = async () => {

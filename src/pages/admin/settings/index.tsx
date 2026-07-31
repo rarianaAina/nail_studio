@@ -1,7 +1,7 @@
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
-  Store, Clock, Share2, CreditCard, Calendar, Bell, Palette, Tag, Settings as SettingsIcon,
+  Store, Clock, Share2, CreditCard, Calendar, Bell, Palette, Tag,
 } from 'lucide-react';
 import { cn } from '@/utils/cn';
 
@@ -33,7 +33,7 @@ export default function SettingsLayout() {
       <div className="flex flex-wrap gap-2 border-b border-border/60 pb-4">
         {SECTIONS.map((section) => {
           const Icon = section.icon;
-          const isActive = location.pathname === section.path || 
+          //const isActive = location.pathname === section.path || 
             (section.id === 'general' && location.pathname === '/admin/parametres');
           return (
             <NavLink
