@@ -1,3 +1,4 @@
+// AppRoutes.tsx
 import { Routes, Route } from 'react-router-dom';
 import { PublicLayout, AdminLayout } from '@/layouts';
 import ProtectedRoute from '@/components/ProtectedRoute';
@@ -22,8 +23,19 @@ import CalendarPage from '@/pages/admin/Calendar';
 import Clients from '@/pages/admin/Clients';
 import AdminServices from '@/pages/admin/AdminServices';
 import Statistics from '@/pages/admin/Statistics';
-import Settings from '@/pages/admin/Settings';
+import SettingsLayout from '@/pages/admin/settings';
 import Notifications from '@/pages/admin/Notifications';
+
+// ✅ Sous-pages des paramètres
+import GeneralSettings from '@/pages/admin/settings/General';
+import HoursSettings from '@/pages/admin/settings/Hours';
+import SocialSettings from '@/pages/admin/settings/Social';
+import PaymentMethodsSettings from '@/pages/admin/settings/PaymentMethods';
+import CancellationSettings from '@/pages/admin/settings/Cancellation';
+import RemindersSettings from '@/pages/admin/settings/Reminders';
+import ColorsSettings from '@/pages/admin/settings/Colors';
+import CategoriesSettings from '@/pages/admin/settings/Categories';
+import TimeSlotsSettings from '@/pages/admin/settings/TimeSlots';
 
 export default function AppRoutes() {
   return (
@@ -66,7 +78,20 @@ export default function AppRoutes() {
         <Route path="prestations" element={<AdminServices />} />
         <Route path="statistiques" element={<Statistics />} />
         <Route path="notifications" element={<Notifications />} />
-        <Route path="parametres" element={<Settings />} />
+        
+        {/* ✅ Paramètres avec sous-routes */}
+        <Route path="parametres" element={<SettingsLayout />}>
+          <Route index element={<GeneralSettings />} />
+          <Route path="general" element={<GeneralSettings />} />
+          <Route path="horaires" element={<HoursSettings />} />
+          <Route path="reseaux" element={<SocialSettings />} />
+          <Route path="paiements" element={<PaymentMethodsSettings />} />
+          <Route path="annulation" element={<CancellationSettings />} />
+          <Route path="rappels" element={<RemindersSettings />} />
+          <Route path="couleurs" element={<ColorsSettings />} />
+          <Route path="categories" element={<CategoriesSettings />} />
+          <Route path="creneaux" element={<TimeSlotsSettings />} />
+        </Route>
       </Route>
     </Routes>
   );
