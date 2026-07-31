@@ -15,8 +15,10 @@ import { useAppointments } from '@/hooks/useAppointments';
 import { useAuth } from '@/hooks/useAuth';
 import { useActiveConfig } from '@/hooks/useActiveConfig';
 import { usePaymentMethods } from '@/hooks/usePaymentMethods';
+import { useSettings } from '@/hooks/useSettings'; // ✅ Ajout
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
+import type { BusinessHours } from '@/types'; // ✅ Ajout
 
 type Step = 1 | 2 | 3 | 4 | 5;
 
@@ -46,8 +48,9 @@ export default function Booking() {
   const { services } = useNailServices();
   const { createAppointment } = useAppointments();
   const { user } = useAuth();
-  const { getActiveTimeSlotsByDay } = useActiveConfig(); // ✅ Changé
+  const { getActiveTimeSlotsByDay } = useActiveConfig();
   const { paymentMethods, loading: loadingPayments } = usePaymentMethods();
+  const { settings } = useSettings(); // ✅ Récupérer les horaires
   const navigate = useNavigate();
   const isLoggedIn = !!user;
 
@@ -90,6 +93,15 @@ export default function Booking() {
     const dayOfWeek = new Date(date).toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
     return getActiveTimeSlotsByDay(dayOfWeek);
   }, [date, getActiveTimeSlotsByDay]);
+
+  // ✅ Vérifier si un jour est disponible
+  const isDayAvailable = (dateStr: string): boolean => {
+    if (!settings?.hours) return true;
+    const dayName = new Date(dateStr).toLocaleDateString('fr-FR', { weekday: 'long' });
+    const dayHours = settings.hours.find((h: BusinessHours) => h.day === dayName);
+    if (!dayHours) return false;
+    return !dayHours.closed;
+  };
 
   useEffect(() => {
     if (!date) { setBookedSlots([]); return; }
@@ -276,12 +288,7 @@ export default function Booking() {
                         const d = new Date();
                         d.setDate(d.getDate() + i);
                         const iso = d.toISOString().slice(0, 10);
-                        
-                        // Vérifier si le jour est disponible
-                        const dayName = d.toLocaleDateString('fr-FR', { weekday: 'long' });
-                        const dayHours = settings?.hours?.find((h) => h.day === dayName);
-                        const isAvailable = dayHours ? !dayHours.closed : false;
-                        const isSunday = d.getDay() === 0;
+                        const isAvailable = isDayAvailable(iso);
                         
                         return (
                           <button 
@@ -292,8 +299,7 @@ export default function Booking() {
                               'flex flex-col items-center rounded-xl border py-2 text-xs transition-all disabled:opacity-30',
                               date === iso 
                                 ? 'border-primary bg-primary text-primary-foreground' 
-                                : 'border-border hover:border-primary/40',
-                              isSunday && isAvailable && 'border-rose-200 bg-rose-50 hover:border-rose-400' // Style spécial pour dimanche
+                                : 'border-border hover:border-primary/40'
                             )}
                           >
                             <span className="text-[10px] uppercase">
