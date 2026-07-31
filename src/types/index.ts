@@ -57,3 +57,7 @@ export type {
   AppointmentSettings,
   UpdateAppointmentSettingsDto,
 } from './appointmentSettings';
+export type {
+  LoyaltySettings,
+  LoyaltySettingsUpdateDto,
+} from './loyalty'; // ✅ Ajout des types de fidélité
