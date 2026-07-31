@@ -9,6 +9,7 @@ import Services from '@/pages/public/Services';
 import Gallery from '@/pages/public/Gallery';
 import Contact from '@/pages/public/Contact';
 import Booking from '@/pages/public/Booking';
+import SpecialInfosSettings from '@/pages/admin/settings/SpecialInfos';
 
 // Auth pages
 import Auth from '@/pages/auth/Auth';
@@ -94,6 +95,7 @@ export default function AppRoutes() {
           <Route path="couleurs" element={<ColorsSettings />} />
           <Route path="categories" element={<CategoriesSettings />} />
           <Route path="creneaux" element={<TimeSlotsSettings />} />
+          <Route path="informations" element={<SpecialInfosSettings />} />
         </Route>
       </Route>
     </Routes>

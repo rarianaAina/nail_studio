@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/utils/cn';
 import { Gift } from 'lucide-react';
+import { Sparkles } from 'lucide-react'; 
 
 const SECTIONS = [
   { id: 'general', label: 'Général', icon: Store, path: '/admin/parametres/general' },
@@ -17,6 +18,7 @@ const SECTIONS = [
   { id: 'colors', label: 'Couleurs', icon: Palette, path: '/admin/parametres/couleurs' },
   { id: 'categories', label: 'Catégories', icon: Tag, path: '/admin/parametres/categories' },
   { id: 'timeslots', label: 'Créneaux', icon: Clock, path: '/admin/parametres/creneaux' },
+  { id: 'informations', label: 'Infos spéciales', icon: Sparkles, path: '/admin/parametres/informations' },
 ];
 
 export default function SettingsLayout() {

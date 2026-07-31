@@ -60,3 +60,8 @@ export type {
   LoyaltySettings,
   LoyaltySettingsUpdateDto,
 } from './loyalty'; // ✅ Ajout des types de fidélité
+export type {
+  SpecialInfo,
+  CreateSpecialInfoDto,
+  UpdateSpecialInfoDto,
+} from './specialInfo';

@@ -18,6 +18,7 @@ import { formatAriary } from '@/lib/data';
 import { useNailServices } from '@/hooks/useNailServices';
 import { useSettings } from '@/hooks/useSettings';
 import { supabase } from '@/lib/supabase';
+import { useSpecialInfos } from '@/hooks/useSpecialInfos';
 
 const LOGO_URL = 'https://tzgcyehdjgqxljjttflj.supabase.co/storage/v1/object/public/Galerie%20v2/WhatsApp%20Image%202026-07-23%20at%2010.41.28%20(1).jpeg';
 
@@ -33,7 +34,7 @@ export default function Home() {
   const { settings } = useSettings();
   const [galleryItems, setGalleryItems] = useState<any[]>([]);
   const [loadingGallery, setLoadingGallery] = useState(true);
-
+  const { infos: specialInfos, loading: loadingInfos } = useSpecialInfos();
   // Fallback si settings n'est pas encore chargé
   const salonInfo = settings || {
     name: 'Harrys Studio',
@@ -146,6 +147,31 @@ export default function Home() {
             </div>
           </motion.div>
 
+          {!loadingInfos && specialInfos.length > 0 && (
+            <section className="py-12">
+              <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  {specialInfos.map((info) => (
+                    <motion.div
+                      key={info.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.4 }}
+                      className="rounded-2xl border border-primary/10 bg-gradient-to-br from-primary/5 to-accent/5 p-6 shadow-soft"
+                    >
+                      <div className="flex items-start gap-3">
+                        <span className="text-3xl">{info.icon}</span>
+                        <div>
+                          <h3 className="font-display text-lg font-semibold">{info.title}</h3>
+                          <p className="mt-1 text-sm text-muted-foreground">{info.content}</p>
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
+            </section>
+          )}
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
