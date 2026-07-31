@@ -276,13 +276,33 @@ export default function Booking() {
                         const d = new Date();
                         d.setDate(d.getDate() + i);
                         const iso = d.toISOString().slice(0, 10);
+                        
+                        // Vérifier si le jour est disponible
+                        const dayName = d.toLocaleDateString('fr-FR', { weekday: 'long' });
+                        const dayHours = settings?.hours?.find((h) => h.day === dayName);
+                        const isAvailable = dayHours ? !dayHours.closed : false;
                         const isSunday = d.getDay() === 0;
+                        
                         return (
-                          <button key={i} disabled={isSunday} onClick={() => setDate(iso)}
-                            className={cn('flex flex-col items-center rounded-xl border py-2 text-xs transition-all disabled:opacity-30',
-                              date === iso ? 'border-primary bg-primary text-primary-foreground' : 'border-border hover:border-primary/40')}>
-                            <span className="text-[10px] uppercase">{d.toLocaleDateString('fr-FR', { weekday: 'short' })}</span>
+                          <button 
+                            key={i} 
+                            disabled={!isAvailable} 
+                            onClick={() => setDate(iso)}
+                            className={cn(
+                              'flex flex-col items-center rounded-xl border py-2 text-xs transition-all disabled:opacity-30',
+                              date === iso 
+                                ? 'border-primary bg-primary text-primary-foreground' 
+                                : 'border-border hover:border-primary/40',
+                              isSunday && isAvailable && 'border-rose-200 bg-rose-50 hover:border-rose-400' // Style spécial pour dimanche
+                            )}
+                          >
+                            <span className="text-[10px] uppercase">
+                              {d.toLocaleDateString('fr-FR', { weekday: 'short' })}
+                            </span>
                             <span className="font-semibold">{d.getDate()}</span>
+                            {!isAvailable && (
+                              <span className="text-[8px] text-rose-500 font-medium">Fermé</span>
+                            )}
                           </button>
                         );
                       })}
