@@ -31,13 +31,8 @@ type DraftService = Omit<Service, 'id'> & { id?: string };
 // ✅ Options pour les heures (0-12)
 const HOURS_OPTIONS = Array.from({ length: 13 }, (_, i) => ({ value: i, label: `${i}h` }));
 
-// ✅ Options pour les minutes (0, 15, 30, 45)
-const MINUTES_OPTIONS = [
-  { value: 0, label: '00min' },
-  { value: 15, label: '15min' },
-  { value: 30, label: '30min' },
-  { value: 45, label: '45min' },
-];
+// ✅ Options pour les minutes (0-59, par pas de 1)
+const MINUTES_OPTIONS = Array.from({ length: 60 }, (_, i) => ({ value: i, label: `${i}min` }));
 
 // ✅ Convertir heures + minutes en minutes totales
 const toTotalMinutes = (hours: number, minutes: number): number => hours * 60 + minutes;
@@ -130,7 +125,7 @@ export default function AdminServices() {
     const mins = minutes % 60;
     if (hours === 0) return `${mins}min`;
     if (mins === 0) return `${hours}h`;
-    return `${hours}h${mins}`;
+    return `${hours}h${mins.toString().padStart(2, '0')}`;
   };
 
   return (
@@ -236,7 +231,7 @@ export default function AdminServices() {
                 </div>
               </div>
               <div className="grid gap-4 sm:grid-cols-2">
-                {/* ✅ Sélecteur de durée en heures et minutes */}
+                {/* ✅ Sélecteur de durée en heures et minutes (0-59) */}
                 <div className="space-y-1.5">
                   <Label>Durée</Label>
                   <div className="flex gap-2">
@@ -247,7 +242,7 @@ export default function AdminServices() {
                       <SelectTrigger className="w-24">
                         <SelectValue placeholder="Heures" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="max-h-48">
                         {HOURS_OPTIONS.map((h) => (
                           <SelectItem key={h.value} value={String(h.value)}>{h.label}</SelectItem>
                         ))}
@@ -260,7 +255,7 @@ export default function AdminServices() {
                       <SelectTrigger className="w-28">
                         <SelectValue placeholder="Minutes" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="max-h-48">
                         {MINUTES_OPTIONS.map((m) => (
                           <SelectItem key={m.value} value={String(m.value)}>{m.label}</SelectItem>
                         ))}
