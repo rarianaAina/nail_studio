@@ -36,6 +36,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useAppointments } from '@/hooks/useAppointments';
 import { useNailServices } from '@/hooks/useNailServices';
 import { useAppointmentSettings } from '@/hooks/useAppointmentSettings';
+import { useLoyalty } from '@/hooks/useLoyalty';
 import { formatAriary, STATUS_COLORS, STATUS_LABELS } from '@/utils';
 import { getTotalPrice, getServiceNames } from '@/types';
 import { cn } from '@/utils/cn';
@@ -60,6 +61,7 @@ export default function ClientSpace() {
   const { appointments, updateStatus, refresh } = useAppointments();
   const { services } = useNailServices();
   const { settings: appointmentSettings } = useAppointmentSettings();
+  const { points: loyaltyPoints, loading: loadingPoints } = useLoyalty(user?.id);
   const [cancellingAppointment, setCancellingAppointment] = useState<Appointment | null>(null);
   const [isCancelling, setIsCancelling] = useState(false);
 
@@ -69,7 +71,6 @@ export default function ClientSpace() {
     
     return appointments
       .filter((a) => {
-        // Filtrer par email ou par nom
         return a.email === user.email || a.clientName === user.name;
       })
       .sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time));
@@ -87,7 +88,6 @@ export default function ClientSpace() {
     .reduce((sum, a) => sum + getTotalPrice(a), 0);
     
   const visits = myAppointments.filter((a) => a.status === 'completed').length;
-  const loyaltyPoints = visits * 50;
 
   // Vérifier si un rendez-vous peut être annulé
   const canCancelAppointment = (appointment: Appointment): { allowed: boolean; reason?: string } => {
@@ -212,7 +212,7 @@ export default function ClientSpace() {
             { label: 'Rendez-vous à venir', value: String(upcoming.length), icon: Clock, color: 'text-primary' },
             { label: 'Visites totales', value: String(visits), icon: Heart, color: 'text-rose-500' },
             { label: 'Total dépensé', value: formatAriary(totalSpent), icon: Wallet, color: 'text-accent' },
-            { label: 'Points fidélité', value: String(loyaltyPoints), icon: Gift, color: 'text-emerald-500' },
+            { label: 'Points fidélité', value: loadingPoints ? '...' : String(loyaltyPoints), icon: Gift, color: 'text-emerald-500' },
           ].map((s, i) => (
             <motion.div key={s.label} {...fadeUp} transition={{ delay: i * 0.08 }}>
               <Card className="border-border/60 shadow-soft">
@@ -240,7 +240,7 @@ export default function ClientSpace() {
                   <div>
                     <p className="font-display text-lg font-semibold">Programme fidélité</p>
                     <p className="text-sm text-muted-foreground">
-                      {loyaltyPoints} points • Plus que {Math.max(0, 500 - loyaltyPoints)} points avant votre soin offert
+                      {loadingPoints ? '...' : `${loyaltyPoints} points`} • Plus que {Math.max(0, 500 - loyaltyPoints)} points avant votre soin offert
                     </p>
                   </div>
                 </div>

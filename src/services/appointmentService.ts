@@ -313,6 +313,13 @@ export const appointmentService = {
       (row as any).services = services;
     }
 
+    // ✅ Récupérer l'ancien statut avant la mise à jour
+    const { data: oldAppointment } = await supabase
+      .from('appointments')
+      .select('client_id, status')
+      .eq('id', id)
+      .single();
+
     const { data: updatedRow, error } = await supabase
       .from('appointments')
       .update(row)
@@ -331,6 +338,41 @@ export const appointmentService = {
     if (error) throw error;
     
     const appointment = rowToAppointment(updatedRow as AppointmentRow);
+
+    // ✅ Ajouter des points de fidélité si le statut passe à 'confirmed'
+    if (data.status === 'confirmed' && oldAppointment?.status !== 'confirmed') {
+      try {
+        // Récupérer les paramètres de fidélité
+        const { data: loyaltySettings } = await supabase
+          .from('loyalty_settings')
+          .select('points_per_visit')
+          .maybeSingle();
+
+        const pointsToAdd = loyaltySettings?.points_per_visit ?? 10;
+
+        // Ajouter les points au client
+        if (appointment.clientId) {
+          // Récupérer les points actuels
+          const { data: client } = await supabase
+            .from('clients')
+            .select('loyalty_points')
+            .eq('id', appointment.clientId)
+            .single();
+
+          const currentPoints = client?.loyalty_points ?? 0;
+          
+          await supabase
+            .from('clients')
+            .update({ loyalty_points: currentPoints + pointsToAdd })
+            .eq('id', appointment.clientId);
+
+          console.log(`⭐ ${pointsToAdd} points de fidélité ajoutés pour ${appointment.clientName}`);
+        }
+      } catch (loyaltyError) {
+        console.error('Erreur lors de l\'ajout des points de fidélité:', loyaltyError);
+        // Ne pas bloquer la confirmation du rendez-vous
+      }
+    }
 
     // Si le rendez-vous est confirmé et que les rappels sont activés
     if (data.status === 'confirmed' && !data.date && !data.time && !data.serviceIds) {
