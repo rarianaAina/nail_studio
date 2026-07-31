@@ -33,6 +33,15 @@ const displayPrice = (price: number): string => {
   return price === 0 ? 'Devis' : formatAriary(price);
 };
 
+// ✅ Fonction pour formater la durée (ex: 85 → "1h25")
+const formatDuration = (minutes: number): string => {
+  const hours = Math.floor(minutes / 60);
+  const mins = minutes % 60;
+  if (hours === 0) return `${mins}min`;
+  if (mins === 0) return `${hours}h`;
+  return `${hours}h${mins.toString().padStart(2, '0')}`;
+};
+
 export default function Booking() {
   const { services } = useNailServices();
   const { createAppointment } = useAppointments();
@@ -211,7 +220,7 @@ export default function Booking() {
                                 </span>
                               )}
                             </div>
-                            <p className="text-xs text-muted-foreground">{s.duration} min</p>
+                            <p className="text-xs text-muted-foreground">{formatDuration(s.duration)}</p>
                             <p className="mt-1 text-sm font-semibold text-primary">{displayPrice(s.price)}</p>
                           </div>
                         </button>
@@ -241,7 +250,7 @@ export default function Booking() {
                         </div>
                         <div className="flex justify-between text-sm text-muted-foreground">
                           <span>Durée totale</span>
-                          <span>{totalDuration} min</span>
+                          <span>{formatDuration(totalDuration)}</span>
                         </div>
                       </div>
                     </motion.div>
@@ -355,6 +364,10 @@ export default function Booking() {
                         <span>Total</span>
                         <span className="text-primary">{displayPrice(totalPrice)}</span>
                       </div>
+                      <div className="flex justify-between text-xs text-muted-foreground">
+                        <span>Durée totale</span>
+                        <span>{formatDuration(totalDuration)}</span>
+                      </div>
                     </div>
                   </div>
                 </motion.div>
@@ -380,7 +393,7 @@ export default function Booking() {
                   </p>
                   <p className="mt-1 text-sm text-muted-foreground">
                     Total : <span className="font-medium text-primary">{displayPrice(totalPrice)}</span> • 
-                    Durée : <span className="font-medium">{totalDuration} min</span>
+                    Durée : <span className="font-medium">{formatDuration(totalDuration)}</span>
                   </p>
                   <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
                     {isLoggedIn ? (
