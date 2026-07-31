@@ -12,6 +12,7 @@ const SECTIONS = [
   { id: 'payment', label: 'Paiements', icon: CreditCard, path: '/admin/parametres/paiements' },
   { id: 'cancellation', label: 'Annulation', icon: Calendar, path: '/admin/parametres/annulation' },
   { id: 'reminders', label: 'Rappels', icon: Bell, path: '/admin/parametres/rappels' },
+  { id: 'loyalty', label: 'Fidélité', icon: Gift, path: '/admin/parametres/fidelite' },
   { id: 'colors', label: 'Couleurs', icon: Palette, path: '/admin/parametres/couleurs' },
   { id: 'categories', label: 'Catégories', icon: Tag, path: '/admin/parametres/categories' },
   { id: 'timeslots', label: 'Créneaux', icon: Clock, path: '/admin/parametres/creneaux' },

@@ -88,6 +88,7 @@ export default function AppRoutes() {
           <Route path="paiements" element={<PaymentMethodsSettings />} />
           <Route path="annulation" element={<CancellationSettings />} />
           <Route path="rappels" element={<RemindersSettings />} />
+          <Route path="fidelite" element={<LoyaltySettings />} />
           <Route path="couleurs" element={<ColorsSettings />} />
           <Route path="categories" element={<CategoriesSettings />} />
           <Route path="creneaux" element={<TimeSlotsSettings />} />
