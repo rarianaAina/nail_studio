@@ -1,36 +1,45 @@
 // hooks/useActiveConfig.ts
-import { useMemo, useCallback } from 'react';
-import { useConfig } from './useConfig';
+import { useCallback, useEffect, useState } from 'react';
+import { configService } from '@/services/configService';
 
 export function useActiveConfig() {
-  const { categories, timeSlots, ...rest } = useConfig();
+  const [categories, setCategories] = useState<string[]>([]);
+  const [timeSlots, setTimeSlots] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const activeCategoryNames = useMemo(
-    () => categories.filter((c) => c.active).map((c) => c.name),
-    [categories]
-  );
+  const load = useCallback(async () => {
+    try {
+      setLoading(true);
+      const [cats, slots] = await Promise.all([
+        configService.getActiveCategories(),
+        configService.getActiveTimeSlots(),
+      ]);
+      setCategories(cats);
+      setTimeSlots(slots);
+    } catch {
+      // silent fallback
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
-  // Pour compatibilité (ancienne méthode)
-  const timeSlotsList = useMemo(
-    () => timeSlots.filter((s) => s.active).map((s) => s.label),
-    [timeSlots]
-  );
+  useEffect(() => { load(); }, [load]);
 
-  // Récupérer les créneaux actifs par jour
-  const getActiveTimeSlotsByDay = useCallback(
-    (dayOfWeek: string): string[] => {
-      return timeSlots
-        .filter((s) => s.dayOfWeek === dayOfWeek && s.active)
-        .sort((a, b) => a.sortOrder - b.sortOrder)
-        .map((s) => s.label);
-    },
-    [timeSlots]
-  );
+  // ✅ Récupérer les créneaux pour un jour spécifique
+  const getTimeSlotsByDay = useCallback(async (dayOfWeek: string): Promise<string[]> => {
+    try {
+      const slots = await configService.getActiveTimeSlotsByDay(dayOfWeek);
+      return slots;
+    } catch {
+      return [];
+    }
+  }, []);
 
-  return {
-    categories: activeCategoryNames,
-    timeSlots: timeSlotsList,
-    getActiveTimeSlotsByDay, // ✅ Une seule fois
-    ...rest,
+  return { 
+    categories, 
+    timeSlots, 
+    loading, 
+    refresh: load,
+    getTimeSlotsByDay, // ✅ Nouvelle fonction
   };
 }
