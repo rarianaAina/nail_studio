@@ -57,7 +57,9 @@ export default function Auth() {
         <div className="absolute inset-0 bg-grid opacity-30" />
         <div className="absolute -right-24 top-10 h-96 w-96 rounded-full bg-primary/20 blur-3xl" />
         <div className="absolute -left-24 bottom-10 h-96 w-96 rounded-full bg-accent/20 blur-3xl" />
-        <div className="relative flex items-center gap-3">
+        
+        {/* ✅ Logo et nom cliquables vers l'accueil */}
+        <Link to="/" className="relative flex items-center gap-3 hover:opacity-80 transition-opacity">
           <img 
             src={LOGO_URL} 
             alt="Harrys Studio Logo" 
@@ -66,7 +68,8 @@ export default function Auth() {
           <div>
             <p className="font-display text-xl font-semibold">Harrys Studio</p>
           </div>
-        </div>
+        </Link>
+        
         <div className="relative">
           <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7 }}
             className="font-display text-5xl font-semibold leading-tight text-foreground">
@@ -84,7 +87,8 @@ export default function Auth() {
       <div className="relative flex items-center justify-center overflow-y-auto bg-background px-4 py-10 sm:px-6 lg:px-8">
         <div className="absolute inset-0 bg-grid opacity-[0.15] lg:hidden" />
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="relative w-full max-w-md">
-          <div className="mb-8 flex items-center justify-center gap-3 lg:hidden">
+          {/* ✅ Logo et nom cliquables vers l'accueil (version mobile) */}
+          <Link to="/" className="mb-8 flex items-center justify-center gap-3 hover:opacity-80 transition-opacity lg:hidden">
             <img 
               src={LOGO_URL} 
               alt="Harrys Studio Logo" 
@@ -94,7 +98,7 @@ export default function Auth() {
               <p className="font-display text-xl font-semibold">Harrys Studio</p>
               <p className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">Nail Studio</p>
             </div>
-          </div>
+          </Link>
 
           <div className="rounded-3xl border border-border/60 bg-card p-6 shadow-soft sm:p-8">
             <div className="relative mb-6 grid grid-cols-2 rounded-full bg-secondary p-1 text-sm font-medium">
