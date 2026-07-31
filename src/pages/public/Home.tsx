@@ -171,7 +171,7 @@ export default function Home() {
                   <Award className="h-4 w-4" />
                 </span>
                 <div>
-                  <p className="text-xs font-semibold">Produits premium</p>
+                  <p className="text-xs font-semibold">Produits premium, SANS TPO, SANS HEMA</p>
                   <p className="text-[10px] text-muted-foreground">Vegan & cruelty-free</p>
                 </div>
               </div>
