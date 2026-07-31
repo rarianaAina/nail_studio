@@ -172,7 +172,7 @@ export default function Home() {
                 </span>
                 <div>
                   <p className="text-xs font-semibold">Produits premium</p>
-                  <p className="text-[20px] text-muted-foreground">SANS TPO, SANS HEMA</p>
+                  <p className="text-[13px] text-muted-foreground">SANS TPO, SANS HEMA</p>
                 </div>
               </div>
             </motion.div>
