@@ -1,3 +1,4 @@
+// hooks/useActiveConfig.ts
 import { useMemo, useCallback } from 'react';
 import { useConfig } from './useConfig';
 
@@ -29,7 +30,7 @@ export function useActiveConfig() {
   return {
     categories: activeCategoryNames,
     timeSlots: timeSlotsList,
-    getActiveTimeSlotsByDay,
+    getActiveTimeSlotsByDay, // ✅ Une seule fois
     ...rest,
   };
 }
