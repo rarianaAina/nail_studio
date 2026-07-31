@@ -28,12 +28,6 @@ const DEFAULT_IMAGE = 'https://images.pexels.com/photos/3997389/pexels-photo-399
 
 type DraftService = Omit<Service, 'id'> & { id?: string };
 
-// ✅ Options pour les heures (0-12)
-const HOURS_OPTIONS = Array.from({ length: 13 }, (_, i) => ({ value: i, label: `${i}h` }));
-
-// ✅ Options pour les minutes (0-59, par pas de 1)
-const MINUTES_OPTIONS = Array.from({ length: 60 }, (_, i) => ({ value: i, label: `${i}min` }));
-
 // ✅ Convertir heures + minutes en minutes totales
 const toTotalMinutes = (hours: number, minutes: number): number => hours * 60 + minutes;
 
@@ -126,6 +120,22 @@ export default function AdminServices() {
     if (hours === 0) return `${mins}min`;
     if (mins === 0) return `${hours}h`;
     return `${hours}h${mins.toString().padStart(2, '0')}`;
+  };
+
+  // ✅ Gestionnaire pour les heures
+  const handleHoursChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value === '' ? 0 : Number(e.target.value);
+    if (value >= 0 && value <= 12) {
+      updateDuration(value, selectedMinutes);
+    }
+  };
+
+  // ✅ Gestionnaire pour les minutes
+  const handleMinutesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value === '' ? 0 : Number(e.target.value);
+    if (value >= 0 && value <= 59) {
+      updateDuration(selectedHours, value);
+    }
   };
 
   return (
@@ -230,59 +240,63 @@ export default function AdminServices() {
                   </div>
                 </div>
               </div>
-              <div className="grid gap-4 sm:grid-cols-2">
-                {/* ✅ Sélecteur de durée en heures et minutes (0-59) */}
+              <div className="grid gap-4 sm:grid-cols-3">
+                {/* ✅ Saisie manuelle des heures */}
                 <div className="space-y-1.5">
-                  <Label>Durée</Label>
-                  <div className="flex gap-2">
-                    <Select
-                      value={String(selectedHours)}
-                      onValueChange={(v) => updateDuration(Number(v), selectedMinutes)}
-                    >
-                      <SelectTrigger className="w-24">
-                        <SelectValue placeholder="Heures" />
-                      </SelectTrigger>
-                      <SelectContent className="max-h-48">
-                        {HOURS_OPTIONS.map((h) => (
-                          <SelectItem key={h.value} value={String(h.value)}>{h.label}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <Select
-                      value={String(selectedMinutes)}
-                      onValueChange={(v) => updateDuration(selectedHours, Number(v))}
-                    >
-                      <SelectTrigger className="w-28">
-                        <SelectValue placeholder="Minutes" />
-                      </SelectTrigger>
-                      <SelectContent className="max-h-48">
-                        {MINUTES_OPTIONS.map((m) => (
-                          <SelectItem key={m.value} value={String(m.value)}>{m.label}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    Total : {formatDuration(toTotalMinutes(selectedHours, selectedMinutes))}
-                  </p>
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="price">Prix (€)</Label>
+                  <Label htmlFor="hours">Heures</Label>
                   <Input
-                    id="price"
+                    id="hours"
                     type="number"
-                    value={editing.price === 0 ? '' : editing.price}
-                    placeholder="Laisser vide pour 'Devis'"
-                    onChange={(e) => {
-                      const value = e.target.value === '' ? 0 : Number(e.target.value);
-                      setEditing({ ...editing, price: value });
-                    }}
+                    min="0"
+                    max="12"
+                    value={selectedHours}
+                    onChange={handleHoursChange}
+                    className="w-full"
                   />
-                  <p className="text-xs text-muted-foreground">
-                    {editing.price === 0 ? 'Le prix sera affiché comme "Devis"' : `Prix : ${formatAriary(editing.price)}`}
-                  </p>
+                </div>
+
+                {/* ✅ Saisie manuelle des minutes */}
+                <div className="space-y-1.5">
+                  <Label htmlFor="minutes">Minutes</Label>
+                  <Input
+                    id="minutes"
+                    type="number"
+                    min="0"
+                    max="59"
+                    value={selectedMinutes}
+                    onChange={handleMinutesChange}
+                    className="w-full"
+                  />
+                </div>
+
+                {/* ✅ Affichage du total */}
+                <div className="space-y-1.5">
+                  <Label>Total</Label>
+                  <div className="flex h-10 items-center rounded-md border border-border px-3 text-sm bg-secondary/30">
+                    {formatDuration(toTotalMinutes(selectedHours, selectedMinutes))}
+                  </div>
                 </div>
               </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="price">Prix (€)</Label>
+                <Input
+                  id="price"
+                  type="number"
+                  min="0"
+                  step="1"
+                  value={editing.price === 0 ? '' : editing.price}
+                  placeholder="Laisser vide pour 'Devis'"
+                  onChange={(e) => {
+                    const value = e.target.value === '' ? 0 : Number(e.target.value);
+                    setEditing({ ...editing, price: value });
+                  }}
+                />
+                <p className="text-xs text-muted-foreground">
+                  {editing.price === 0 ? 'Le prix sera affiché comme "Devis"' : `Prix : ${formatAriary(editing.price)}`}
+                </p>
+              </div>
+
               <div className="space-y-1.5">
                 <Label htmlFor="desc">Description</Label>
                 <Textarea id="desc" rows={3} value={editing.description} onChange={(e) => setEditing({ ...editing, description: e.target.value })} />
