@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useCallback } from 'react';
 import { useConfig } from './useConfig';
 
 export function useActiveConfig() {
@@ -9,13 +9,13 @@ export function useActiveConfig() {
     [categories]
   );
 
-  // ✅ Pour compatibilité (ancienne méthode)
+  // Pour compatibilité (ancienne méthode)
   const timeSlotsList = useMemo(
     () => timeSlots.filter((s) => s.active).map((s) => s.label),
     [timeSlots]
   );
 
-  // ✅ Récupérer les créneaux actifs par jour
+  // Récupérer les créneaux actifs par jour
   const getActiveTimeSlotsByDay = useCallback(
     (dayOfWeek: string): string[] => {
       return timeSlots
@@ -28,8 +28,8 @@ export function useActiveConfig() {
 
   return {
     categories: activeCategoryNames,
-    timeSlots: timeSlotsList, // ✅ Compatibilité
-    getActiveTimeSlotsByDay,  // ✅ Nouveau
+    timeSlots: timeSlotsList,
+    getActiveTimeSlotsByDay,
     ...rest,
   };
 }

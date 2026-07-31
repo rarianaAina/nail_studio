@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
+// import { Label } from '@/components/ui/label'; // ✅ Supprimé car non utilisé
 import { toast } from 'sonner';
 import { cn } from '@/utils/cn';
 import { useConfig } from '@/hooks/useConfig';
@@ -31,19 +31,19 @@ export default function TimeSlotsSettings() {
   const [selectedDay, setSelectedDay] = useState<string>('monday');
   const [newSlot, setNewSlot] = useState('');
 
-  // ✅ Créneaux du jour sélectionné
+  // Créneaux du jour sélectionné
   const daySlots = useMemo(() => {
     return timeSlots
       .filter((s) => s.dayOfWeek === selectedDay)
       .sort((a, b) => a.sortOrder - b.sortOrder);
   }, [timeSlots, selectedDay]);
 
-  // ✅ Ajouter un créneau pour le jour sélectionné
+  // Ajouter un créneau pour le jour sélectionné
   const handleAdd = async () => {
     if (!newSlot.trim()) return;
     try {
       await createTimeSlot({
-        dayOfWeek: selectedDay,
+        dayOfWeek: selectedDay, // ✅ Ajout du dayOfWeek requis
         label: newSlot,
         sortOrder: daySlots.length,
         active: true,
@@ -55,7 +55,7 @@ export default function TimeSlotsSettings() {
     }
   };
 
-  // ✅ Copier les créneaux d'un jour vers un autre
+  // Copier les créneaux d'un jour vers un autre
   const handleCopy = async (fromDay: string, toDay: string) => {
     if (fromDay === toDay) return;
     
@@ -104,7 +104,7 @@ export default function TimeSlotsSettings() {
             Gérez les créneaux disponibles pour chaque jour de la semaine. Chaque jour peut avoir ses propres créneaux.
           </p>
 
-          {/* ✅ Sélecteur de jour */}
+          {/* Sélecteur de jour */}
           <div className="flex flex-wrap gap-2 border-b border-border/60 pb-4">
             {DAYS.map((day) => (
               <button
@@ -122,7 +122,7 @@ export default function TimeSlotsSettings() {
             ))}
           </div>
 
-          {/* ✅ Liste des créneaux du jour */}
+          {/* Liste des créneaux du jour */}
           <div className="min-h-[100px]">
             {daySlots.length === 0 ? (
               <div className="flex h-[100px] items-center justify-center rounded-xl border-2 border-dashed border-border/60">
@@ -165,7 +165,7 @@ export default function TimeSlotsSettings() {
             )}
           </div>
 
-          {/* ✅ Ajouter un créneau */}
+          {/* Ajouter un créneau */}
           <div className="flex gap-2 border-t border-border/60 pt-4">
             <Input
               type="time"
@@ -179,7 +179,7 @@ export default function TimeSlotsSettings() {
             </Button>
           </div>
 
-          {/* ✅ Copier les créneaux */}
+          {/* Copier les créneaux */}
           <div className="border-t border-border/60 pt-4">
             <p className="text-sm font-medium mb-2">Copier les créneaux</p>
             <div className="flex flex-wrap items-center gap-2">
