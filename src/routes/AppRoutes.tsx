@@ -37,6 +37,8 @@ import ColorsSettings from '@/pages/admin/settings/Colors';
 import CategoriesSettings from '@/pages/admin/settings/Categories';
 import TimeSlotsSettings from '@/pages/admin/settings/TimeSlots';
 
+import LoyaltySettings from '@/pages/admin/settings/Loyalty';
+
 export default function AppRoutes() {
   return (
     <Routes>

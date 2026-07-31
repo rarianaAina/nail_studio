@@ -4,6 +4,7 @@ import {
   Store, Clock, Share2, CreditCard, Calendar, Bell, Palette, Tag,
 } from 'lucide-react';
 import { cn } from '@/utils/cn';
+import { Gift } from 'lucide-react';
 
 const SECTIONS = [
   { id: 'general', label: 'Général', icon: Store, path: '/admin/parametres/general' },
