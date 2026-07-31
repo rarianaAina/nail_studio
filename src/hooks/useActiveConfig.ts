@@ -1,22 +1,28 @@
-// hooks/useActiveConfig.ts
 import { useMemo, useCallback } from 'react';
 import { useConfig } from './useConfig';
 
 export function useActiveConfig() {
-  const { categories, timeSlots, ...rest } = useConfig();
+  const { 
+    categories, 
+    timeSlots, 
+    loading, 
+    refresh,
+    // ✅ On exclut explicitement getActiveTimeSlotsByDay de rest
+    getActiveTimeSlotsByDay: _getActiveTimeSlotsByDay, 
+    ...rest 
+  } = useConfig();
 
   const activeCategoryNames = useMemo(
     () => categories.filter((c) => c.active).map((c) => c.name),
     [categories]
   );
 
-  // Pour compatibilité (ancienne méthode)
   const timeSlotsList = useMemo(
     () => timeSlots.filter((s) => s.active).map((s) => s.label),
     [timeSlots]
   );
 
-  // Récupérer les créneaux actifs par jour
+  // ✅ On redéfinit notre propre version
   const getActiveTimeSlotsByDay = useCallback(
     (dayOfWeek: string): string[] => {
       return timeSlots
@@ -30,7 +36,9 @@ export function useActiveConfig() {
   return {
     categories: activeCategoryNames,
     timeSlots: timeSlotsList,
-    getActiveTimeSlotsByDay,
-    ...rest,
+    loading,
+    refresh,
+    getActiveTimeSlotsByDay, // ✅ Une seule fois
+    ...rest, // ✅ rest ne contient plus getActiveTimeSlotsByDay
   };
 }
