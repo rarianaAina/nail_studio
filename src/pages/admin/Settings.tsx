@@ -2,8 +2,8 @@ import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { 
   Save, Upload, Palette, Clock, Share2, Store, Bell, User, ShieldCheck, Users, 
-  Plus, Trash2, GripVertical, Tag, CreditCard, Pencil, Settings as SettingsIcon,
-  Calendar, DollarSign, MessageSquare, Sparkles, Layout
+  Plus, Trash2, GripVertical, Tag, CreditCard, Pencil,
+  Calendar
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
