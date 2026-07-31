@@ -1,4 +1,3 @@
-// types/index.ts
 export type { User, UserRole, UpdateUserDto } from './user';
 export type {
   Client,
