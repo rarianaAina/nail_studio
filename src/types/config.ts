@@ -7,7 +7,8 @@ export interface ServiceCategoryConfig {
 
 export interface TimeSlotConfig {
   id: string;
-  label: string;
+  dayOfWeek: string; // ✅ Ajout: 'monday', 'tuesday', ...
+  label: string;     // '09:00', '09:30', ...
   sortOrder: number;
   active: boolean;
 }
@@ -18,6 +19,8 @@ export interface CreateCategoryDto {
 }
 
 export interface CreateTimeSlotDto {
+  dayOfWeek: string; // ✅ Ajout
   label: string;
   sortOrder?: number;
+  active?: boolean;
 }

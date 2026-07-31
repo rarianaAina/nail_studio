@@ -46,7 +46,7 @@ export default function Booking() {
   const { services } = useNailServices();
   const { createAppointment } = useAppointments();
   const { user } = useAuth();
-  const { timeSlots: configuredSlots } = useActiveConfig();
+  const { getActiveTimeSlotsByDay } = useActiveConfig(); // ✅ Changé
   const { paymentMethods, loading: loadingPayments } = usePaymentMethods();
   const navigate = useNavigate();
   const isLoggedIn = !!user;
@@ -83,6 +83,13 @@ export default function Booking() {
     () => selectedServices.reduce((sum, s) => sum + s.duration, 0),
     [selectedServices]
   );
+
+  // ✅ Récupérer les créneaux pour la date sélectionnée
+  const availableSlots = useMemo(() => {
+    if (!date) return [];
+    const dayOfWeek = new Date(date).toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
+    return getActiveTimeSlotsByDay(dayOfWeek);
+  }, [date, getActiveTimeSlotsByDay]);
 
   useEffect(() => {
     if (!date) { setBookedSlots([]); return; }
@@ -291,16 +298,29 @@ export default function Booking() {
                     Créneaux disponibles pour le {new Date(date).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}.
                   </p>
                   <div className="mt-6 grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-5">
-                    {configuredSlots.map((t) => {
+                    {availableSlots.map((t) => {
                       const taken = bookedSlots.includes(t);
                       return (
-                        <button key={t} disabled={taken} onClick={() => setTime(t)}
-                          className={cn('flex items-center justify-center gap-1.5 rounded-xl border py-2.5 text-sm transition-all disabled:opacity-30 disabled:line-through',
-                            time === t ? 'border-primary bg-primary text-primary-foreground shadow-glow' : 'border-border hover:border-primary/40')}>
+                        <button
+                          key={t}
+                          disabled={taken}
+                          onClick={() => setTime(t)}
+                          className={cn(
+                            'flex items-center justify-center gap-1.5 rounded-xl border py-2.5 text-sm transition-all disabled:opacity-30 disabled:line-through',
+                            time === t
+                              ? 'border-primary bg-primary text-primary-foreground shadow-glow'
+                              : 'border-border hover:border-primary/40'
+                          )}
+                        >
                           <Clock className="h-3.5 w-3.5" /> {t}
                         </button>
                       );
                     })}
+                    {availableSlots.length === 0 && (
+                      <div className="col-span-full py-8 text-center text-sm text-muted-foreground">
+                        Aucun créneau disponible pour ce jour.
+                      </div>
+                    )}
                   </div>
                 </motion.div>
               )}

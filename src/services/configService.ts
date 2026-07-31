@@ -10,6 +10,7 @@ interface CategoryRow {
 
 interface SlotRow {
   id: string;
+  day_of_week: string; // ✅ Ajout
   label: string;
   sort_order: number;
   active: boolean;
@@ -20,7 +21,13 @@ function rowToCategory(r: CategoryRow): ServiceCategoryConfig {
 }
 
 function rowToSlot(r: SlotRow): TimeSlotConfig {
-  return { id: r.id, label: r.label, sortOrder: r.sort_order, active: r.active };
+  return { 
+    id: r.id, 
+    dayOfWeek: r.day_of_week, // ✅ Ajout
+    label: r.label, 
+    sortOrder: r.sort_order, 
+    active: r.active 
+  };
 }
 
 export const configService = {
@@ -67,29 +74,51 @@ export const configService = {
     if (error) throw error;
   },
 
+  // ✅ Récupérer tous les créneaux
   async getTimeSlots(): Promise<TimeSlotConfig[]> {
     const { data, error } = await supabase
       .from('time_slots')
       .select('*')
+      .order('day_of_week', { ascending: true })
       .order('sort_order', { ascending: true });
     if (error) throw error;
     return (data as SlotRow[]).map(rowToSlot);
   },
 
-  async getActiveTimeSlots(): Promise<string[]> {
+  // ✅ Récupérer les créneaux actifs pour un jour spécifique
+  async getActiveTimeSlotsByDay(dayOfWeek: string): Promise<string[]> {
     const { data, error } = await supabase
       .from('time_slots')
       .select('label')
+      .eq('day_of_week', dayOfWeek)
       .eq('active', true)
       .order('sort_order', { ascending: true });
     if (error) throw error;
     return (data as Pick<SlotRow, 'label'>[]).map((r) => r.label);
   },
 
+  // ✅ Récupérer tous les créneaux actifs (pour compatibilité)
+  async getActiveTimeSlots(): Promise<string[]> {
+    const { data, error } = await supabase
+      .from('time_slots')
+      .select('label')
+      .eq('active', true)
+      .order('day_of_week', { ascending: true })
+      .order('sort_order', { ascending: true });
+    if (error) throw error;
+    return (data as Pick<SlotRow, 'label'>[]).map((r) => r.label);
+  },
+
+  // ✅ Créer un créneau avec jour
   async createTimeSlot(data: CreateTimeSlotDto): Promise<TimeSlotConfig> {
     const { data: row, error } = await supabase
       .from('time_slots')
-      .insert({ label: data.label, sort_order: data.sortOrder ?? 0 })
+      .insert({ 
+        day_of_week: data.dayOfWeek, // ✅ Ajout
+        label: data.label, 
+        sort_order: data.sortOrder ?? 0,
+        active: data.active ?? true,
+      })
       .select()
       .single();
     if (error) throw error;
@@ -98,6 +127,7 @@ export const configService = {
 
   async updateTimeSlot(id: string, data: Partial<TimeSlotConfig>): Promise<void> {
     const row: Record<string, unknown> = {};
+    if (data.dayOfWeek !== undefined) row.day_of_week = data.dayOfWeek; // ✅ Ajout
     if (data.label !== undefined) row.label = data.label;
     if (data.sortOrder !== undefined) row.sort_order = data.sortOrder;
     if (data.active !== undefined) row.active = data.active;

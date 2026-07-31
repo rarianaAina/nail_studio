@@ -1,28 +1,35 @@
-import { useCallback, useEffect, useState } from 'react';
-import { configService } from '@/services/configService';
+import { useMemo } from 'react';
+import { useConfig } from './useConfig';
 
 export function useActiveConfig() {
-  const [categories, setCategories] = useState<string[]>([]);
-  const [timeSlots, setTimeSlots] = useState<string[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { categories, timeSlots, ...rest } = useConfig();
 
-  const load = useCallback(async () => {
-    try {
-      setLoading(true);
-      const [cats, slots] = await Promise.all([
-        configService.getActiveCategories(),
-        configService.getActiveTimeSlots(),
-      ]);
-      setCategories(cats);
-      setTimeSlots(slots);
-    } catch {
-      // silent fallback
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const activeCategoryNames = useMemo(
+    () => categories.filter((c) => c.active).map((c) => c.name),
+    [categories]
+  );
 
-  useEffect(() => { load(); }, [load]);
+  // ✅ Pour compatibilité (ancienne méthode)
+  const timeSlotsList = useMemo(
+    () => timeSlots.filter((s) => s.active).map((s) => s.label),
+    [timeSlots]
+  );
 
-  return { categories, timeSlots, loading, refresh: load };
+  // ✅ Récupérer les créneaux actifs par jour
+  const getActiveTimeSlotsByDay = useCallback(
+    (dayOfWeek: string): string[] => {
+      return timeSlots
+        .filter((s) => s.dayOfWeek === dayOfWeek && s.active)
+        .sort((a, b) => a.sortOrder - b.sortOrder)
+        .map((s) => s.label);
+    },
+    [timeSlots]
+  );
+
+  return {
+    categories: activeCategoryNames,
+    timeSlots: timeSlotsList, // ✅ Compatibilité
+    getActiveTimeSlotsByDay,  // ✅ Nouveau
+    ...rest,
+  };
 }
