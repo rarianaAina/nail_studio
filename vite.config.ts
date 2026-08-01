@@ -13,37 +13,31 @@ export default defineConfig({
   optimizeDeps: {
     exclude: ['lucide-react'],
   },
+
   build: {
-    cssCodeSplit: true,
-    minify: 'esbuild',
-    sourcemap: false,
     rollupOptions: {
       output: {
-        // ✅ Correction : Utiliser des fonctions pour le code splitting
         manualChunks: (id) => {
-          // Regrouper les librairies tierces
           if (id.includes('node_modules')) {
-            // Regrouper les gros bundles
-            if (id.includes('react') || id.includes('react-dom') || id.includes('react-router-dom')) {
-              return 'vendor';
+            // ✅ Séparer les gros bundles
+            if (id.includes('recharts') || id.includes('d3')) {
+              return 'charts';
             }
             if (id.includes('framer-motion')) {
-              return 'framer-motion';
+              return 'animation';
             }
-            if (id.includes('recharts')) {
-              return 'recharts';
+            if (id.includes('lucide-react')) {
+              return 'icons';
             }
-            // Les autres node_modules
+            if (id.includes('react') || id.includes('react-dom') || id.includes('react-router-dom')) {
+              return 'react-core';
+            }
+            // Le reste
             return 'vendor';
           }
         },
-        entryFileNames: 'assets/[name]-[hash].js',
-        chunkFileNames: 'assets/[name]-[hash].js',
-        assetFileNames: 'assets/[name]-[hash].[ext]',
       },
     },
-    assetsInlineLimit: 4096,
-    chunkSizeWarningLimit: 1000,
   },
   server: {
     headers: {
