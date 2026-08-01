@@ -11,6 +11,5 @@ export interface GalleryItem {
 export interface CreateGalleryItemDto {
   title: string;
   category: string;
-  image: string;
   description?: string;
 }

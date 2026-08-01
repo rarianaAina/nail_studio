@@ -19,6 +19,8 @@ const SECTIONS = [
   { id: 'categories', label: 'Catégories', icon: Tag, path: '/admin/parametres/categories' },
   { id: 'timeslots', label: 'Créneaux', icon: Clock, path: '/admin/parametres/creneaux' },
   { id: 'informations', label: 'Infos spéciales', icon: Sparkles, path: '/admin/parametres/informations' },
+  { id: 'gallerie', label: 'Galerie', icon: Sparkles, path: '/admin/galerie' },
+
 ];
 
 export default function SettingsLayout() {
