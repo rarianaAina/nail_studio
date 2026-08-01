@@ -223,7 +223,7 @@ export default function Home() {
                   <div className="flex items-start gap-3">
                     <span className="text-3xl">{info.icon}</span>
                     <div>
-                      <h3 className="font-display text-base font-semibold">{info.title}</h3>
+                      <h2 className="font-display text-base font-semibold">{info.title}</h2>
                       <p className="mt-1 text-sm text-muted-foreground">{info.content}</p>
                     </div>
                   </div>
@@ -277,7 +277,7 @@ export default function Home() {
                   </div>
                   <CardContent className="p-5">
                     <div className="flex items-center justify-between">
-                      <h3 className="font-display text-xl font-semibold">{s.name}</h3>
+                      <h2 className="font-display text-xl font-semibold">{s.name}</h2>
                       <span className="text-sm font-semibold text-primary">
                         {s.price === 0 ? 'Devis' : formatAriary(s.price)}
                       </span>
