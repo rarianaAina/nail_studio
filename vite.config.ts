@@ -1,4 +1,3 @@
-// vite.config.ts
 import path from 'path';
 import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
@@ -13,32 +12,33 @@ export default defineConfig({
   optimizeDeps: {
     exclude: ['lucide-react'],
   },
-
   build: {
+    // ✅ Activer le code splitting CSS
+    cssCodeSplit: true,
+    // ✅ Minification
+    minify: 'esbuild',
+    // ✅ Sourcemap pour le debug
+    sourcemap: false,
     rollupOptions: {
       output: {
-        manualChunks: (id) => {
-          if (id.includes('node_modules')) {
-            // ✅ Séparer les gros bundles
-            if (id.includes('recharts') || id.includes('d3')) {
-              return 'charts';
-            }
-            if (id.includes('framer-motion')) {
-              return 'animation';
-            }
-            if (id.includes('lucide-react')) {
-              return 'icons';
-            }
-            if (id.includes('react') || id.includes('react-dom') || id.includes('react-router-dom')) {
-              return 'react-core';
-            }
-            // Le reste
-            return 'vendor';
-          }
+        // ✅ Séparer le CSS critique du reste
+        manualChunks: {
+          // Regrouper les librairies tierces
+          vendor: ['react', 'react-dom', 'react-router-dom'],
+          ui: ['@/components/ui'],
         },
+        // ✅ Nom des fichiers pour le cache
+        entryFileNames: 'assets/[name]-[hash].js',
+        chunkFileNames: 'assets/[name]-[hash].js',
+        assetFileNames: 'assets/[name]-[hash].[ext]',
       },
     },
+    // ✅ Compression des assets
+    assetsInlineLimit: 4096,
+    // ✅ Taille de chunk
+    chunkSizeWarningLimit: 1000,
   },
+  // ✅ Optimisation du serveur de dev
   server: {
     headers: {
       'Cache-Control': 'public, max-age=31536000, immutable',
