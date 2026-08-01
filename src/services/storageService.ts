@@ -1,15 +1,77 @@
 import { supabase } from '@/lib/supabase';
 
+// ✅ Fonction pour compresser l'image avant upload
+async function compressImage(file: File): Promise<File> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = (event) => {
+      const img = new Image();
+      img.src = event.target?.result as string;
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const MAX_WIDTH = 800;
+        const MAX_HEIGHT = 800;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > MAX_WIDTH) {
+            height = height * (MAX_WIDTH / width);
+            width = MAX_WIDTH;
+          }
+        } else {
+          if (height > MAX_HEIGHT) {
+            width = width * (MAX_HEIGHT / height);
+            height = MAX_HEIGHT;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx?.drawImage(img, 0, 0, width, height);
+
+        // Convertir en WebP avec qualité 80%
+        canvas.toBlob(
+          (blob) => {
+            if (blob) {
+              const compressedFile = new File(
+                [blob],
+                file.name.replace(/\.[^.]+$/, '.webp'),
+                { type: 'image/webp' }
+              );
+              resolve(compressedFile);
+            } else {
+              reject(new Error('Compression failed'));
+            }
+          },
+          'image/webp',
+          0.8
+        );
+      };
+      img.onerror = reject;
+    };
+    reader.onerror = reject;
+  });
+}
+
 export async function uploadImage(
   file: File,
   folder: string = 'services'
 ): Promise<string> {
-  const ext = file.name.split('.').pop() ?? 'jpg';
+  // ✅ Compresser l'image avant upload
+  const compressedFile = await compressImage(file);
+  
+  const ext = compressedFile.name.split('.').pop() ?? 'webp';
   const fileName = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2, 9)}.${ext}`;
 
   const { error } = await supabase.storage
     .from('images')
-    .upload(fileName, file, { cacheControl: '3600', upsert: false });
+    .upload(fileName, compressedFile, { 
+      cacheControl: '31536000', // ✅ 1 an de cache
+      upsert: false 
+    });
 
   if (error) throw error;
 
