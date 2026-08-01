@@ -1,11 +1,9 @@
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
-  Store, Clock, Share2, CreditCard, Calendar, Bell, Palette, Tag,
+  Store, Clock, Share2, CreditCard, Calendar, Bell, Palette, Tag, Gift, Sparkles, Image,
 } from 'lucide-react';
 import { cn } from '@/utils/cn';
-import { Gift } from 'lucide-react';
-import { Sparkles } from 'lucide-react'; 
 
 const SECTIONS = [
   { id: 'general', label: 'Général', icon: Store, path: '/admin/parametres/general' },
@@ -19,8 +17,7 @@ const SECTIONS = [
   { id: 'categories', label: 'Catégories', icon: Tag, path: '/admin/parametres/categories' },
   { id: 'timeslots', label: 'Créneaux', icon: Clock, path: '/admin/parametres/creneaux' },
   { id: 'informations', label: 'Infos spéciales', icon: Sparkles, path: '/admin/parametres/informations' },
-  { id: 'gallerie', label: 'Galerie', icon: Sparkles, path: '/admin/parametres/galerie' },
-
+  { id: 'galerie', label: 'Galerie', icon: Image, path: '/admin/parametres/galerie' },
 ];
 
 export default function SettingsLayout() {
@@ -39,8 +36,6 @@ export default function SettingsLayout() {
       <div className="flex flex-wrap gap-2 border-b border-border/60 pb-4">
         {SECTIONS.map((section) => {
           const Icon = section.icon;
-          //const isActive = location.pathname === section.path || 
-            (section.id === 'general' && location.pathname === '/admin/parametres');
           return (
             <NavLink
               key={section.id}
