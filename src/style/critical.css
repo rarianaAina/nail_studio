@@ -1,0 +1,67 @@
+/* src/styles/critical.css */
+/* Ce fichier est facultatif car le CSS critique est déjà inline dans index.html */
+/* Garde-le pour référence ou pour le développement */
+
+:root {
+  --background: 40 25% 97%;
+  --foreground: 30 20% 15%;
+  --primary: 30 60% 45%;
+  --primary-foreground: 40 25% 97%;
+  --accent: 35 55% 48%;
+  --border: 35 15% 85%;
+  --muted: 35 15% 88%;
+}
+
+* {
+  border-color: hsl(var(--border));
+}
+
+body {
+  margin: 0;
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+  font-family: 'Inter', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4, .font-display {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+}
+
+.gradient-rose {
+  background-image: linear-gradient(
+    135deg,
+    hsl(35 25% 92%) 0%,
+    hsl(30 20% 88%) 50%,
+    hsl(35 30% 85%) 100%
+  );
+}
+
+.bg-grid {
+  background-image: radial-gradient(
+    circle at 1px 1px,
+    rgba(200, 180, 160, 0.6) 1px,
+    transparent 0
+  );
+  background-size: 24px 24px;
+}
+
+.text-balance {
+  text-wrap: balance;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: hsl(var(--muted));
+}
+::-webkit-scrollbar-thumb {
+  background: hsl(30 40% 60%);
+  border-radius: 999px;
+  border: 2px solid hsl(var(--muted));
+}
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(30 50% 45%);
+}
