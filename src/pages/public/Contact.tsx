@@ -27,6 +27,11 @@ export default function Contact() {
     setForm({ name: '', email: '', phone: '', message: '' });
   };
 
+  // ✅ URL Google Maps avec l'adresse du salon
+  const mapUrl = settings?.address 
+    ? `https://www.google.com/maps/embed/v1/place?key=YOUR_GOOGLE_MAPS_API_KEY&q=${encodeURIComponent(settings.address)}`
+    : '';
+
   return (
     <div>
       <section className="gradient-rose pt-32 pb-16">
@@ -99,20 +104,45 @@ export default function Contact() {
                       </div>
                     </CardContent>
                   </Card>
+
+                  {/* ✅ Carte Google Maps interactive */}
+                  <Card className="overflow-hidden border-border/60 shadow-soft">
+                    <div className="aspect-video w-full overflow-hidden bg-secondary">
+                      {settings.address ? (
+                        <iframe
+                          src={mapUrl}
+                          width="100%"
+                          height="100%"
+                          style={{ border: 0 }}
+                          allowFullScreen
+                          loading="lazy" // ✅ Lazy loading pour ne pas bloquer le rendu
+                          referrerPolicy="no-referrer-when-downgrade"
+                          title="Harrys Studio - Localisation"
+                          className="h-full w-full"
+                        />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-secondary to-primary/10">
+                          <div className="text-center">
+                            <MapPin className="mx-auto h-10 w-10 text-primary" />
+                            <p className="mt-2 text-sm font-medium">Carte Google Maps</p>
+                            <p className="text-xs text-muted-foreground">Adresse non configurée</p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                    <div className="p-3 bg-secondary/30 text-center">
+                      <a
+                        href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(settings?.address || '')}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm text-primary hover:underline"
+                      >
+                        🗺️ Ouvrir dans Google Maps
+                      </a>
+                    </div>
+                  </Card>
                 </>
               )}
-
-              <Card className="overflow-hidden border-border/60 shadow-soft">
-                <div className="aspect-video w-full bg-secondary">
-                  <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-secondary to-primary/10">
-                    <div className="text-center">
-                      <MapPin className="mx-auto h-10 w-10 text-primary" />
-                      <p className="mt-2 text-sm font-medium">Carte Google Maps</p>
-                      {settings && <p className="text-xs text-muted-foreground">{settings.address}</p>}
-                    </div>
-                  </div>
-                </div>
-              </Card>
             </motion.div>
 
             <motion.div {...fadeUp} transition={{ delay: 0.1 }}>
