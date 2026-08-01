@@ -22,9 +22,9 @@
     --secondary: 35 20% 90%;
     --secondary-foreground: 30 25% 20%;
 
-    /* Champagne */
-    --muted: 35 15% 92%;
-    --muted-foreground: 30 15% 45%;
+    /* ✅ Champagne - Assombri pour meilleur contraste */
+    --muted: 35 15% 88%;
+    --muted-foreground: 30 20% 30%; /* ✅ Plus sombre (était 30 15% 45%) */
 
     /* Doré accent */
     --accent: 35 55% 48%;
@@ -62,8 +62,8 @@
     --secondary: 30 15% 18%;
     --secondary-foreground: 40 25% 96%;
     
-    --muted: 30 15% 18%;
-    --muted-foreground: 40 10% 70%;
+    --muted: 30 15% 22%; /* ✅ Plus clair */
+    --muted-foreground: 40 15% 75%; /* ✅ Plus clair (était 40 10% 70%) */
     
     --accent: 35 55% 50%;
     --accent-foreground: 30 20% 10%;
