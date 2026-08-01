@@ -162,7 +162,7 @@ export default function Home() {
             <div className="relative aspect-[4/5] overflow-hidden rounded-[2rem] shadow-glow ring-1 ring-primary/10">
               {/* ✅ Image LCP avec priorité élevée */}
               <img
-                src="https://images.pexels.com/photos/3997391/pexels-photo-3997391.jpeg?auto=compress&cs=tinysrgb&w=900&h=1120&fit=crop"
+                src="https://tzgcyehdjgqxljjttflj.supabase.co/storage/v1/object/public/images/services/1785598830482-uymrlg1.webp"
                 alt="Réalisation Harrys Studio"
                 className="h-full w-full object-cover"
                 fetchPriority="high"
