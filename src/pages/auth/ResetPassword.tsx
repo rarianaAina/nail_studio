@@ -10,7 +10,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
 
-const LOGO_URL = 'https://tzgcyehdjgqxljjttflj.supabase.co/storage/v1/object/public/Galerie%20v2/WhatsApp%20Image%202026-07-23%20at%2010.41.28%20(1).jpeg';
+const LOGO_URL = 'https://tzgcyehdjgqxljjttflj.supabase.co/storage/v1/object/public/images/logos/logo.webp';
 
 export default function ResetPassword() {
   const navigate = useNavigate();

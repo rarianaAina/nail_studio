@@ -12,7 +12,7 @@ import { uploadImage } from '@/services/storageService';
 import type { SalonSettings } from '@/types';
 
 // ✅ Logo par défaut (si aucun logo n'est configuré)
-const DEFAULT_LOGO = 'https://tzgcyehdjgqxljjttflj.supabase.co/storage/v1/object/public/Galerie%20v2/harrys-studio-logo.webp';
+const DEFAULT_LOGO = 'https://tzgcyehdjgqxljjttflj.supabase.co/storage/v1/object/public/images/logos/logo.webp';
 
 export default function GeneralSettings() {
   const { settings, updateSettings } = useSettings();
@@ -44,7 +44,7 @@ export default function GeneralSettings() {
     toast.success('Paramètres enregistrés.');
   };
 
-  // ✅ Gestion de l'upload du logo avec compression automatique
+  // ✅ Gestion de l'upload du logo avec compression automatique et renommage
   const handleLogoUpload = async (file: File) => {
     // Vérifier la taille (max 2 Mo)
     if (file.size > 2 * 1024 * 1024) {
@@ -60,8 +60,15 @@ export default function GeneralSettings() {
 
     setUploading(true);
     try {
-      // ✅ Upload avec compression automatique
-      const url = await uploadImage(file, 'logos');
+      // ✅ Renommer le fichier en "logo.webp" avant upload
+      const renamedFile = new File(
+        [file],
+        'logo.webp',
+        { type: 'image/webp' }
+      );
+      
+      // ✅ Upload avec nom fixe "logo"
+      const url = await uploadImage(renamedFile, 'logos', 'logo');
       setLogoUrl(url);
       toast.success('Logo téléversé avec succès !');
     } catch (error) {

@@ -57,23 +57,29 @@ async function compressImage(file: File): Promise<File> {
   });
 }
 
+// services/storageService.ts
 export async function uploadImage(
   file: File,
-  folder: string = 'services'
+  folder: string = 'services',
+  fixedName?: string // ✅ Nouveau paramètre optionnel
 ): Promise<string> {
-  // ✅ Compresser l'image avant upload
   const compressedFile = await compressImage(file);
   
-  const ext = compressedFile.name.split('.').pop() ?? 'webp';
-  const fileName = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2, 9)}.${ext}`;
+  // ✅ Si un nom fixe est fourni, l'utiliser
+  let fileName: string;
+  if (fixedName) {
+    const ext = compressedFile.name.split('.').pop() ?? 'webp';
+    fileName = `${folder}/${fixedName}.${ext}`;
+  } else {
+    const ext = compressedFile.name.split('.').pop() ?? 'webp';
+    fileName = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2, 9)}.${ext}`;
+  }
 
-  // ✅ S'assurer que le bucket 'images' existe
-  // Si ce n'est pas le cas, il sera créé automatiquement à l'upload
   const { error } = await supabase.storage
     .from('images')
     .upload(fileName, compressedFile, { 
-      cacheControl: '31536000', // ✅ 1 an de cache
-      upsert: false 
+      cacheControl: '31536000',
+      upsert: true // ✅ Important pour remplacer l'ancien logo
     });
 
   if (error) throw error;
