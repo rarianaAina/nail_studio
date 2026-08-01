@@ -57,14 +57,15 @@ export default function Home() {
     ],
   };
 
-  // Récupérer les images de la galerie depuis Supabase
+  // ✅ Récupérer les images de la galerie avec optimisation
   useEffect(() => {
     const fetchGallery = async () => {
       try {
         const { data, error } = await supabase
           .from('gallery')
-          .select('*')
-          .order('created_at', { ascending: false });
+          .select('id, title, category, image') // ✅ Uniquement les champs nécessaires
+          .order('created_at', { ascending: false })
+          .limit(8); // ✅ Limiter à 8 images
 
         if (error) throw error;
         setGalleryItems(data || []);
@@ -124,6 +125,8 @@ export default function Home() {
                     src={LOGO_URL}
                     alt="Harrys Studio Logo"
                     className="h-10 w-10 rounded-full border-2 border-white object-cover cursor-pointer transition-transform hover:scale-105"
+                    loading="lazy"
+                    decoding="async"
                   />
                 </Link>
                 {[3997389, 3997391, 704815].map((id) => (
@@ -132,6 +135,8 @@ export default function Home() {
                     src={`https://images.pexels.com/photos/${id}/pexels-photo-${id}.jpeg?auto=compress&cs=tinysrgb&w=80&h=80&fit=crop`}
                     alt="Cliente"
                     className="h-10 w-10 rounded-full border-2 border-white object-cover"
+                    loading="lazy"
+                    decoding="async"
                   />
                 ))}
               </div>
@@ -155,10 +160,14 @@ export default function Home() {
             className="relative mx-auto w-full max-w-md"
           >
             <div className="relative aspect-[4/5] overflow-hidden rounded-[2rem] shadow-glow ring-1 ring-primary/10">
+              {/* ✅ Image LCP avec priorité élevée */}
               <img
                 src="https://images.pexels.com/photos/3997391/pexels-photo-3997391.jpeg?auto=compress&cs=tinysrgb&w=900&h=1120&fit=crop"
                 alt="Réalisation Harrys Studio"
                 className="h-full w-full object-cover"
+                fetchPriority="high"
+                loading="eager"
+                decoding="sync"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-foreground/30 via-transparent to-transparent" />
             </div>
@@ -257,6 +266,8 @@ export default function Home() {
                       src={s.image}
                       alt={s.name}
                       className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+                      loading="lazy"
+                      decoding="async"
                     />
                     {s.popular && (
                       <Badge className="absolute left-3 top-3 gap-1 rounded-full bg-primary text-primary-foreground shadow">
@@ -328,6 +339,8 @@ export default function Home() {
                     src={g.image}
                     alt={g.title}
                     className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
+                    loading="lazy"
+                    decoding="async"
                   />
                   <div className="absolute inset-0 flex items-end bg-gradient-to-t from-foreground/60 via-transparent to-transparent opacity-0 transition-opacity group-hover:opacity-100">
                     <div className="p-4 text-white">
