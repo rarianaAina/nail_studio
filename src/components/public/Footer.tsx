@@ -16,6 +16,11 @@ export default function Footer() {
     instagram: 'https://instagram.com/nida.nail.studio',
   };
 
+  // ✅ Fonction pour remonter en haut de page
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   return (
     <footer className="border-t border-border/60 bg-secondary/40">
       <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
@@ -48,6 +53,7 @@ export default function Footer() {
                 <li key={to}>
                   <Link
                     to={to}
+                    onClick={scrollToTop} // ✅ Ajouter le scroll
                     className="text-muted-foreground transition-colors hover:text-primary"
                   >
                     {label}
