@@ -1,4 +1,3 @@
-// services/storageService.ts
 import { supabase } from '@/lib/supabase';
 
 // ✅ Fonction pour compresser l'image avant upload
@@ -67,8 +66,6 @@ export async function uploadImage(
   const ext = compressedFile.name.split('.').pop() ?? 'webp';
   const fileName = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2, 9)}.${ext}`;
 
-  // ✅ S'assurer que le bucket 'images' existe
-  // Si ce n'est pas le cas, il sera créé automatiquement à l'upload
   const { error } = await supabase.storage
     .from('images')
     .upload(fileName, compressedFile, { 
@@ -79,20 +76,5 @@ export async function uploadImage(
   if (error) throw error;
 
   const { data } = supabase.storage.from('images').getPublicUrl(fileName);
-  return data.publicUrl;
-}
-
-// ✅ Fonction pour supprimer une image du storage
-export async function deleteImage(filePath: string): Promise<void> {
-  const { error } = await supabase.storage
-    .from('images')
-    .remove([filePath]);
-  
-  if (error) throw error;
-}
-
-// ✅ Fonction pour obtenir l'URL publique d'une image
-export function getPublicUrl(filePath: string): string {
-  const { data } = supabase.storage.from('images').getPublicUrl(filePath);
   return data.publicUrl;
 }
