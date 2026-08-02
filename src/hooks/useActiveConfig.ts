@@ -7,7 +7,7 @@ export function useActiveConfig() {
     timeSlots, 
     loading, 
     refresh,
-    // ✅ On exclut explicitement getActiveTimeSlotsByDate de rest
+  
     getActiveTimeSlotsByDate: _getActiveTimeSlotsByDate, 
     ...rest 
   } = useConfig();
