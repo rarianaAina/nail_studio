@@ -7,8 +7,8 @@ export function useActiveConfig() {
     timeSlots, 
     loading, 
     refresh,
-    // ✅ On exclut explicitement getActiveTimeSlotsByDay de rest
-    getActiveTimeSlotsByDay: _getActiveTimeSlotsByDay, 
+    // ✅ On exclut explicitement getActiveTimeSlotsByDate de rest
+    getActiveTimeSlotsByDate: _getActiveTimeSlotsByDate, 
     ...rest 
   } = useConfig();
 
@@ -22,11 +22,11 @@ export function useActiveConfig() {
     [timeSlots]
   );
 
-  // ✅ On redéfinit notre propre version
-  const getActiveTimeSlotsByDay = useCallback(
-    (dayOfWeek: string): string[] => {
+  // ✅ On redéfinit notre propre version pour le système par date
+  const getActiveTimeSlotsByDate = useCallback(
+    (date: string): string[] => {
       return timeSlots
-        .filter((s) => s.dayOfWeek === dayOfWeek && s.active)
+        .filter((s) => s.date === date && s.active)
         .sort((a, b) => a.sortOrder - b.sortOrder)
         .map((s) => s.label);
     },
@@ -38,7 +38,7 @@ export function useActiveConfig() {
     timeSlots: timeSlotsList,
     loading,
     refresh,
-    getActiveTimeSlotsByDay, // ✅ Une seule fois
-    ...rest, // ✅ rest ne contient plus getActiveTimeSlotsByDay
+    getActiveTimeSlotsByDate, // ✅ Une seule fois
+    ...rest, // ✅ rest ne contient plus getActiveTimeSlotsByDate
   };
 }
