@@ -134,7 +134,6 @@ export default function Booking() {
     return () => { mounted = false; };
   }, [date]);
 
-  const minDate = toDateString(new Date());
 
   const canNext =
     (step === 1 && selectedServiceIds.length > 0) ||
