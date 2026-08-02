@@ -1,3 +1,4 @@
+// pages/public/Booking.tsx
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -48,7 +49,7 @@ export default function Booking() {
   const { services } = useNailServices();
   const { createAppointment } = useAppointments();
   const { user } = useAuth();
-  const { getActiveTimeSlotsByDay } = useActiveConfig();
+  const { getActiveTimeSlotsByDate } = useActiveConfig(); // ✅ Changé de getActiveTimeSlotsByDay à getActiveTimeSlotsByDate
   const { paymentMethods, loading: loadingPayments } = usePaymentMethods();
   const { settings } = useSettings();
   const navigate = useNavigate();
@@ -90,9 +91,9 @@ export default function Booking() {
   // ✅ Récupérer les créneaux pour la date sélectionnée
   const availableSlots = useMemo(() => {
     if (!date) return [];
-    const dayOfWeek = new Date(date).toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
-    return getActiveTimeSlotsByDay(dayOfWeek);
-  }, [date, getActiveTimeSlotsByDay]);
+    // ✅ Utiliser getActiveTimeSlotsByDate au lieu de getActiveTimeSlotsByDay
+    return getActiveTimeSlotsByDate(date);
+  }, [date, getActiveTimeSlotsByDate]);
 
   // ✅ Vérifier si un jour est disponible (avec fallback)
   const isDayAvailable = (dateStr: string): boolean => {
@@ -326,7 +327,7 @@ export default function Booking() {
                     Créneaux disponibles pour le {new Date(date).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}.
                   </p>
                   <div className="mt-6 grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-5">
-                    {availableSlots.map((t) => {
+                    {availableSlots.map((t: string) => { // ✅ Ajout du type string explicite
                       const taken = bookedSlots.includes(t);
                       return (
                         <button
