@@ -67,8 +67,9 @@ export default function Booking() {
   });
   const [submitting, setSubmitting] = useState(false);
   const [bookedSlots, setBookedSlots] = useState<string[]>([]);
+  const [slotsByDate, setSlotsByDate] = useState<Record<string, number>>({});
 
-  // ✅ Calendrier
+  // Calendrier
   const [calendarMonth, setCalendarMonth] = useState(() => {
     const d = new Date();
     return new Date(d.getFullYear(), d.getMonth(), 1);
@@ -106,19 +107,36 @@ export default function Booking() {
     return !dayHours.closed;
   };
 
-  // ✅ Générer les cellules du calendrier
-  const calendarCells = useMemo(() => {
-    const year = calendarMonth.getFullYear();
-    const month = calendarMonth.getMonth();
-    const first = new Date(year, month, 1);
-    const startDay = (first.getDay() + 6) % 7;
-    const daysInMonth = new Date(year, month + 1, 0).getDate();
-    const arr: (Date | null)[] = [];
-    for (let i = 0; i < startDay; i++) arr.push(null);
-    for (let d = 1; d <= daysInMonth; d++) arr.push(new Date(year, month, d));
-    while (arr.length % 7 !== 0) arr.push(null);
-    return arr;
+  // ✅ Charger les créneaux pour le mois affiché
+  useEffect(() => {
+    const fetchSlotsForMonth = async () => {
+      const year = calendarMonth.getFullYear();
+      const month = String(calendarMonth.getMonth() + 1).padStart(2, '0');
+      const daysInMonth = new Date(year, calendarMonth.getMonth() + 1, 0).getDate();
+      const startDate = `${year}-${month}-01`;
+      const endDate = `${year}-${month}-${String(daysInMonth).padStart(2, '0')}`;
+
+      const { data } = await supabase
+        .from('time_slots')
+        .select('date, active')
+        .gte('date', startDate)
+        .lte('date', endDate)
+        .eq('active', true);
+
+      const grouped: Record<string, number> = {};
+      (data || []).forEach((slot) => {
+        grouped[slot.date] = (grouped[slot.date] || 0) + 1;
+      });
+      setSlotsByDate(grouped);
+    };
+
+    fetchSlotsForMonth();
   }, [calendarMonth]);
+
+  // ✅ Vérifier si une date a des créneaux
+  const hasSlots = (dateStr: string): boolean => {
+    return !!slotsByDate[dateStr];
+  };
 
   useEffect(() => {
     if (!date) { setBookedSlots([]); return; }
@@ -134,6 +152,21 @@ export default function Booking() {
     return () => { mounted = false; };
   }, [date]);
 
+  // Générer les cellules du calendrier
+  const calendarCells = useMemo(() => {
+    const year = calendarMonth.getFullYear();
+    const month = calendarMonth.getMonth();
+    const first = new Date(year, month, 1);
+    const startDay = (first.getDay() + 6) % 7;
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const arr: (Date | null)[] = [];
+    for (let i = 0; i < startDay; i++) arr.push(null);
+    for (let d = 1; d <= daysInMonth; d++) arr.push(new Date(year, month, d));
+    while (arr.length % 7 !== 0) arr.push(null);
+    return arr;
+  }, [calendarMonth]);
+
+  const minDate = toDateString(new Date());
 
   const canNext =
     (step === 1 && selectedServiceIds.length > 0) ||
@@ -299,7 +332,6 @@ export default function Booking() {
                   <h2 className="font-display text-2xl font-semibold">Choisissez une date</h2>
                   <p className="mt-1 text-sm text-muted-foreground">Sélectionnez le jour de votre rendez-vous.</p>
                   <div className="mt-6 mx-auto max-w-md">
-                    {/* ✅ Calendrier complet avec points */}
                     <Card className="border-border/60 shadow-soft">
                       <CardContent className="p-4">
                         <div className="flex items-center justify-between mb-4">
@@ -337,25 +369,26 @@ export default function Booking() {
                             const iso = toDateString(dateObj);
                             const isToday = iso === toDateString(new Date());
                             const isSelected = iso === date;
-                            const isAvailable = isDayAvailable(iso);
+                            const isDayOpen = isDayAvailable(iso);
+                            const hasAvailableSlots = hasSlots(iso) && isDayOpen;
                             
                             return (
                               <button
                                 key={i}
                                 onClick={() => {
-                                  if (isAvailable) {
+                                  if (hasAvailableSlots) {
                                     setDate(iso);
                                   }
                                 }}
-                                disabled={!isAvailable}
+                                disabled={!hasAvailableSlots}
                                 className={cn(
                                   'aspect-square rounded-lg text-sm transition-all flex flex-col items-center justify-center',
                                   isSelected
                                     ? 'bg-primary text-primary-foreground shadow-glow'
-                                    : isAvailable
+                                    : hasAvailableSlots
                                     ? 'bg-primary/5 text-primary hover:bg-primary/10 hover:scale-105 cursor-pointer'
                                     : 'text-muted-foreground cursor-default opacity-40',
-                                  isToday && !isSelected && 'ring-1 ring-primary/30'
+                                  isToday && !isSelected && hasAvailableSlots && 'ring-1 ring-primary/30'
                                 )}
                               >
                                 <span className={cn(
@@ -364,7 +397,7 @@ export default function Booking() {
                                 )}>
                                   {dateObj.getDate()}
                                 </span>
-                                {isAvailable && (
+                                {hasAvailableSlots && (
                                   <div className={cn(
                                     'mt-0.5 h-1 w-1 rounded-full',
                                     isSelected ? 'bg-primary-foreground' : 'bg-primary'
@@ -378,11 +411,11 @@ export default function Booking() {
                         <div className="mt-4 flex items-center gap-3 text-xs text-muted-foreground">
                           <div className="flex items-center gap-1.5">
                             <span className="inline-block h-2 w-2 rounded-full bg-primary" />
-                            <span>Disponible</span>
+                            <span>Créneaux disponibles</span>
                           </div>
                           <div className="flex items-center gap-1.5">
                             <span className="inline-block h-2 w-2 rounded-full bg-muted-foreground/30" />
-                            <span>Indisponible</span>
+                            <span>Aucun créneau</span>
                           </div>
                           <div className="flex items-center gap-1.5">
                             <span className="inline-block h-2 w-2 rounded-full bg-primary ring-1 ring-primary/30" />
