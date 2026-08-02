@@ -19,6 +19,7 @@ import { usePaymentMethods } from '@/hooks/usePaymentMethods';
 import { useSettings } from '@/hooks/useSettings';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
+import { toDateString, formatDate, isToday } from '@/utils/date';
 import type { BusinessHours } from '@/types';
 
 type Step = 1 | 2 | 3 | 4 | 5;
@@ -31,12 +32,10 @@ const stepsMeta = [
   { n: 5, label: 'Confirmation' },
 ] as const;
 
-// ✅ Fonction pour afficher le prix ou "Devis"
 const displayPrice = (price: number): string => {
   return price === 0 ? 'Devis' : formatAriary(price);
 };
 
-// ✅ Fonction pour formater la durée (ex: 85 → "1h25")
 const formatDuration = (minutes: number): string => {
   const hours = Math.floor(minutes / 60);
   const mins = minutes % 60;
@@ -49,7 +48,7 @@ export default function Booking() {
   const { services } = useNailServices();
   const { createAppointment } = useAppointments();
   const { user } = useAuth();
-  const { getActiveTimeSlotsByDate } = useActiveConfig(); // ✅ Changé de getActiveTimeSlotsByDay à getActiveTimeSlotsByDate
+  const { getActiveTimeSlotsByDate } = useActiveConfig();
   const { paymentMethods, loading: loadingPayments } = usePaymentMethods();
   const { settings } = useSettings();
   const navigate = useNavigate();
@@ -88,21 +87,15 @@ export default function Booking() {
     [selectedServices]
   );
 
-  // ✅ Récupérer les créneaux pour la date sélectionnée
   const availableSlots = useMemo(() => {
     if (!date) return [];
-    // ✅ Utiliser getActiveTimeSlotsByDate au lieu de getActiveTimeSlotsByDay
     return getActiveTimeSlotsByDate(date);
   }, [date, getActiveTimeSlotsByDate]);
 
-  // ✅ Vérifier si un jour est disponible (avec fallback)
   const isDayAvailable = (dateStr: string): boolean => {
-    const dayName = new Date(dateStr).toLocaleDateString('fr-FR', { weekday: 'long' });
+    const dayName = new Date(dateStr + 'T00:00:00').toLocaleDateString('fr-FR', { weekday: 'long' });
     const dayHours = settings?.hours?.find((h: BusinessHours) => h.day === dayName);
-    
-    // Si settings n'est pas chargé ou que le jour n'existe pas, on autorise
     if (!settings?.hours || !dayHours) return true;
-    
     return !dayHours.closed;
   };
 
@@ -120,7 +113,7 @@ export default function Booking() {
     return () => { mounted = false; };
   }, [date]);
 
-  const minDate = new Date().toISOString().slice(0, 10);
+  const minDate = toDateString(new Date());
 
   const canNext =
     (step === 1 && selectedServiceIds.length > 0) ||
@@ -164,6 +157,7 @@ export default function Booking() {
       setStep((s) => Math.min(5, s + 1) as Step);
     }
   };
+
   const prev = () => setStep((s) => Math.max(1, s - 1) as Step);
 
   const toggleService = (serviceId: string) => {
@@ -285,12 +279,18 @@ export default function Booking() {
                   <h2 className="font-display text-2xl font-semibold">Choisissez une date</h2>
                   <p className="mt-1 text-sm text-muted-foreground">Sélectionnez le jour de votre rendez-vous.</p>
                   <div className="mt-6 mx-auto max-w-md">
-                    <Input type="date" min={minDate} value={date} onChange={(e) => setDate(e.target.value)} className="h-14 rounded-2xl text-lg" />
+                    <Input 
+                      type="date" 
+                      min={minDate} 
+                      value={date} 
+                      onChange={(e) => setDate(e.target.value)} 
+                      className="h-14 rounded-2xl text-lg" 
+                    />
                     <div className="mt-4 grid grid-cols-4 gap-2 sm:grid-cols-7">
                       {Array.from({ length: 14 }).map((_, i) => {
                         const d = new Date();
                         d.setDate(d.getDate() + i);
-                        const iso = d.toISOString().slice(0, 10);
+                        const iso = toDateString(d);
                         const isAvailable = isDayAvailable(iso);
                         
                         return (
@@ -324,10 +324,10 @@ export default function Booking() {
                 <motion.div key="s3" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
                   <h2 className="font-display text-2xl font-semibold">Choisissez un créneau</h2>
                   <p className="mt-1 text-sm text-muted-foreground">
-                    Créneaux disponibles pour le {new Date(date).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}.
+                    Créneaux disponibles pour le {date ? new Date(date + 'T00:00:00').toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' }) : ''}
                   </p>
                   <div className="mt-6 grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-5">
-                    {availableSlots.map((t: string) => { // ✅ Ajout du type string explicite
+                    {availableSlots.map((t: string) => {
                       const taken = bookedSlots.includes(t);
                       return (
                         <button
@@ -372,7 +372,6 @@ export default function Booking() {
                       <Input id="email" type="email" value={info.email} onChange={(e) => setInfo({ ...info, email: e.target.value })} placeholder="vous@email.com" />
                     </div>
                     
-                    {/* Moyen de paiement */}
                     <div className="space-y-1.5">
                       <Label htmlFor="payment">Moyen de paiement *</Label>
                       <Select value={paymentMethodId} onValueChange={setPaymentMethodId}>
@@ -400,7 +399,6 @@ export default function Booking() {
                       </Select>
                     </div>
 
-                    {/* Récapitulatif de la commande */}
                     <div className="rounded-xl bg-secondary/50 p-3 text-sm">
                       <p className="font-medium">Récapitulatif de votre commande</p>
                       {selectedServices.map(s => (
@@ -436,7 +434,7 @@ export default function Booking() {
                     </span>{' '}
                     le{' '}
                     <span className="font-medium text-foreground">
-                      {new Date(date).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })} à {time}
+                      {date ? new Date(date + 'T00:00:00').toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' }) : ''} à {time}
                     </span>{' '}
                     a bien été enregistré.
                   </p>

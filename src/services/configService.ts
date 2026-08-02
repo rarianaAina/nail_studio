@@ -10,7 +10,7 @@ interface CategoryRow {
 
 interface SlotRow {
   id: string;
-  date: string;        // ✅ Date spécifique
+  date: string;
   label: string;
   sort_order: number;
   active: boolean;
@@ -23,7 +23,7 @@ function rowToCategory(r: CategoryRow): ServiceCategoryConfig {
 function rowToSlot(r: SlotRow): TimeSlotConfig {
   return { 
     id: r.id, 
-    date: r.date,      // ✅ Date spécifique
+    date: r.date,
     label: r.label, 
     sortOrder: r.sort_order, 
     active: r.active 
@@ -74,7 +74,6 @@ export const configService = {
     if (error) throw error;
   },
 
-  // ✅ Récupérer tous les créneaux
   async getTimeSlots(): Promise<TimeSlotConfig[]> {
     const { data, error } = await supabase
       .from('time_slots')
@@ -85,7 +84,6 @@ export const configService = {
     return (data as SlotRow[]).map(rowToSlot);
   },
 
-  // ✅ Récupérer les créneaux pour une date spécifique
   async getTimeSlotsByDate(date: string): Promise<TimeSlotConfig[]> {
     const { data, error } = await supabase
       .from('time_slots')
@@ -96,7 +94,6 @@ export const configService = {
     return (data as SlotRow[]).map(rowToSlot);
   },
 
-  // ✅ Récupérer les créneaux actifs pour une date spécifique
   async getActiveTimeSlotsByDate(date: string): Promise<string[]> {
     const { data, error } = await supabase
       .from('time_slots')
@@ -108,7 +105,6 @@ export const configService = {
     return (data as Pick<SlotRow, 'label'>[]).map((r) => r.label);
   },
 
-  // ✅ Récupérer tous les créneaux actifs (pour compatibilité)
   async getActiveTimeSlots(): Promise<string[]> {
     const { data, error } = await supabase
       .from('time_slots')
@@ -120,12 +116,11 @@ export const configService = {
     return (data as Pick<SlotRow, 'label'>[]).map((r) => r.label);
   },
 
-  // ✅ Créer un créneau avec date
   async createTimeSlot(data: CreateTimeSlotDto): Promise<TimeSlotConfig> {
     const { data: row, error } = await supabase
       .from('time_slots')
       .insert({ 
-        date: data.date,      // ✅ Date spécifique
+        date: data.date,
         label: data.label, 
         sort_order: data.sortOrder ?? 0,
         active: data.active ?? true,
@@ -151,7 +146,6 @@ export const configService = {
     if (error) throw error;
   },
 
-  // ✅ Supprimer tous les créneaux d'une date
   async deleteTimeSlotsByDate(date: string): Promise<void> {
     const { error } = await supabase
       .from('time_slots')
@@ -160,7 +154,6 @@ export const configService = {
     if (error) throw error;
   },
 
-  // ✅ Copier les créneaux d'une date vers une autre
   async copyTimeSlots(fromDate: string, toDate: string): Promise<void> {
     const { data: sourceSlots } = await supabase
       .from('time_slots')
@@ -171,13 +164,11 @@ export const configService = {
       throw new Error('Aucun créneau à copier');
     }
 
-    // Supprimer les créneaux existants de la date cible
     await supabase
       .from('time_slots')
       .delete()
       .eq('date', toDate);
 
-    // Insérer les nouveaux créneaux
     const newSlots = sourceSlots.map(s => ({
       date: toDate,
       label: s.label,

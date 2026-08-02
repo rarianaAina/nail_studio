@@ -1,3 +1,4 @@
+// hooks/useConfig.ts
 import { useCallback, useEffect, useState } from 'react';
 import type { ServiceCategoryConfig, TimeSlotConfig, CreateCategoryDto, CreateTimeSlotDto } from '@/types/config';
 import { configService } from '@/services/configService';
@@ -57,12 +58,10 @@ export function useConfig() {
     setTimeSlots((prev) => prev.filter((s) => s.id !== id));
   };
 
-  // ✅ Récupérer les créneaux pour une date spécifique
   const getTimeSlotsByDate = useCallback((date: string): TimeSlotConfig[] => {
     return timeSlots.filter((slot) => slot.date === date);
   }, [timeSlots]);
 
-  // ✅ Récupérer les créneaux actifs pour une date spécifique
   const getActiveTimeSlotsByDate = useCallback((date: string): string[] => {
     return timeSlots
       .filter((slot) => slot.date === date && slot.active)
@@ -70,7 +69,6 @@ export function useConfig() {
       .map((slot) => slot.label);
   }, [timeSlots]);
 
-  // ✅ Récupérer tous les créneaux actifs (compatibilité)
   const getActiveTimeSlots = useCallback((): string[] => {
     return timeSlots
       .filter((slot) => slot.active)

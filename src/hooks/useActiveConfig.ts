@@ -7,7 +7,6 @@ export function useActiveConfig() {
     timeSlots, 
     loading, 
     refresh,
-  
     getActiveTimeSlotsByDate: _getActiveTimeSlotsByDate, 
     ...rest 
   } = useConfig();
@@ -22,7 +21,6 @@ export function useActiveConfig() {
     [timeSlots]
   );
 
-  // ✅ On redéfinit notre propre version pour le système par date
   const getActiveTimeSlotsByDate = useCallback(
     (date: string): string[] => {
       return timeSlots
@@ -38,7 +36,7 @@ export function useActiveConfig() {
     timeSlots: timeSlotsList,
     loading,
     refresh,
-    getActiveTimeSlotsByDate, // ✅ Une seule fois
-    ...rest, // ✅ rest ne contient plus getActiveTimeSlotsByDate
+    getActiveTimeSlotsByDate,
+    ...rest,
   };
 }

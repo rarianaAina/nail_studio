@@ -1,6 +1,7 @@
+// pages/admin/settings/TimeSlotsSettings.tsx
 import { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Plus, Trash2, Copy, Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Plus, Trash2, Clock, Copy, Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,6 +9,7 @@ import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
 import { cn } from '@/utils/cn';
 import { useConfig } from '@/hooks/useConfig';
+import { toDateString, formatDateShort, isToday } from '@/utils/date';
 
 const weekdays = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
 
@@ -20,7 +22,7 @@ export default function TimeSlotsSettings() {
   } = useConfig();
 
   const [selectedDate, setSelectedDate] = useState<string>(
-    new Date().toISOString().slice(0, 10)
+    toDateString(new Date())
   );
   const [newSlot, setNewSlot] = useState('');
   const [cursor, setCursor] = useState(() => {
@@ -28,14 +30,12 @@ export default function TimeSlotsSettings() {
     return new Date(d.getFullYear(), d.getMonth(), 1);
   });
 
-  // Créneaux pour la date sélectionnée
   const daySlots = useMemo(() => {
     return timeSlots
       .filter((s) => s.date === selectedDate)
       .sort((a, b) => a.sortOrder - b.sortOrder);
   }, [timeSlots, selectedDate]);
 
-  // Grouper les créneaux par date pour l'affichage
   const slotsByDate = useMemo(() => {
     const grouped: Record<string, typeof timeSlots> = {};
     timeSlots.forEach((slot) => {
@@ -45,7 +45,6 @@ export default function TimeSlotsSettings() {
     return grouped;
   }, [timeSlots]);
 
-  // Ajouter un créneau
   const handleAdd = async () => {
     if (!newSlot.trim()) return;
     try {
@@ -62,7 +61,6 @@ export default function TimeSlotsSettings() {
     }
   };
 
-  // Copier les créneaux d'une date vers une autre
   const handleCopy = async (fromDate: string, toDate: string) => {
     if (fromDate === toDate) return;
     
@@ -72,18 +70,16 @@ export default function TimeSlotsSettings() {
       return;
     }
 
-    const fromLabel = new Date(fromDate).toLocaleDateString('fr-FR');
-    const toLabel = new Date(toDate).toLocaleDateString('fr-FR');
+    const fromLabel = new Date(fromDate + 'T00:00:00').toLocaleDateString('fr-FR');
+    const toLabel = new Date(toDate + 'T00:00:00').toLocaleDateString('fr-FR');
     if (!confirm(`Copier les créneaux du ${fromLabel} vers le ${toLabel} ?`)) return;
 
     try {
-      // Supprimer les créneaux existants de la date cible
       const targetSlots = timeSlots.filter((s) => s.date === toDate);
       for (const slot of targetSlots) {
         await deleteTimeSlot(slot.id);
       }
 
-      // Créer les nouveaux créneaux
       for (const slot of sourceSlots) {
         await createTimeSlot({
           date: toDate,
@@ -99,7 +95,6 @@ export default function TimeSlotsSettings() {
     }
   };
 
-  // Générer les cellules du calendrier
   const cells = useMemo(() => {
     const year = cursor.getFullYear();
     const month = cursor.getMonth();
@@ -152,8 +147,8 @@ export default function TimeSlotsSettings() {
               {cells.map((d, i) => {
                 if (!d) return <div key={i} className="min-h-[56px] rounded-xl bg-secondary/20" />;
                 
-                const iso = d.toISOString().slice(0, 10);
-                const isToday = iso === new Date().toISOString().slice(0, 10);
+                const iso = toDateString(d);
+                const isTodayDate = isToday(iso);
                 const isSelected = iso === selectedDate;
                 const hasSlots = slotsByDate[iso] && slotsByDate[iso].length > 0;
                 const activeSlots = slotsByDate[iso]?.filter(s => s.active).length || 0;
@@ -170,7 +165,7 @@ export default function TimeSlotsSettings() {
                     <div className="flex items-center justify-between">
                       <span className={cn(
                         'grid h-6 w-6 place-items-center rounded-full text-xs font-semibold',
-                        isToday ? 'bg-primary text-primary-foreground' : 'text-foreground'
+                        isTodayDate ? 'bg-primary text-primary-foreground' : 'text-foreground'
                       )}>
                         {d.getDate()}
                       </span>
@@ -202,7 +197,7 @@ export default function TimeSlotsSettings() {
           <div className="border-t border-border/60 pt-4">
             <div className="flex items-center justify-between mb-3">
               <h4 className="font-medium">
-                Créneaux du {new Date(selectedDate).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
+                Créneaux du {new Date(selectedDate + 'T00:00:00').toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
               </h4>
               <Button
                 variant="outline"
