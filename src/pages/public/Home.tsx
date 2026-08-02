@@ -17,11 +17,8 @@ import { Badge } from '@/components/ui/badge';
 import { formatAriary } from '@/lib/data';
 import { useNailServices } from '@/hooks/useNailServices';
 import { useSettings } from '@/hooks/useSettings';
-
 import { supabase } from '@/lib/supabase';
 import { useSpecialInfos } from '@/hooks/useSpecialInfos';
-
-
 
 const LOGO_URL = 'https://tzgcyehdjgqxljjttflj.supabase.co/storage/v1/object/public/images/logos/logo.webp';
 
@@ -32,6 +29,14 @@ const fadeUp = {
   transition: { duration: 0.6 },
 };
 
+// ✅ Fonction pour formater la durée (ex: 85 → "1h25")
+const formatDuration = (minutes: number): string => {
+  const hours = Math.floor(minutes / 60);
+  const mins = minutes % 60;
+  if (hours === 0) return `${mins}min`;
+  if (mins === 0) return `${hours}h`;
+  return `${hours}h${mins.toString().padStart(2, '0')}`;
+};
 
 export default function Home() {
   const { services } = useNailServices();
@@ -39,8 +44,6 @@ export default function Home() {
   const [galleryItems, setGalleryItems] = useState<any[]>([]);
   const [loadingGallery, setLoadingGallery] = useState(true);
   const { infos: specialInfos, loading: loadingInfos } = useSpecialInfos();
-  
- 
 
   const salonInfo = settings || {
     name: 'Harrys Studio',
@@ -61,9 +64,6 @@ export default function Home() {
       { day: 'Dimanche', open: '00:00', close: '00:00', closed: true },
     ],
   };
-
-
-
 
   // Récupérer les images de la galerie
   useEffect(() => {
@@ -294,7 +294,8 @@ export default function Home() {
                     </p>
                     <div className="mt-4 flex items-center justify-between">
                       <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                        <Clock className="h-3.5 w-3.5" /> {s.duration} min
+                        <Clock className="h-3.5 w-3.5" />
+                        {formatDuration(s.duration)} {/* ✅ Affichage formaté */}
                       </span>
                       <Button asChild size="sm" variant="secondary" className="rounded-full">
                         <Link to="/reservation">Réserver</Link>
@@ -362,7 +363,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* COORDONNÉES + DISPONIBILITÉS */}
+      {/* COORDONNÉES */}
       <section className="py-20 sm:py-28">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="grid gap-10 lg:grid-cols-2">
