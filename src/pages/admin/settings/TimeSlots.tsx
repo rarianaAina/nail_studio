@@ -1,7 +1,6 @@
-// pages/admin/settings/TimeSlotsSettings.tsx
 import { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Plus, Trash2, Clock, Copy, Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Plus, Trash2, Copy, Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,7 +8,7 @@ import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
 import { cn } from '@/utils/cn';
 import { useConfig } from '@/hooks/useConfig';
-import { toDateString, formatDateShort, isToday } from '@/utils/date';
+import { toDateString, isToday } from '@/utils/date';
 
 const weekdays = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
 

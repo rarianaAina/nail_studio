@@ -1,4 +1,3 @@
-// pages/public/Booking.tsx
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -19,7 +18,7 @@ import { usePaymentMethods } from '@/hooks/usePaymentMethods';
 import { useSettings } from '@/hooks/useSettings';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
-import { toDateString, formatDate, isToday } from '@/utils/date';
+import { toDateString } from '@/utils/date';
 import type { BusinessHours } from '@/types';
 
 type Step = 1 | 2 | 3 | 4 | 5;
