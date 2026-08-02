@@ -1,11 +1,10 @@
-// src/pages/public/Availability.tsx
 import { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
-import { CalendarHeart, Sparkles, Clock, ChevronLeft, ChevronRight, CheckCircle2 } from 'lucide-react';
+import { Sparkles, Clock, ChevronLeft, ChevronRight, CheckCircle2 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/lib/supabase';
-import { toDateString, formatDate } from '@/utils/date';
+import { toDateString } from '@/utils/date';
 import { cn } from '@/utils/cn';
 import { useActiveConfig } from '@/hooks/useActiveConfig';
 import { useSettings } from '@/hooks/useSettings';
