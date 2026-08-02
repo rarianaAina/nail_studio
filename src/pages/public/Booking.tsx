@@ -166,7 +166,6 @@ export default function Booking() {
     return arr;
   }, [calendarMonth]);
 
-  const minDate = toDateString(new Date());
 
   const canNext =
     (step === 1 && selectedServiceIds.length > 0) ||
