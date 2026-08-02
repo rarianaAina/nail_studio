@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import {
   CalendarHeart,
   Sparkles,
@@ -10,6 +10,8 @@ import {
   MapPin,
   Star,
   ArrowRight,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -17,8 +19,11 @@ import { Badge } from '@/components/ui/badge';
 import { formatAriary } from '@/lib/data';
 import { useNailServices } from '@/hooks/useNailServices';
 import { useSettings } from '@/hooks/useSettings';
+import { useConfig } from '@/hooks/useConfig'; // ✅ Changé de useActiveConfig à useConfig
 import { supabase } from '@/lib/supabase';
 import { useSpecialInfos } from '@/hooks/useSpecialInfos';
+import { toDateString } from '@/utils/date';
+import { cn } from '@/utils/cn';
 
 const LOGO_URL = 'https://tzgcyehdjgqxljjttflj.supabase.co/storage/v1/object/public/images/logos/logo.webp';
 
@@ -29,14 +34,21 @@ const fadeUp = {
   transition: { duration: 0.6 },
 };
 
+const weekDays = ['L', 'M', 'M', 'J', 'V', 'S', 'D'];
+
 export default function Home() {
   const { services } = useNailServices();
   const { settings } = useSettings();
+  const { timeSlots } = useConfig(); // ✅ Utilise useConfig pour avoir les vrais objets
   const [galleryItems, setGalleryItems] = useState<any[]>([]);
   const [loadingGallery, setLoadingGallery] = useState(true);
   const { infos: specialInfos, loading: loadingInfos } = useSpecialInfos();
   
-  // Fallback si settings n'est pas encore chargé
+  const [calendarMonth, setCalendarMonth] = useState(() => {
+    const d = new Date();
+    return new Date(d.getFullYear(), d.getMonth(), 1);
+  });
+
   const salonInfo = settings || {
     name: 'Harrys Studio',
     tagline: "L'art des ongles, sublimé",
@@ -57,15 +69,44 @@ export default function Home() {
     ],
   };
 
-  // ✅ Récupérer les images de la galerie avec optimisation
+  // ✅ Grouper les créneaux par date (timeSlots contient des objets TimeSlotConfig)
+  const slotsByDate = useMemo(() => {
+    const grouped: Record<string, number> = {};
+    timeSlots.forEach((slot) => {
+      if (slot.active) {
+        grouped[slot.date] = (grouped[slot.date] || 0) + 1;
+      }
+    });
+    return grouped;
+  }, [timeSlots]);
+
+  const calendarCells = useMemo(() => {
+    const year = calendarMonth.getFullYear();
+    const month = calendarMonth.getMonth();
+    const first = new Date(year, month, 1);
+    const startDay = (first.getDay() + 6) % 7;
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const arr: (Date | null)[] = [];
+    for (let i = 0; i < startDay; i++) arr.push(null);
+    for (let d = 1; d <= daysInMonth; d++) arr.push(new Date(year, month, d));
+    while (arr.length % 7 !== 0) arr.push(null);
+    return arr;
+  }, [calendarMonth]);
+
+  const hasSlots = (date: Date): boolean => {
+    const dateStr = toDateString(date);
+    return !!slotsByDate[dateStr];
+  };
+
+  // Récupérer les images de la galerie
   useEffect(() => {
     const fetchGallery = async () => {
       try {
         const { data, error } = await supabase
           .from('gallery')
-          .select('id, title, category, image') // ✅ Uniquement les champs nécessaires
+          .select('id, title, category, image')
           .order('created_at', { ascending: false })
-          .limit(8); // ✅ Limiter à 8 images
+          .limit(8);
 
         if (error) throw error;
         setGalleryItems(data || []);
@@ -160,7 +201,6 @@ export default function Home() {
             className="relative mx-auto w-full max-w-md"
           >
             <div className="relative aspect-[4/5] overflow-hidden rounded-[2rem] shadow-glow ring-1 ring-primary/10">
-              {/* ✅ Image LCP avec priorité élevée */}
               <img
                 src="https://tzgcyehdjgqxljjttflj.supabase.co/storage/v1/object/public/images/services/1785598830482-uymrlg1.webp"
                 alt="Réalisation Harrys Studio"
@@ -207,7 +247,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ✅ SECTION INFORMATIONS SPÉCIALES - Déplacée ici après le Hero */}
+      {/* SECTION INFORMATIONS SPÉCIALES */}
       {!loadingInfos && specialInfos.length > 0 && (
         <section className="relative -mt-10 pb-12">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -301,7 +341,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* GALERIE - Utilise les données de la base de données */}
+      {/* GALERIE */}
       <section className="bg-secondary/40 py-20 sm:py-28">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <motion.div {...fadeUp} className="mx-auto max-w-3xl text-center">
@@ -355,7 +395,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* COORDONNÉES + HORAIRES */}
+      {/* COORDONNÉES + DISPONIBILITÉS */}
       <section className="py-20 sm:py-28">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="grid gap-10 lg:grid-cols-2">
@@ -388,26 +428,90 @@ export default function Home() {
               </div>
             </motion.div>
 
+            {/* ✅ DISPONIBILITÉS AVEC CALENDRIER */}
             <motion.div {...fadeUp} transition={{ delay: 0.1 }}>
               <p className="text-sm font-medium uppercase tracking-[0.25em] text-primary">
-                Horaires
+                Disponibilités
               </p>
               <h2 className="mt-3 font-display text-4xl font-semibold text-foreground">
-                Heures d'ouverture
+                Prochains créneaux disponibles
               </h2>
               <Card className="mt-8 border-border/60 shadow-soft">
-                <CardContent className="divide-y divide-border/60 p-2">
-                  {salonInfo.hours.map((h) => (
-                    <div
-                      key={h.day}
-                      className="flex items-center justify-between px-4 py-3 text-sm"
-                    >
-                      <span className="font-medium">{h.day}</span>
-                      <span className={h.closed ? 'text-destructive' : 'text-muted-foreground'}>
-                        {h.closed ? 'Fermé' : `${h.open} — ${h.close}`}
-                      </span>
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between mb-4">
+                    <span className="text-sm font-medium">
+                      {calendarMonth.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}
+                    </span>
+                    <div className="flex gap-1">
+                      <button
+                        onClick={() => setCalendarMonth(new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() - 1, 1))}
+                        className="p-1 rounded hover:bg-secondary transition-colors"
+                        aria-label="Mois précédent"
+                      >
+                        <ChevronLeft className="h-4 w-4" />
+                      </button>
+                      <button
+                        onClick={() => setCalendarMonth(new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() + 1, 1))}
+                        className="p-1 rounded hover:bg-secondary transition-colors"
+                        aria-label="Mois suivant"
+                      >
+                        <ChevronRight className="h-4 w-4" />
+                      </button>
                     </div>
-                  ))}
+                  </div>
+
+                  <div className="grid grid-cols-7 gap-1 text-center">
+                    {weekDays.map((d) => (
+                      <div key={d} className="py-1 text-[10px] font-medium text-muted-foreground">
+                        {d}
+                      </div>
+                    ))}
+                    {calendarCells.map((date, i) => {
+                      if (!date) {
+                        return <div key={i} className="aspect-square" />;
+                      }
+                      const isToday = toDateString(date) === toDateString(new Date());
+                      const hasAvailableSlots = hasSlots(date);
+                      
+                      return (
+                        <button
+                          key={i}
+                          onClick={() => {
+                            if (hasAvailableSlots) {
+                              window.location.href = `/reservation?date=${toDateString(date)}`;
+                            }
+                          }}
+                          disabled={!hasAvailableSlots}
+                          className={cn(
+                            'aspect-square rounded-lg text-sm transition-all flex flex-col items-center justify-center',
+                            hasAvailableSlots
+                              ? 'bg-primary/5 text-primary hover:bg-primary/10 hover:scale-105 cursor-pointer'
+                              : 'text-muted-foreground cursor-default',
+                            isToday && hasAvailableSlots && 'ring-2 ring-primary/30'
+                          )}
+                        >
+                          <span className={cn(
+                            isToday && 'font-bold'
+                          )}>
+                            {date.getDate()}
+                          </span>
+                          {hasAvailableSlots && (
+                            <div className="mt-0.5 h-1 w-1 rounded-full bg-primary" />
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  <div className="mt-4 flex items-center justify-between text-xs text-muted-foreground">
+                    <div className="flex items-center gap-2">
+                      <span className="inline-block h-2 w-2 rounded-full bg-primary" />
+                      <span>Créneaux disponibles</span>
+                    </div>
+                    <Button asChild size="sm" variant="outline" className="rounded-full">
+                      <Link to="/reservation">Voir tous les créneaux</Link>
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             </motion.div>
