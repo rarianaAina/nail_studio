@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { CalendarHeart, Check, Clock, ArrowLeft, ArrowRight, PartyPopper, Sparkles } from 'lucide-react';
+import { CalendarHeart, Check, Clock, ArrowLeft, ArrowRight, PartyPopper, Sparkles, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -22,6 +22,8 @@ import { toDateString } from '@/utils/date';
 import type { BusinessHours } from '@/types';
 
 type Step = 1 | 2 | 3 | 4 | 5;
+
+const weekDays = ['L', 'M', 'M', 'J', 'V', 'S', 'D'];
 
 const stepsMeta = [
   { n: 1, label: 'Prestation(s)' },
@@ -66,6 +68,12 @@ export default function Booking() {
   const [submitting, setSubmitting] = useState(false);
   const [bookedSlots, setBookedSlots] = useState<string[]>([]);
 
+  // ✅ Calendrier
+  const [calendarMonth, setCalendarMonth] = useState(() => {
+    const d = new Date();
+    return new Date(d.getFullYear(), d.getMonth(), 1);
+  });
+
   const activePaymentMethods = useMemo(
     () => paymentMethods.filter(m => m.active),
     [paymentMethods]
@@ -97,6 +105,20 @@ export default function Booking() {
     if (!settings?.hours || !dayHours) return true;
     return !dayHours.closed;
   };
+
+  // ✅ Générer les cellules du calendrier
+  const calendarCells = useMemo(() => {
+    const year = calendarMonth.getFullYear();
+    const month = calendarMonth.getMonth();
+    const first = new Date(year, month, 1);
+    const startDay = (first.getDay() + 6) % 7;
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const arr: (Date | null)[] = [];
+    for (let i = 0; i < startDay; i++) arr.push(null);
+    for (let d = 1; d <= daysInMonth; d++) arr.push(new Date(year, month, d));
+    while (arr.length % 7 !== 0) arr.push(null);
+    return arr;
+  }, [calendarMonth]);
 
   useEffect(() => {
     if (!date) { setBookedSlots([]); return; }
@@ -278,43 +300,98 @@ export default function Booking() {
                   <h2 className="font-display text-2xl font-semibold">Choisissez une date</h2>
                   <p className="mt-1 text-sm text-muted-foreground">Sélectionnez le jour de votre rendez-vous.</p>
                   <div className="mt-6 mx-auto max-w-md">
-                    <Input 
-                      type="date" 
-                      min={minDate} 
-                      value={date} 
-                      onChange={(e) => setDate(e.target.value)} 
-                      className="h-14 rounded-2xl text-lg" 
-                    />
-                    <div className="mt-4 grid grid-cols-4 gap-2 sm:grid-cols-7">
-                      {Array.from({ length: 14 }).map((_, i) => {
-                        const d = new Date();
-                        d.setDate(d.getDate() + i);
-                        const iso = toDateString(d);
-                        const isAvailable = isDayAvailable(iso);
-                        
-                        return (
-                          <button 
-                            key={i} 
-                            disabled={!isAvailable} 
-                            onClick={() => setDate(iso)}
-                            className={cn(
-                              'flex flex-col items-center rounded-xl border py-2 text-xs transition-all disabled:opacity-30',
-                              date === iso 
-                                ? 'border-primary bg-primary text-primary-foreground' 
-                                : 'border-border hover:border-primary/40'
-                            )}
-                          >
-                            <span className="text-[10px] uppercase">
-                              {d.toLocaleDateString('fr-FR', { weekday: 'short' })}
-                            </span>
-                            <span className="font-semibold">{d.getDate()}</span>
-                            {!isAvailable && (
-                              <span className="text-[8px] text-rose-500 font-medium">Fermé</span>
-                            )}
-                          </button>
-                        );
-                      })}
-                    </div>
+                    {/* ✅ Calendrier complet avec points */}
+                    <Card className="border-border/60 shadow-soft">
+                      <CardContent className="p-4">
+                        <div className="flex items-center justify-between mb-4">
+                          <span className="text-sm font-medium">
+                            {calendarMonth.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}
+                          </span>
+                          <div className="flex gap-1">
+                            <button
+                              onClick={() => setCalendarMonth(new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() - 1, 1))}
+                              className="p-1 rounded hover:bg-secondary transition-colors"
+                              aria-label="Mois précédent"
+                            >
+                              <ChevronLeft className="h-4 w-4" />
+                            </button>
+                            <button
+                              onClick={() => setCalendarMonth(new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() + 1, 1))}
+                              className="p-1 rounded hover:bg-secondary transition-colors"
+                              aria-label="Mois suivant"
+                            >
+                              <ChevronRight className="h-4 w-4" />
+                            </button>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-7 gap-1 text-center">
+                          {weekDays.map((d) => (
+                            <div key={d} className="py-1 text-[10px] font-medium text-muted-foreground">
+                              {d}
+                            </div>
+                          ))}
+                          {calendarCells.map((dateObj, i) => {
+                            if (!dateObj) {
+                              return <div key={i} className="aspect-square" />;
+                            }
+                            const iso = toDateString(dateObj);
+                            const isToday = iso === toDateString(new Date());
+                            const isSelected = iso === date;
+                            const isAvailable = isDayAvailable(iso);
+                            
+                            return (
+                              <button
+                                key={i}
+                                onClick={() => {
+                                  if (isAvailable) {
+                                    setDate(iso);
+                                  }
+                                }}
+                                disabled={!isAvailable}
+                                className={cn(
+                                  'aspect-square rounded-lg text-sm transition-all flex flex-col items-center justify-center',
+                                  isSelected
+                                    ? 'bg-primary text-primary-foreground shadow-glow'
+                                    : isAvailable
+                                    ? 'bg-primary/5 text-primary hover:bg-primary/10 hover:scale-105 cursor-pointer'
+                                    : 'text-muted-foreground cursor-default opacity-40',
+                                  isToday && !isSelected && 'ring-1 ring-primary/30'
+                                )}
+                              >
+                                <span className={cn(
+                                  isSelected && 'font-bold',
+                                  isToday && !isSelected && 'font-bold'
+                                )}>
+                                  {dateObj.getDate()}
+                                </span>
+                                {isAvailable && (
+                                  <div className={cn(
+                                    'mt-0.5 h-1 w-1 rounded-full',
+                                    isSelected ? 'bg-primary-foreground' : 'bg-primary'
+                                  )} />
+                                )}
+                              </button>
+                            );
+                          })}
+                        </div>
+
+                        <div className="mt-4 flex items-center gap-3 text-xs text-muted-foreground">
+                          <div className="flex items-center gap-1.5">
+                            <span className="inline-block h-2 w-2 rounded-full bg-primary" />
+                            <span>Disponible</span>
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <span className="inline-block h-2 w-2 rounded-full bg-muted-foreground/30" />
+                            <span>Indisponible</span>
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <span className="inline-block h-2 w-2 rounded-full bg-primary ring-1 ring-primary/30" />
+                            <span>Aujourd'hui</span>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
                   </div>
                 </motion.div>
               )}
