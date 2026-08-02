@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState } from 'react';
 import {
   CalendarHeart,
   Sparkles,
@@ -10,8 +10,6 @@ import {
   MapPin,
   Star,
   ArrowRight,
-  ChevronLeft,
-  ChevronRight,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -19,11 +17,11 @@ import { Badge } from '@/components/ui/badge';
 import { formatAriary } from '@/lib/data';
 import { useNailServices } from '@/hooks/useNailServices';
 import { useSettings } from '@/hooks/useSettings';
-import { useConfig } from '@/hooks/useConfig'; // ✅ Changé de useActiveConfig à useConfig
+
 import { supabase } from '@/lib/supabase';
 import { useSpecialInfos } from '@/hooks/useSpecialInfos';
-import { toDateString } from '@/utils/date';
-import { cn } from '@/utils/cn';
+
+
 
 const LOGO_URL = 'https://tzgcyehdjgqxljjttflj.supabase.co/storage/v1/object/public/images/logos/logo.webp';
 
@@ -34,20 +32,15 @@ const fadeUp = {
   transition: { duration: 0.6 },
 };
 
-const weekDays = ['L', 'M', 'M', 'J', 'V', 'S', 'D'];
 
 export default function Home() {
   const { services } = useNailServices();
   const { settings } = useSettings();
-  const { timeSlots } = useConfig(); // ✅ Utilise useConfig pour avoir les vrais objets
   const [galleryItems, setGalleryItems] = useState<any[]>([]);
   const [loadingGallery, setLoadingGallery] = useState(true);
   const { infos: specialInfos, loading: loadingInfos } = useSpecialInfos();
   
-  const [calendarMonth, setCalendarMonth] = useState(() => {
-    const d = new Date();
-    return new Date(d.getFullYear(), d.getMonth(), 1);
-  });
+ 
 
   const salonInfo = settings || {
     name: 'Harrys Studio',
@@ -69,34 +62,8 @@ export default function Home() {
     ],
   };
 
-  // ✅ Grouper les créneaux par date (timeSlots contient des objets TimeSlotConfig)
-  const slotsByDate = useMemo(() => {
-    const grouped: Record<string, number> = {};
-    timeSlots.forEach((slot) => {
-      if (slot.active) {
-        grouped[slot.date] = (grouped[slot.date] || 0) + 1;
-      }
-    });
-    return grouped;
-  }, [timeSlots]);
 
-  const calendarCells = useMemo(() => {
-    const year = calendarMonth.getFullYear();
-    const month = calendarMonth.getMonth();
-    const first = new Date(year, month, 1);
-    const startDay = (first.getDay() + 6) % 7;
-    const daysInMonth = new Date(year, month + 1, 0).getDate();
-    const arr: (Date | null)[] = [];
-    for (let i = 0; i < startDay; i++) arr.push(null);
-    for (let d = 1; d <= daysInMonth; d++) arr.push(new Date(year, month, d));
-    while (arr.length % 7 !== 0) arr.push(null);
-    return arr;
-  }, [calendarMonth]);
 
-  const hasSlots = (date: Date): boolean => {
-    const dateStr = toDateString(date);
-    return !!slotsByDate[dateStr];
-  };
 
   // Récupérer les images de la galerie
   useEffect(() => {
