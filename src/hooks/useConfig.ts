@@ -57,15 +57,15 @@ export function useConfig() {
     setTimeSlots((prev) => prev.filter((s) => s.id !== id));
   };
 
-  // ✅ Récupérer les créneaux pour un jour spécifique
-  const getTimeSlotsByDay = useCallback((dayOfWeek: string): TimeSlotConfig[] => {
-    return timeSlots.filter((slot) => slot.dayOfWeek === dayOfWeek);
+  // ✅ Récupérer les créneaux pour une date spécifique
+  const getTimeSlotsByDate = useCallback((date: string): TimeSlotConfig[] => {
+    return timeSlots.filter((slot) => slot.date === date);
   }, [timeSlots]);
 
-  // ✅ Récupérer les créneaux actifs pour un jour spécifique
-  const getActiveTimeSlotsByDay = useCallback((dayOfWeek: string): string[] => {
+  // ✅ Récupérer les créneaux actifs pour une date spécifique
+  const getActiveTimeSlotsByDate = useCallback((date: string): string[] => {
     return timeSlots
-      .filter((slot) => slot.dayOfWeek === dayOfWeek && slot.active)
+      .filter((slot) => slot.date === date && slot.active)
       .sort((a, b) => a.sortOrder - b.sortOrder)
       .map((slot) => slot.label);
   }, [timeSlots]);
@@ -88,9 +88,9 @@ export function useConfig() {
     createTimeSlot,
     updateTimeSlot,
     deleteTimeSlot,
-    getTimeSlotsByDay,        // ✅ Nouveau
-    getActiveTimeSlotsByDay,  // ✅ Nouveau
-    getActiveTimeSlots,       // ✅ Nouveau (pour compatibilité)
+    getTimeSlotsByDate,
+    getActiveTimeSlotsByDate,
+    getActiveTimeSlots,
     refresh: load,
   };
 }

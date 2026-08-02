@@ -10,7 +10,7 @@ interface CategoryRow {
 
 interface SlotRow {
   id: string;
-  day_of_week: string; // ✅ Ajout
+  date: string;        // ✅ Date spécifique
   label: string;
   sort_order: number;
   active: boolean;
@@ -23,7 +23,7 @@ function rowToCategory(r: CategoryRow): ServiceCategoryConfig {
 function rowToSlot(r: SlotRow): TimeSlotConfig {
   return { 
     id: r.id, 
-    dayOfWeek: r.day_of_week, // ✅ Ajout
+    date: r.date,      // ✅ Date spécifique
     label: r.label, 
     sortOrder: r.sort_order, 
     active: r.active 
@@ -79,18 +79,29 @@ export const configService = {
     const { data, error } = await supabase
       .from('time_slots')
       .select('*')
-      .order('day_of_week', { ascending: true })
+      .order('date', { ascending: true })
       .order('sort_order', { ascending: true });
     if (error) throw error;
     return (data as SlotRow[]).map(rowToSlot);
   },
 
-  // ✅ Récupérer les créneaux actifs pour un jour spécifique
-  async getActiveTimeSlotsByDay(dayOfWeek: string): Promise<string[]> {
+  // ✅ Récupérer les créneaux pour une date spécifique
+  async getTimeSlotsByDate(date: string): Promise<TimeSlotConfig[]> {
+    const { data, error } = await supabase
+      .from('time_slots')
+      .select('*')
+      .eq('date', date)
+      .order('sort_order', { ascending: true });
+    if (error) throw error;
+    return (data as SlotRow[]).map(rowToSlot);
+  },
+
+  // ✅ Récupérer les créneaux actifs pour une date spécifique
+  async getActiveTimeSlotsByDate(date: string): Promise<string[]> {
     const { data, error } = await supabase
       .from('time_slots')
       .select('label')
-      .eq('day_of_week', dayOfWeek)
+      .eq('date', date)
       .eq('active', true)
       .order('sort_order', { ascending: true });
     if (error) throw error;
@@ -103,18 +114,18 @@ export const configService = {
       .from('time_slots')
       .select('label')
       .eq('active', true)
-      .order('day_of_week', { ascending: true })
+      .order('date', { ascending: true })
       .order('sort_order', { ascending: true });
     if (error) throw error;
     return (data as Pick<SlotRow, 'label'>[]).map((r) => r.label);
   },
 
-  // ✅ Créer un créneau avec jour
+  // ✅ Créer un créneau avec date
   async createTimeSlot(data: CreateTimeSlotDto): Promise<TimeSlotConfig> {
     const { data: row, error } = await supabase
       .from('time_slots')
       .insert({ 
-        day_of_week: data.dayOfWeek, // ✅ Ajout
+        date: data.date,      // ✅ Date spécifique
         label: data.label, 
         sort_order: data.sortOrder ?? 0,
         active: data.active ?? true,
@@ -127,7 +138,7 @@ export const configService = {
 
   async updateTimeSlot(id: string, data: Partial<TimeSlotConfig>): Promise<void> {
     const row: Record<string, unknown> = {};
-    if (data.dayOfWeek !== undefined) row.day_of_week = data.dayOfWeek; // ✅ Ajout
+    if (data.date !== undefined) row.date = data.date;
     if (data.label !== undefined) row.label = data.label;
     if (data.sortOrder !== undefined) row.sort_order = data.sortOrder;
     if (data.active !== undefined) row.active = data.active;
@@ -137,6 +148,47 @@ export const configService = {
 
   async deleteTimeSlot(id: string): Promise<void> {
     const { error } = await supabase.from('time_slots').delete().eq('id', id);
+    if (error) throw error;
+  },
+
+  // ✅ Supprimer tous les créneaux d'une date
+  async deleteTimeSlotsByDate(date: string): Promise<void> {
+    const { error } = await supabase
+      .from('time_slots')
+      .delete()
+      .eq('date', date);
+    if (error) throw error;
+  },
+
+  // ✅ Copier les créneaux d'une date vers une autre
+  async copyTimeSlots(fromDate: string, toDate: string): Promise<void> {
+    const { data: sourceSlots } = await supabase
+      .from('time_slots')
+      .select('label, sort_order, active')
+      .eq('date', fromDate);
+
+    if (!sourceSlots || sourceSlots.length === 0) {
+      throw new Error('Aucun créneau à copier');
+    }
+
+    // Supprimer les créneaux existants de la date cible
+    await supabase
+      .from('time_slots')
+      .delete()
+      .eq('date', toDate);
+
+    // Insérer les nouveaux créneaux
+    const newSlots = sourceSlots.map(s => ({
+      date: toDate,
+      label: s.label,
+      sort_order: s.sort_order,
+      active: s.active,
+    }));
+
+    const { error } = await supabase
+      .from('time_slots')
+      .insert(newSlots);
+
     if (error) throw error;
   },
 };

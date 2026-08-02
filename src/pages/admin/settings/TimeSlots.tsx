@@ -1,24 +1,15 @@
 import { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Plus, Trash2, Clock, Copy } from 'lucide-react';
+import { Plus, Trash2, Copy, Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
-// import { Label } from '@/components/ui/label'; // ✅ Supprimé car non utilisé
 import { toast } from 'sonner';
 import { cn } from '@/utils/cn';
 import { useConfig } from '@/hooks/useConfig';
 
-const DAYS = [
-  { value: 'monday', label: 'Lundi' },
-  { value: 'tuesday', label: 'Mardi' },
-  { value: 'wednesday', label: 'Mercredi' },
-  { value: 'thursday', label: 'Jeudi' },
-  { value: 'friday', label: 'Vendredi' },
-  { value: 'saturday', label: 'Samedi' },
-  { value: 'sunday', label: 'Dimanche' },
-];
+const weekdays = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
 
 export default function TimeSlotsSettings() {
   const {
@@ -28,22 +19,38 @@ export default function TimeSlotsSettings() {
     deleteTimeSlot,
   } = useConfig();
 
-  const [selectedDay, setSelectedDay] = useState<string>('monday');
+  const [selectedDate, setSelectedDate] = useState<string>(
+    new Date().toISOString().slice(0, 10)
+  );
   const [newSlot, setNewSlot] = useState('');
+  const [cursor, setCursor] = useState(() => {
+    const d = new Date();
+    return new Date(d.getFullYear(), d.getMonth(), 1);
+  });
 
-  // Créneaux du jour sélectionné
+  // Créneaux pour la date sélectionnée
   const daySlots = useMemo(() => {
     return timeSlots
-      .filter((s) => s.dayOfWeek === selectedDay)
+      .filter((s) => s.date === selectedDate)
       .sort((a, b) => a.sortOrder - b.sortOrder);
-  }, [timeSlots, selectedDay]);
+  }, [timeSlots, selectedDate]);
 
-  // Ajouter un créneau pour le jour sélectionné
+  // Grouper les créneaux par date pour l'affichage
+  const slotsByDate = useMemo(() => {
+    const grouped: Record<string, typeof timeSlots> = {};
+    timeSlots.forEach((slot) => {
+      if (!grouped[slot.date]) grouped[slot.date] = [];
+      grouped[slot.date].push(slot);
+    });
+    return grouped;
+  }, [timeSlots]);
+
+  // Ajouter un créneau
   const handleAdd = async () => {
     if (!newSlot.trim()) return;
     try {
       await createTimeSlot({
-        dayOfWeek: selectedDay, // ✅ Ajout du dayOfWeek requis
+        date: selectedDate,
         label: newSlot,
         sortOrder: daySlots.length,
         active: true,
@@ -55,21 +62,23 @@ export default function TimeSlotsSettings() {
     }
   };
 
-  // Copier les créneaux d'un jour vers un autre
-  const handleCopy = async (fromDay: string, toDay: string) => {
-    if (fromDay === toDay) return;
+  // Copier les créneaux d'une date vers une autre
+  const handleCopy = async (fromDate: string, toDate: string) => {
+    if (fromDate === toDate) return;
     
-    const sourceSlots = timeSlots.filter((s) => s.dayOfWeek === fromDay);
+    const sourceSlots = timeSlots.filter((s) => s.date === fromDate);
     if (sourceSlots.length === 0) {
-      toast.error('Aucun créneau à copier pour ce jour.');
+      toast.error('Aucun créneau à copier pour cette date.');
       return;
     }
 
-    if (!confirm(`Copier les créneaux de ${DAYS.find(d => d.value === fromDay)?.label} vers ${DAYS.find(d => d.value === toDay)?.label} ?`)) return;
+    const fromLabel = new Date(fromDate).toLocaleDateString('fr-FR');
+    const toLabel = new Date(toDate).toLocaleDateString('fr-FR');
+    if (!confirm(`Copier les créneaux du ${fromLabel} vers le ${toLabel} ?`)) return;
 
     try {
-      // Supprimer les créneaux existants du jour cible
-      const targetSlots = timeSlots.filter((s) => s.dayOfWeek === toDay);
+      // Supprimer les créneaux existants de la date cible
+      const targetSlots = timeSlots.filter((s) => s.date === toDate);
       for (const slot of targetSlots) {
         await deleteTimeSlot(slot.id);
       }
@@ -77,7 +86,7 @@ export default function TimeSlotsSettings() {
       // Créer les nouveaux créneaux
       for (const slot of sourceSlots) {
         await createTimeSlot({
-          dayOfWeek: toDay,
+          date: toDate,
           label: slot.label,
           sortOrder: slot.sortOrder,
           active: slot.active,
@@ -90,49 +99,130 @@ export default function TimeSlotsSettings() {
     }
   };
 
+  // Générer les cellules du calendrier
+  const cells = useMemo(() => {
+    const year = cursor.getFullYear();
+    const month = cursor.getMonth();
+    const first = new Date(year, month, 1);
+    const startDay = (first.getDay() + 6) % 7;
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const arr: (Date | null)[] = [];
+    for (let i = 0; i < startDay; i++) arr.push(null);
+    for (let d = 1; d <= daysInMonth; d++) arr.push(new Date(year, month, d));
+    while (arr.length % 7 !== 0) arr.push(null);
+    return arr;
+  }, [cursor]);
+
   return (
     <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
       <Card className="border-border/60 shadow-soft">
         <CardHeader>
           <div className="flex items-center gap-2">
-            <Clock className="h-5 w-5 text-primary" />
-            <CardTitle className="font-display text-lg">Créneaux horaires par jour</CardTitle>
+            <Calendar className="h-5 w-5 text-primary" />
+            <CardTitle className="font-display text-lg">Créneaux horaires par date</CardTitle>
           </div>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-6">
           <p className="text-sm text-muted-foreground">
-            Gérez les créneaux disponibles pour chaque jour de la semaine. Chaque jour peut avoir ses propres créneaux.
+            Gérez les créneaux disponibles pour chaque date spécifique. Chaque date peut avoir ses propres créneaux.
           </p>
 
-          {/* Sélecteur de jour */}
-          <div className="flex flex-wrap gap-2 border-b border-border/60 pb-4">
-            {DAYS.map((day) => (
-              <button
-                key={day.value}
-                onClick={() => setSelectedDay(day.value)}
-                className={cn(
-                  'rounded-full px-4 py-2 text-sm font-medium transition-all',
-                  selectedDay === day.value
-                    ? 'bg-primary text-primary-foreground shadow-glow'
-                    : 'bg-secondary text-muted-foreground hover:bg-secondary/80'
-                )}
-              >
-                {day.label}
-              </button>
-            ))}
+          {/* Calendrier */}
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-semibold text-lg">
+                {cursor.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}
+              </h3>
+              <div className="flex gap-1">
+                <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => setCursor(new Date(cursor.getFullYear(), cursor.getMonth() - 1, 1))}>
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => setCursor(new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1))}>
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-7 gap-1">
+              {weekdays.map((d) => (
+                <div key={d} className="py-2 text-center text-[10px] font-medium uppercase text-muted-foreground">
+                  {d}
+                </div>
+              ))}
+              {cells.map((d, i) => {
+                if (!d) return <div key={i} className="min-h-[56px] rounded-xl bg-secondary/20" />;
+                
+                const iso = d.toISOString().slice(0, 10);
+                const isToday = iso === new Date().toISOString().slice(0, 10);
+                const isSelected = iso === selectedDate;
+                const hasSlots = slotsByDate[iso] && slotsByDate[iso].length > 0;
+                const activeSlots = slotsByDate[iso]?.filter(s => s.active).length || 0;
+
+                return (
+                  <button
+                    key={i}
+                    onClick={() => setSelectedDate(iso)}
+                    className={cn(
+                      'min-h-[56px] rounded-xl border p-1 text-left transition-all sm:p-2',
+                      isSelected ? 'border-primary bg-primary/5 shadow-glow' : 'border-border hover:border-primary/40'
+                    )}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className={cn(
+                        'grid h-6 w-6 place-items-center rounded-full text-xs font-semibold',
+                        isToday ? 'bg-primary text-primary-foreground' : 'text-foreground'
+                      )}>
+                        {d.getDate()}
+                      </span>
+                      {hasSlots && (
+                        <span className="text-[9px] font-medium text-primary">
+                          {activeSlots} créneau{activeSlots > 1 ? 'x' : ''}
+                        </span>
+                      )}
+                    </div>
+                    {hasSlots && (
+                      <div className="mt-1 hidden sm:block">
+                        {slotsByDate[iso]?.slice(0, 2).map((s) => (
+                          <div key={s.id} className="truncate rounded bg-primary/10 px-1 py-0.5 text-[8px] text-primary">
+                            {s.label} {!s.active && '(off)'}
+                          </div>
+                        ))}
+                        {slotsByDate[iso]?.length > 2 && (
+                          <div className="text-[8px] text-muted-foreground">+{slotsByDate[iso].length - 2}</div>
+                        )}
+                      </div>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
-          {/* Liste des créneaux du jour */}
-          <div className="min-h-[100px]">
-            {daySlots.length === 0 ? (
-              <div className="flex h-[100px] items-center justify-center rounded-xl border-2 border-dashed border-border/60">
-                <p className="text-sm text-muted-foreground">
-                  Aucun créneau pour {DAYS.find(d => d.value === selectedDay)?.label}
-                </p>
-              </div>
-            ) : (
-              <div className="flex flex-wrap gap-2">
-                {daySlots.map((s) => (
+          {/* Créneaux du jour sélectionné */}
+          <div className="border-t border-border/60 pt-4">
+            <div className="flex items-center justify-between mb-3">
+              <h4 className="font-medium">
+                Créneaux du {new Date(selectedDate).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
+              </h4>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  const fromDate = prompt('Copier depuis quelle date ? (YYYY-MM-DD)');
+                  if (fromDate) handleCopy(fromDate, selectedDate);
+                }}
+              >
+                <Copy className="mr-1.5 h-3.5 w-3.5" /> Copier depuis
+              </Button>
+            </div>
+
+            <div className="flex flex-wrap gap-2 min-h-[50px]">
+              {daySlots.length === 0 ? (
+                <div className="w-full py-4 text-center text-sm text-muted-foreground border-2 border-dashed rounded-xl border-border/60">
+                  Aucun créneau pour cette date
+                </div>
+              ) : (
+                daySlots.map((s) => (
                   <div
                     key={s.id}
                     className={cn(
@@ -160,62 +250,20 @@ export default function TimeSlotsSettings() {
                       <Trash2 className="h-3.5 w-3.5" />
                     </button>
                   </div>
-                ))}
-              </div>
-            )}
-          </div>
+                ))
+              )}
+            </div>
 
-          {/* Ajouter un créneau */}
-          <div className="flex gap-2 border-t border-border/60 pt-4">
-            <Input
-              type="time"
-              value={newSlot}
-              onChange={(e) => setNewSlot(e.target.value)}
-              className="w-32"
-              placeholder="HH:MM"
-            />
-            <Button variant="outline" onClick={handleAdd}>
-              <Plus className="mr-1.5 h-4 w-4" /> Ajouter
-            </Button>
-          </div>
-
-          {/* Copier les créneaux */}
-          <div className="border-t border-border/60 pt-4">
-            <p className="text-sm font-medium mb-2">Copier les créneaux</p>
-            <div className="flex flex-wrap items-center gap-2">
-              <select
-                value={selectedDay}
-                onChange={(e) => setSelectedDay(e.target.value)}
-                className="rounded-lg border border-border bg-background px-3 py-2 text-sm"
-              >
-                {DAYS.map((day) => (
-                  <option key={day.value} value={day.value}>
-                    {day.label}
-                  </option>
-                ))}
-              </select>
-              <span className="text-muted-foreground">→</span>
-              <select
-                id="copy-target"
-                className="rounded-lg border border-border bg-background px-3 py-2 text-sm"
-              >
-                {DAYS.filter((d) => d.value !== selectedDay).map((day) => (
-                  <option key={day.value} value={day.value}>
-                    {day.label}
-                  </option>
-                ))}
-              </select>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  const target = document.getElementById('copy-target') as HTMLSelectElement;
-                  if (target) {
-                    handleCopy(selectedDay, target.value);
-                  }
-                }}
-              >
-                <Copy className="mr-1.5 h-4 w-4" /> Copier
+            <div className="flex gap-2 mt-3">
+              <Input
+                type="time"
+                value={newSlot}
+                onChange={(e) => setNewSlot(e.target.value)}
+                className="w-32"
+                placeholder="HH:MM"
+              />
+              <Button variant="outline" onClick={handleAdd}>
+                <Plus className="mr-1.5 h-4 w-4" /> Ajouter
               </Button>
             </div>
           </div>

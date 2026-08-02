@@ -5,10 +5,11 @@ export interface ServiceCategoryConfig {
   active: boolean;
 }
 
+// ✅ Version avec date (pour le nouveau système)
 export interface TimeSlotConfig {
   id: string;
-  dayOfWeek: string; // ✅ Ajout: 'monday', 'tuesday', ...
-  label: string;     // '09:00', '09:30', ...
+  date: string;        // ✅ Date spécifique (YYYY-MM-DD) au lieu de dayOfWeek
+  label: string;       // '09:00', '09:30', ...
   sortOrder: number;
   active: boolean;
 }
@@ -18,8 +19,9 @@ export interface CreateCategoryDto {
   sortOrder?: number;
 }
 
+// ✅ Version avec date (pour le nouveau système)
 export interface CreateTimeSlotDto {
-  dayOfWeek: string; // ✅ Ajout
+  date: string;        // ✅ Date spécifique au lieu de dayOfWeek
   label: string;
   sortOrder?: number;
   active?: boolean;
