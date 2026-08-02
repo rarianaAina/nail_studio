@@ -3,6 +3,7 @@ import { lazy, Suspense } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { PublicLayout, AdminLayout } from '@/layouts';
 import ProtectedRoute from '@/components/ProtectedRoute';
+import Availability from '@/pages/public/Availability';
 
 // ✅ Lazy loading des pages publiques
 const Home = lazy(() => import('@/pages/public/Home'));
@@ -64,6 +65,7 @@ export default function AppRoutes() {
           <Route path="/galerie" element={<Gallery />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/reservation" element={<Booking />} />
+          <Route path="/disponibilites" element={<Availability />} />
         </Route>
 
         {/* Auth */}
