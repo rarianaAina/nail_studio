@@ -12,7 +12,7 @@ const links = [
   { to: '/prestations', label: 'Prestations' },
   { to: '/galerie', label: 'Galerie' },
   { to: '/contact', label: 'Contact' },
-  { to: '/contact', label: 'Contact' },
+  { to: '/disponibilites', label: 'Disponibilités' },
 ];
 
 export default function Navbar() {
