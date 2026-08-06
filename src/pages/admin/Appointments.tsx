@@ -1,3 +1,4 @@
+// pages/admin/Appointments.tsx
 import { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Search, Eye, Pencil, Check, X, CalendarPlus, Bell, Image as ImageIcon } from 'lucide-react';
@@ -553,10 +554,10 @@ export default function Appointments() {
                 </div>
               </div>
 
-              {/* ✅ Image de référence */}
-              <div>
-                <span className="text-muted-foreground">Image de référence</span>
-                {viewing.referenceImage ? (
+              {/* ✅ Image de référence - affichée uniquement si présente */}
+              {viewing.referenceImage && (
+                <div>
+                  <span className="text-muted-foreground">Image de référence</span>
                   <div className="mt-1 rounded-xl overflow-hidden border border-border/60">
                     <img
                       src={viewing.referenceImage}
@@ -564,22 +565,18 @@ export default function Appointments() {
                       className="max-h-48 w-full object-contain bg-secondary/30"
                     />
                   </div>
-                ) : (
-                  <p className="mt-1 text-sm text-muted-foreground">Aucune image fournie</p>
-                )}
-              </div>
+                </div>
+              )}
 
-              {/* ✅ Notes client */}
-              <div>
-                <span className="text-muted-foreground">Description du rendu souhaité</span>
-                {viewing.clientNotes ? (
+              {/* ✅ Notes client - affichées uniquement si présentes */}
+              {viewing.clientNotes && (
+                <div>
+                  <span className="text-muted-foreground">Description du rendu souhaité</span>
                   <p className="mt-1 p-3 rounded-xl bg-secondary/50 text-sm">
                     {viewing.clientNotes}
                   </p>
-                ) : (
-                  <p className="mt-1 text-sm text-muted-foreground">Aucune description</p>
-                )}
-              </div>
+                </div>
+              )}
 
               <div className="flex justify-between"><span className="text-muted-foreground">Date</span><span>{new Date(viewing.date).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</span></div>
               <div className="flex justify-between"><span className="text-muted-foreground">Heure</span><span>{viewing.time}</span></div>
