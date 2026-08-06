@@ -217,7 +217,7 @@ export default function Booking() {
         
         // ✅ Upload de l'image si présente
         if (referenceImage) {
-          uploadedImageUrl = await uploadImage(referenceImage, 'appointments');
+          uploadedImageUrl = await uploadImage(referenceImage, 'appointments', undefined, 'appointments');
         }
 
         let clientId: string | undefined;
