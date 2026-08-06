@@ -58,14 +58,45 @@ async function compressImage(file: File): Promise<File> {
 }
 
 // services/storageService.ts
+// export async function uploadImage(
+//   file: File,
+//   folder: string = 'services',
+//   fixedName?: string // ✅ Nouveau paramètre optionnel
+// ): Promise<string> {
+//   const compressedFile = await compressImage(file);
+  
+//   // ✅ Si un nom fixe est fourni, l'utiliser
+//   let fileName: string;
+//   if (fixedName) {
+//     const ext = compressedFile.name.split('.').pop() ?? 'webp';
+//     fileName = `${folder}/${fixedName}.${ext}`;
+//   } else {
+//     const ext = compressedFile.name.split('.').pop() ?? 'webp';
+//     fileName = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2, 9)}.${ext}`;
+//   }
+
+//   const { error } = await supabase.storage
+//     .from('images')
+//     .upload(fileName, compressedFile, { 
+//       cacheControl: '31536000',
+//       upsert: true // ✅ Important pour remplacer l'ancien logo
+//     });
+
+//   if (error) throw error;
+
+//   const { data } = supabase.storage.from('images').getPublicUrl(fileName);
+//   return data.publicUrl;
+// }
+
+// services/storageService.ts
 export async function uploadImage(
   file: File,
   folder: string = 'services',
-  fixedName?: string // ✅ Nouveau paramètre optionnel
+  fixedName?: string,
+  bucket: string = 'images' // ✅ Par défaut, utiliser 'images'
 ): Promise<string> {
   const compressedFile = await compressImage(file);
   
-  // ✅ Si un nom fixe est fourni, l'utiliser
   let fileName: string;
   if (fixedName) {
     const ext = compressedFile.name.split('.').pop() ?? 'webp';
@@ -76,15 +107,15 @@ export async function uploadImage(
   }
 
   const { error } = await supabase.storage
-    .from('images')
+    .from(bucket) // ✅ Utiliser le bucket spécifié
     .upload(fileName, compressedFile, { 
       cacheControl: '31536000',
-      upsert: true // ✅ Important pour remplacer l'ancien logo
+      upsert: true
     });
 
   if (error) throw error;
 
-  const { data } = supabase.storage.from('images').getPublicUrl(fileName);
+  const { data } = supabase.storage.from(bucket).getPublicUrl(fileName);
   return data.publicUrl;
 }
 
