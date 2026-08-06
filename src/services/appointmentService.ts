@@ -1,4 +1,3 @@
-// services/appointmentService.ts
 import { supabase } from '@/lib/supabase';
 import type { Appointment, AppointmentStatus, CreateAppointmentDto, UpdateAppointmentDto, ServiceItem } from '@/types';
 import { reminderSettingsService } from './reminderSettingsService';
@@ -15,13 +14,14 @@ interface AppointmentRow {
   time: string;
   status: string;
   payment_method_id: string | null;
+  reference_image: string | null;
+  client_notes: string | null;
   notes: string | null;
   created_at: string | null;
   updated_at: string | null;
 }
 
 function rowToAppointment(r: AppointmentRow): Appointment {
-  // ✅ Récupérer les services depuis le JSONB
   const services = (r.services as ServiceItem[]) || [];
   
   return {
@@ -35,25 +35,13 @@ function rowToAppointment(r: AppointmentRow): Appointment {
     time: r.time,
     status: r.status as AppointmentStatus,
     paymentMethodId: r.payment_method_id ?? undefined,
+    referenceImage: r.reference_image ?? undefined,
+    clientNotes: r.client_notes ?? undefined,
     notes: r.notes ?? undefined,
     createdAt: r.created_at ?? undefined,
     updatedAt: r.updated_at ?? undefined,
   };
 }
-
-// function dtoToRow(data: CreateAppointmentDto): Partial<AppointmentRow> {
-//   return {
-//     client_id: data.clientId ?? null,
-//     client_name: data.clientName,
-//     phone: data.phone,
-//     email: data.email ?? null,
-//     services: [], // Sera rempli après récupération des services
-//     date: data.date,
-//     time: data.time,
-//     payment_method_id: data.paymentMethodId ?? null,
-//     notes: data.notes ?? null,
-//   };
-// }
 
 function patchToRow(data: UpdateAppointmentDto): Partial<AppointmentRow> {
   const row: Record<string, unknown> = {};
@@ -65,6 +53,8 @@ function patchToRow(data: UpdateAppointmentDto): Partial<AppointmentRow> {
   if (data.time !== undefined) row.time = data.time;
   if (data.status !== undefined) row.status = data.status;
   if (data.paymentMethodId !== undefined) row.payment_method_id = data.paymentMethodId ?? null;
+  if (data.referenceImage !== undefined) row.reference_image = data.referenceImage ?? null;
+  if (data.clientNotes !== undefined) row.client_notes = data.clientNotes ?? null;
   if (data.notes !== undefined) row.notes = data.notes ?? null;
   return row as Partial<AppointmentRow>;
 }
@@ -144,12 +134,10 @@ export const appointmentService = {
   },
 
   async create(data: CreateAppointmentDto): Promise<Appointment> {
-    // 1. Vérifier qu'il y a au moins un service
     if (!data.serviceIds || data.serviceIds.length === 0) {
       throw new Error('Au moins un service est requis');
     }
 
-    // 2. Récupérer les services sélectionnés
     const { data: servicesData, error: servicesError } = await supabase
       .from('services')
       .select('id, name, price, duration')
@@ -160,7 +148,6 @@ export const appointmentService = {
       throw new Error('Services non trouvés');
     }
 
-    // 3. Construire le tableau de services
     const services: ServiceItem[] = servicesData.map(s => ({
       id: s.id,
       name: s.name,
@@ -168,21 +155,21 @@ export const appointmentService = {
       duration: s.duration,
     }));
 
-    // 4. Créer le row avec les services en JSON
     const row = {
       client_id: data.clientId ?? null,
       client_name: data.clientName,
       phone: data.phone,
       email: data.email ?? null,
-      services: services, // ✅ Stocké en JSONB
+      services: services,
       date: data.date,
       time: data.time,
       status: 'pending',
       payment_method_id: data.paymentMethodId ?? null,
+      reference_image: data.referenceImage ?? null,
+      client_notes: data.clientNotes ?? null,
       notes: data.notes ?? null,
     };
 
-    // 5. Gestion du client pour les réservations invitées
     if (!row.client_id && row.email) {
       const { data: existing } = await supabase
         .from('clients')
@@ -207,13 +194,11 @@ export const appointmentService = {
       }
     }
 
-    // 6. Insérer le rendez-vous
     const { error: insertError } = await supabase
       .from('appointments')
       .insert(row);
     if (insertError) throw insertError;
 
-    // 7. Récupérer le rendez-vous créé
     const { data: rows, error: selError } = await supabase
       .from('appointments')
       .select(`
@@ -234,7 +219,6 @@ export const appointmentService = {
 
     if (selError) throw selError;
     if (!rows || rows.length === 0) {
-      // Fallback
       return {
         id: '',
         clientId: data.clientId,
@@ -246,13 +230,14 @@ export const appointmentService = {
         time: data.time,
         status: 'pending',
         paymentMethodId: data.paymentMethodId,
+        referenceImage: data.referenceImage,
+        clientNotes: data.clientNotes,
         notes: data.notes,
       };
     }
 
     const appointment = rowToAppointment(rows[0] as AppointmentRow);
 
-    // 8. Créer un rappel pour le rendez-vous (avec le premier service pour le nom)
     try {
       const settings = await reminderSettingsService.get();
       if (settings.enabled) {
@@ -262,7 +247,7 @@ export const appointmentService = {
           clientName: appointment.clientName,
           clientPhone: appointment.phone,
           clientEmail: appointment.email,
-          serviceName: serviceNames, // ✅ Nom des services combinés
+          serviceName: serviceNames,
           appointmentDate: appointment.date,
           appointmentTime: appointment.time,
           delayHours: settings.delayHours,
@@ -278,7 +263,6 @@ export const appointmentService = {
   },
 
   async update(id: string, data: UpdateAppointmentDto): Promise<Appointment> {
-    // Si le statut change vers 'cancelled', supprimer les rappels
     if (data.status === 'cancelled') {
       await reminderService.deleteByAppointmentId(id);
       console.log(`🗑️ Rappels supprimés pour le rendez-vous annulé ${id}`);
@@ -286,7 +270,6 @@ export const appointmentService = {
 
     const row = patchToRow(data);
 
-    // ✅ Si les services sont modifiés
     if (data.serviceIds !== undefined) {
       if (data.serviceIds.length === 0) {
         throw new Error('Au moins un service est requis');
@@ -309,11 +292,9 @@ export const appointmentService = {
         duration: s.duration,
       }));
 
-      // ✅ Mettre à jour les services dans le JSON
       (row as any).services = services;
     }
 
-    // ✅ Récupérer l'ancien statut avant la mise à jour
     const { data: oldAppointment } = await supabase
       .from('appointments')
       .select('client_id, status')
@@ -339,10 +320,8 @@ export const appointmentService = {
     
     const appointment = rowToAppointment(updatedRow as AppointmentRow);
 
-    // ✅ Ajouter des points de fidélité si le statut passe à 'confirmed'
     if (data.status === 'confirmed' && oldAppointment?.status !== 'confirmed') {
       try {
-        // Récupérer les paramètres de fidélité
         const { data: loyaltySettings } = await supabase
           .from('loyalty_settings')
           .select('points_per_visit')
@@ -350,9 +329,7 @@ export const appointmentService = {
 
         const pointsToAdd = loyaltySettings?.points_per_visit ?? 10;
 
-        // Ajouter les points au client
         if (appointment.clientId) {
-          // Récupérer les points actuels
           const { data: client } = await supabase
             .from('clients')
             .select('loyalty_points')
@@ -370,11 +347,9 @@ export const appointmentService = {
         }
       } catch (loyaltyError) {
         console.error('Erreur lors de l\'ajout des points de fidélité:', loyaltyError);
-        // Ne pas bloquer la confirmation du rendez-vous
       }
     }
 
-    // Si le rendez-vous est confirmé et que les rappels sont activés
     if (data.status === 'confirmed' && !data.date && !data.time && !data.serviceIds) {
       try {
         const settings = await reminderSettingsService.get();
@@ -400,7 +375,6 @@ export const appointmentService = {
       }
     }
 
-    // Si la date ou l'heure change, mettre à jour le rappel
     if (data.date || data.time) {
       try {
         await reminderService.deleteByAppointmentId(id);

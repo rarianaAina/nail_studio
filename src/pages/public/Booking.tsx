@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { CalendarHeart, Check, Clock, ArrowLeft, ArrowRight, PartyPopper, Sparkles, ChevronLeft, ChevronRight } from 'lucide-react';
+import { CalendarHeart, Check, Clock, ArrowLeft, ArrowRight, PartyPopper, Sparkles, ChevronLeft, ChevronRight, Image as ImageIcon, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/utils/cn';
@@ -19,6 +20,7 @@ import { useSettings } from '@/hooks/useSettings';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 import { toDateString } from '@/utils/date';
+import { uploadImage } from '@/services/storageService';
 import type { BusinessHours } from '@/types';
 
 type Step = 1 | 2 | 3 | 4 | 5;
@@ -69,6 +71,12 @@ export default function Booking() {
   const [bookedSlots, setBookedSlots] = useState<string[]>([]);
   const [slotsByDate, setSlotsByDate] = useState<Record<string, number>>({});
 
+  // ✅ États pour l'image de référence et les notes
+  const [referenceImage, setReferenceImage] = useState<File | null>(null);
+  const [referenceImageUrl, setReferenceImageUrl] = useState<string>('');
+  const [clientNotes, setClientNotes] = useState<string>('');
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+
   // Calendrier
   const [calendarMonth, setCalendarMonth] = useState(() => {
     const d = new Date();
@@ -107,7 +115,7 @@ export default function Booking() {
     return !dayHours.closed;
   };
 
-  // ✅ Charger les créneaux pour le mois affiché
+  // Charger les créneaux pour le mois affiché
   useEffect(() => {
     const fetchSlotsForMonth = async () => {
       const year = calendarMonth.getFullYear();
@@ -133,7 +141,6 @@ export default function Booking() {
     fetchSlotsForMonth();
   }, [calendarMonth]);
 
-  // ✅ Vérifier si une date a des créneaux
   const hasSlots = (dateStr: string): boolean => {
     return !!slotsByDate[dateStr];
   };
@@ -152,7 +159,6 @@ export default function Booking() {
     return () => { mounted = false; };
   }, [date]);
 
-  // Générer les cellules du calendrier
   const calendarCells = useMemo(() => {
     const year = calendarMonth.getFullYear();
     const month = calendarMonth.getMonth();
@@ -166,6 +172,35 @@ export default function Booking() {
     return arr;
   }, [calendarMonth]);
 
+  // ✅ Gestion de l'upload d'image
+  const handleImageUpload = (file: File) => {
+    // Vérifier le type
+    if (!file.type.startsWith('image/')) {
+      toast.error('Veuillez sélectionner une image');
+      return;
+    }
+
+    // Vérifier la taille (max 5 Mo)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('L\'image ne doit pas dépasser 5 Mo');
+      return;
+    }
+
+    // Créer un aperçu
+    const reader = new FileReader();
+    reader.onload = () => {
+      setPreviewUrl(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+
+    setReferenceImage(file);
+  };
+
+  const handleImageRemove = () => {
+    setReferenceImage(null);
+    setPreviewUrl(null);
+    setReferenceImageUrl('');
+  };
 
   const canNext =
     (step === 1 && selectedServiceIds.length > 0) ||
@@ -178,6 +213,13 @@ export default function Booking() {
     if (step === 4) {
       setSubmitting(true);
       try {
+        let uploadedImageUrl = referenceImageUrl;
+        
+        // ✅ Upload de l'image si présente
+        if (referenceImage) {
+          uploadedImageUrl = await uploadImage(referenceImage, 'appointments');
+        }
+
         let clientId: string | undefined;
         if (isLoggedIn && user) {
           const { data: clientRow } = await supabase
@@ -197,6 +239,8 @@ export default function Booking() {
           date,
           time,
           paymentMethodId,
+          referenceImage: uploadedImageUrl || undefined,
+          clientNotes: clientNotes || undefined,
         });
         setStep(5);
       } catch (error) {
@@ -504,6 +548,69 @@ export default function Booking() {
                           )}
                         </SelectContent>
                       </Select>
+                    </div>
+
+                    {/* ✅ Image de référence et notes client */}
+                    <div className="space-y-4 border-t border-border/60 pt-4">
+                      <div>
+                        <Label>Photo de référence (optionnel)</Label>
+                        <p className="text-xs text-muted-foreground mb-2">
+                          Ajoutez une photo pour montrer le rendu souhaité.
+                        </p>
+                        <div className="space-y-2">
+                          {previewUrl ? (
+                            <div className="relative rounded-xl overflow-hidden border border-border/60">
+                              <img
+                                src={previewUrl}
+                                alt="Aperçu"
+                                className="w-full max-h-48 object-contain bg-secondary/30"
+                              />
+                              <button
+                                type="button"
+                                onClick={handleImageRemove}
+                                className="absolute top-2 right-2 rounded-full bg-black/50 p-1 text-white hover:bg-black/70 transition-colors"
+                              >
+                                <X className="h-4 w-4" />
+                              </button>
+                            </div>
+                          ) : (
+                            <div
+                              className="border-2 border-dashed rounded-xl p-6 text-center transition-colors cursor-pointer hover:border-primary/40"
+                              onClick={() => document.getElementById('image-upload')?.click()}
+                            >
+                              <input
+                                id="image-upload"
+                                type="file"
+                                accept="image/*"
+                                className="hidden"
+                                onChange={(e) => {
+                                  const file = e.target.files?.[0];
+                                  if (file) handleImageUpload(file);
+                                }}
+                              />
+                              <ImageIcon className="mx-auto h-10 w-10 text-muted-foreground" />
+                              <p className="mt-2 text-sm text-muted-foreground">
+                                Cliquez pour sélectionner une image
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                JPG, PNG, WebP • Max 5 Mo
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <Label htmlFor="client-notes">Description du rendu souhaité (optionnel)</Label>
+                        <Textarea
+                          id="client-notes"
+                          rows={3}
+                          value={clientNotes}
+                          onChange={(e) => setClientNotes(e.target.value)}
+                          placeholder="Décrivez ce que vous souhaitez : couleur, style, effets..."
+                          className="resize-none"
+                        />
+                      </div>
                     </div>
 
                     <div className="rounded-xl bg-secondary/50 p-3 text-sm">

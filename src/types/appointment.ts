@@ -25,6 +25,8 @@ export interface Appointment {
     label: string;
     icon?: string;
   };
+  referenceImage?: string; // ✅ Nouveau
+  clientNotes?: string;     // ✅ Nouveau
   notes?: string;
   createdAt?: string;
   updatedAt?: string;
@@ -40,6 +42,8 @@ export interface CreateAppointmentDto {
   time: string;
   paymentMethodId?: string;
   notes?: string;
+  referenceImage?: string;
+  clientNotes?: string;
 }
 
 export interface UpdateAppointmentDto {
@@ -52,6 +56,8 @@ export interface UpdateAppointmentDto {
   time?: string;
   status?: AppointmentStatus;
   paymentMethodId?: string;
+  referenceImage?: string;
+  clientNotes?: string;
   notes?: string;
 }
 
