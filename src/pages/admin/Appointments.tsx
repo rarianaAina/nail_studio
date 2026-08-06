@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Search, Eye, Pencil, Check, X, CalendarPlus, Bell } from 'lucide-react';
+import { Search, Eye, Pencil, Check, X, CalendarPlus, Bell, Image as ImageIcon } from 'lucide-react';
 import { useNailServices } from '@/hooks/useNailServices';
 import { useClients } from '@/hooks/useClients';
 import {
@@ -47,7 +47,7 @@ export default function Appointments() {
     clientName: '',
     phone: '',
     email: '',
-    serviceIds: [] as string[], // ✅ Changé de serviceId à serviceIds (tableau)
+    serviceIds: [] as string[],
     date: '',
     time: '09:00',
     paymentMethodId: '',
@@ -68,7 +68,6 @@ export default function Appointments() {
     [appointments, query, filter]
   );
 
-  // Récupérer le libellé du moyen de paiement
   const getPaymentMethodLabel = (paymentMethodId?: string) => {
     if (!paymentMethodId) return 'Non renseigné';
     const method = paymentMethods.find(m => m.id === paymentMethodId);
@@ -121,7 +120,6 @@ export default function Appointments() {
     }
   };
 
-  // ✅ Fonction pour basculer la sélection d'un service dans le formulaire de création
   const toggleServiceSelection = (serviceId: string) => {
     setNewAppt(prev => ({
       ...prev,
@@ -145,7 +143,6 @@ export default function Appointments() {
         </Button>
       </div>
 
-      {/* Info rappel actif */}
       {reminderSettings?.enabled && (
         <div className="flex items-center gap-3 rounded-2xl border border-primary/20 bg-primary/5 px-4 py-3 text-sm text-primary">
           <Bell className="h-4 w-4 shrink-0" />
@@ -235,6 +232,11 @@ export default function Appointments() {
                           {a.status === 'confirmed' && reminderSettings?.enabled && (
                             <span title="Rappel programmé" className="text-primary">
                               <Bell className="h-3.5 w-3.5" />
+                            </span>
+                          )}
+                          {a.referenceImage && (
+                            <span title="Image de référence" className="text-primary">
+                              <ImageIcon className="h-3.5 w-3.5" />
                             </span>
                           )}
                         </div>
@@ -373,7 +375,6 @@ export default function Appointments() {
               </>
             )}
             
-            {/* ✅ Sélection multiple des prestations */}
             <div className="space-y-1.5">
               <Label>Prestations * (sélectionnez une ou plusieurs)</Label>
               <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto p-1">
@@ -426,7 +427,6 @@ export default function Appointments() {
               </div>
             </div>
             
-            {/* Moyen de paiement */}
             <div className="space-y-1.5">
               <Label>Moyen de paiement</Label>
               <Select
@@ -500,7 +500,7 @@ export default function Appointments() {
                     clientName,
                     phone,
                     email,
-                    serviceIds: newAppt.serviceIds, // ✅ Changé de serviceId à serviceIds
+                    serviceIds: newAppt.serviceIds,
                     date: newAppt.date,
                     time: newAppt.time,
                     paymentMethodId: newAppt.paymentMethodId || undefined,
@@ -535,7 +535,6 @@ export default function Appointments() {
               <div className="flex justify-between"><span className="text-muted-foreground">Téléphone</span><span>{viewing.phone}</span></div>
               {viewing.email && <div className="flex justify-between"><span className="text-muted-foreground">Email</span><span>{viewing.email}</span></div>}
               
-              {/* ✅ Affichage des services */}
               <div className="space-y-1">
                 <span className="text-muted-foreground">Prestations</span>
                 {viewing.services.map((s, index) => (
@@ -552,6 +551,34 @@ export default function Appointments() {
                   <span>Durée totale</span>
                   <span>{getTotalDuration(viewing)} min</span>
                 </div>
+              </div>
+
+              {/* ✅ Image de référence */}
+              <div>
+                <span className="text-muted-foreground">Image de référence</span>
+                {viewing.referenceImage ? (
+                  <div className="mt-1 rounded-xl overflow-hidden border border-border/60">
+                    <img
+                      src={viewing.referenceImage}
+                      alt="Référence client"
+                      className="max-h-48 w-full object-contain bg-secondary/30"
+                    />
+                  </div>
+                ) : (
+                  <p className="mt-1 text-sm text-muted-foreground">Aucune image fournie</p>
+                )}
+              </div>
+
+              {/* ✅ Notes client */}
+              <div>
+                <span className="text-muted-foreground">Description du rendu souhaité</span>
+                {viewing.clientNotes ? (
+                  <p className="mt-1 p-3 rounded-xl bg-secondary/50 text-sm">
+                    {viewing.clientNotes}
+                  </p>
+                ) : (
+                  <p className="mt-1 text-sm text-muted-foreground">Aucune description</p>
+                )}
               </div>
 
               <div className="flex justify-between"><span className="text-muted-foreground">Date</span><span>{new Date(viewing.date).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</span></div>
