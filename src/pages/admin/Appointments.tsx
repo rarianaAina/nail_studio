@@ -568,7 +568,15 @@ export default function Appointments() {
                         <p className="text-xs font-medium text-muted-foreground">Main gauche</p>
                         <div className="mt-1 flex flex-wrap gap-2">
                           {viewing.referenceImages.filter(img => img.type === 'left').map((img, idx) => (
-                            <div key={idx} className="relative">
+                            <a
+                              key={idx}
+                              href={img.url}
+                              download={`reference-main-gauche-${idx + 1}.webp`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="relative block hover:opacity-80 transition-opacity cursor-pointer"
+                              title="Cliquez pour télécharger"
+                            >
                               <img
                                 src={img.url}
                                 alt={`Main gauche ${img.caption || ''}`}
@@ -579,7 +587,10 @@ export default function Appointments() {
                                   {img.caption}
                                 </span>
                               )}
-                            </div>
+                              <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 hover:opacity-100 transition-opacity rounded-lg">
+                                <span className="text-white text-[10px] font-medium">Télécharger</span>
+                              </div>
+                            </a>
                           ))}
                         </div>
                       </div>
@@ -591,7 +602,15 @@ export default function Appointments() {
                         <p className="text-xs font-medium text-muted-foreground">Main droite</p>
                         <div className="mt-1 flex flex-wrap gap-2">
                           {viewing.referenceImages.filter(img => img.type === 'right').map((img, idx) => (
-                            <div key={idx} className="relative">
+                            <a
+                              key={idx}
+                              href={img.url}
+                              download={`reference-main-droite-${idx + 1}.webp`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="relative block hover:opacity-80 transition-opacity cursor-pointer"
+                              title="Cliquez pour télécharger"
+                            >
                               <img
                                 src={img.url}
                                 alt={`Main droite ${img.caption || ''}`}
@@ -602,7 +621,10 @@ export default function Appointments() {
                                   {img.caption}
                                 </span>
                               )}
-                            </div>
+                              <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 hover:opacity-100 transition-opacity rounded-lg">
+                                <span className="text-white text-[10px] font-medium">Télécharger</span>
+                              </div>
+                            </a>
                           ))}
                         </div>
                       </div>
@@ -614,7 +636,15 @@ export default function Appointments() {
                         <p className="text-xs font-medium text-muted-foreground">Inspiration</p>
                         <div className="mt-1 flex flex-wrap gap-2">
                           {viewing.referenceImages.filter(img => img.type === 'inspiration').map((img, idx) => (
-                            <div key={idx} className="relative">
+                            <a
+                              key={idx}
+                              href={img.url}
+                              download={`reference-inspiration-${idx + 1}.webp`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="relative block hover:opacity-80 transition-opacity cursor-pointer"
+                              title="Cliquez pour télécharger"
+                            >
                               <img
                                 src={img.url}
                                 alt={`Inspiration ${img.caption || ''}`}
@@ -625,7 +655,10 @@ export default function Appointments() {
                                   {img.caption}
                                 </span>
                               )}
-                            </div>
+                              <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 hover:opacity-100 transition-opacity rounded-lg">
+                                <span className="text-white text-[10px] font-medium">Télécharger</span>
+                              </div>
+                            </a>
                           ))}
                         </div>
                       </div>
