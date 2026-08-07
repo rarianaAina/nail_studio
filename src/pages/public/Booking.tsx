@@ -1,8 +1,7 @@
-// pages/public/Booking.tsx
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { CalendarHeart, Check, Clock, ArrowLeft, ArrowRight, PartyPopper, Sparkles, ChevronLeft, ChevronRight, Image as ImageIcon, X, Plus } from 'lucide-react';
+import { CalendarHeart, Check, Clock, ArrowLeft, ArrowRight, PartyPopper, Sparkles, ChevronLeft, ChevronRight, Image as X, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
