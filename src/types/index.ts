@@ -65,3 +65,4 @@ export type {
   CreateSpecialInfoDto,
   UpdateSpecialInfoDto,
 } from './specialInfo';
+export type { ReferenceImage } from './appointment'; // ✅ Ajout du type ReferenceImage

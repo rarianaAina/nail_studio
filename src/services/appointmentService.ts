@@ -1,5 +1,5 @@
 import { supabase } from '@/lib/supabase';
-import type { Appointment, AppointmentStatus, CreateAppointmentDto, UpdateAppointmentDto, ServiceItem } from '@/types';
+import type { Appointment, AppointmentStatus, CreateAppointmentDto, UpdateAppointmentDto, ServiceItem, ReferenceImage } from '@/types';
 import { reminderSettingsService } from './reminderSettingsService';
 import { reminderService } from './reminderService';
 
@@ -14,7 +14,7 @@ interface AppointmentRow {
   time: string;
   status: string;
   payment_method_id: string | null;
-  reference_image: string | null;
+  reference_images: any; // ✅ JSONB pour les images multiples
   client_notes: string | null;
   notes: string | null;
   created_at: string | null;
@@ -23,6 +23,7 @@ interface AppointmentRow {
 
 function rowToAppointment(r: AppointmentRow): Appointment {
   const services = (r.services as ServiceItem[]) || [];
+  const referenceImages = (r.reference_images as ReferenceImage[]) || [];
   
   return {
     id: r.id,
@@ -35,7 +36,7 @@ function rowToAppointment(r: AppointmentRow): Appointment {
     time: r.time,
     status: r.status as AppointmentStatus,
     paymentMethodId: r.payment_method_id ?? undefined,
-    referenceImage: r.reference_image ?? undefined,
+    referenceImages: referenceImages, // ✅ Tableau d'images
     clientNotes: r.client_notes ?? undefined,
     notes: r.notes ?? undefined,
     createdAt: r.created_at ?? undefined,
@@ -53,7 +54,7 @@ function patchToRow(data: UpdateAppointmentDto): Partial<AppointmentRow> {
   if (data.time !== undefined) row.time = data.time;
   if (data.status !== undefined) row.status = data.status;
   if (data.paymentMethodId !== undefined) row.payment_method_id = data.paymentMethodId ?? null;
-  if (data.referenceImage !== undefined) row.reference_image = data.referenceImage ?? null;
+  if (data.referenceImages !== undefined) row.reference_images = data.referenceImages; // ✅ Tableau d'images
   if (data.clientNotes !== undefined) row.client_notes = data.clientNotes ?? null;
   if (data.notes !== undefined) row.notes = data.notes ?? null;
   return row as Partial<AppointmentRow>;
@@ -165,7 +166,7 @@ export const appointmentService = {
       time: data.time,
       status: 'pending',
       payment_method_id: data.paymentMethodId ?? null,
-      reference_image: data.referenceImage ?? null,
+      reference_images: data.referenceImages || [], // ✅ Tableau d'images
       client_notes: data.clientNotes ?? null,
       notes: data.notes ?? null,
     };
@@ -230,7 +231,7 @@ export const appointmentService = {
         time: data.time,
         status: 'pending',
         paymentMethodId: data.paymentMethodId,
-        referenceImage: data.referenceImage,
+        referenceImages: data.referenceImages || [],
         clientNotes: data.clientNotes,
         notes: data.notes,
       };

@@ -1,7 +1,8 @@
+// pages/public/Booking.tsx
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { CalendarHeart, Check, Clock, ArrowLeft, ArrowRight, PartyPopper, Sparkles, ChevronLeft, ChevronRight, Image as ImageIcon, X } from 'lucide-react';
+import { CalendarHeart, Check, Clock, ArrowLeft, ArrowRight, PartyPopper, Sparkles, ChevronLeft, ChevronRight, Image as ImageIcon, X, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -21,11 +22,17 @@ import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 import { toDateString } from '@/utils/date';
 import { uploadImage } from '@/services/storageService';
-import type { BusinessHours } from '@/types';
+import type { BusinessHours, ReferenceImage } from '@/types';
 
 type Step = 1 | 2 | 3 | 4 | 5;
 
 const weekDays = ['L', 'M', 'M', 'J', 'V', 'S', 'D'];
+const SIDE_OPTIONS = [
+  { value: 'left', label: 'Main gauche' },
+  { value: 'right', label: 'Main droite' },
+  { value: 'both', label: 'Les deux' },
+  { value: 'other', label: 'Autre' },
+];
 
 const stepsMeta = [
   { n: 1, label: 'Prestation(s)' },
@@ -71,11 +78,10 @@ export default function Booking() {
   const [bookedSlots, setBookedSlots] = useState<string[]>([]);
   const [slotsByDate, setSlotsByDate] = useState<Record<string, number>>({});
 
-  // ✅ États pour l'image de référence et les notes
-  const [referenceImage, setReferenceImage] = useState<File | null>(null);
-  const [referenceImageUrl, setReferenceImageUrl] = useState<string>('');
+  // ✅ États pour les images de référence et les notes
+  const [referenceImages, setReferenceImages] = useState<ReferenceImage[]>([]);
   const [clientNotes, setClientNotes] = useState<string>('');
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
 
   // Calendrier
   const [calendarMonth, setCalendarMonth] = useState(() => {
@@ -173,7 +179,7 @@ export default function Booking() {
   }, [calendarMonth]);
 
   // ✅ Gestion de l'upload d'image
-  const handleImageUpload = (file: File) => {
+  const handleImageUpload = (file: File, side: string) => {
     // Vérifier le type
     if (!file.type.startsWith('image/')) {
       toast.error('Veuillez sélectionner une image');
@@ -186,20 +192,39 @@ export default function Booking() {
       return;
     }
 
+    if (referenceImages.length >= 4) {
+      toast.error('Maximum 4 images autorisées');
+      return;
+    }
+
     // Créer un aperçu
     const reader = new FileReader();
     reader.onload = () => {
-      setPreviewUrl(reader.result as string);
+      const newImage: ReferenceImage = {
+        id: Date.now().toString(),
+        file: file,
+        side: side as ReferenceImage['side'],
+        url: reader.result as string,
+      };
+      setReferenceImages([...referenceImages, newImage]);
     };
     reader.readAsDataURL(file);
-
-    setReferenceImage(file);
   };
 
-  const handleImageRemove = () => {
-    setReferenceImage(null);
-    setPreviewUrl(null);
-    setReferenceImageUrl('');
+  const handleImageRemove = (id: string) => {
+    setReferenceImages(referenceImages.filter(img => img.id !== id));
+  };
+
+  const handleSideChange = (id: string, side: string) => {
+    setReferenceImages(referenceImages.map(img => 
+      img.id === id ? { ...img, side: side as ReferenceImage['side'] } : img
+    ));
+  };
+
+  const handleCaptionChange = (id: string, caption: string) => {
+    setReferenceImages(referenceImages.map(img => 
+      img.id === id ? { ...img, caption } : img
+    ));
   };
 
   const canNext =
@@ -212,12 +237,20 @@ export default function Booking() {
     if (!canNext) return;
     if (step === 4) {
       setSubmitting(true);
+      setIsUploading(true);
       try {
-        let uploadedImageUrl = referenceImageUrl;
+        // ✅ Uploader toutes les images
+        let uploadedImages: ReferenceImage[] = [];
         
-        // ✅ Upload de l'image si présente
-        if (referenceImage) {
-          uploadedImageUrl = await uploadImage(referenceImage, 'appointments', undefined, 'appointments');
+        if (referenceImages.length > 0) {
+          const uploadPromises = referenceImages.map(async (img) => {
+            if (img.file) {
+              const url = await uploadImage(img.file, 'appointments', undefined, 'appointments');
+              return { ...img, url, file: undefined };
+            }
+            return img;
+          });
+          uploadedImages = await Promise.all(uploadPromises);
         }
 
         let clientId: string | undefined;
@@ -239,7 +272,7 @@ export default function Booking() {
           date,
           time,
           paymentMethodId,
-          referenceImage: uploadedImageUrl || undefined,
+          referenceImages: uploadedImages,
           clientNotes: clientNotes || undefined,
         });
         setStep(5);
@@ -248,6 +281,7 @@ export default function Booking() {
         toast.error('Une erreur est survenue. Veuillez réessayer.');
       } finally {
         setSubmitting(false);
+        setIsUploading(false);
       }
     } else {
       setStep((s) => Math.min(5, s + 1) as Step);
@@ -550,54 +584,124 @@ export default function Booking() {
                       </Select>
                     </div>
 
-                    {/* ✅ Image de référence et notes client */}
+                    {/* ✅ Images de référence multiples */}
                     <div className="space-y-4 border-t border-border/60 pt-4">
                       <div>
-                        <Label>Photo de référence (optionnel)</Label>
-                        <p className="text-xs text-muted-foreground mb-2">
-                          Ajoutez une photo pour montrer le rendu souhaité.
-                        </p>
-                        <div className="space-y-2">
-                          {previewUrl ? (
-                            <div className="relative rounded-xl overflow-hidden border border-border/60">
-                              <img
-                                src={previewUrl}
-                                alt="Aperçu"
-                                className="w-full max-h-48 object-contain bg-secondary/30"
-                              />
-                              <button
-                                type="button"
-                                onClick={handleImageRemove}
-                                className="absolute top-2 right-2 rounded-full bg-black/50 p-1 text-white hover:bg-black/70 transition-colors"
-                              >
-                                <X className="h-4 w-4" />
-                              </button>
-                            </div>
-                          ) : (
-                            <div
-                              className="border-2 border-dashed rounded-xl p-6 text-center transition-colors cursor-pointer hover:border-primary/40"
-                              onClick={() => document.getElementById('image-upload')?.click()}
-                            >
-                              <input
-                                id="image-upload"
-                                type="file"
-                                accept="image/*"
-                                className="hidden"
-                                onChange={(e) => {
-                                  const file = e.target.files?.[0];
-                                  if (file) handleImageUpload(file);
-                                }}
-                              />
-                              <ImageIcon className="mx-auto h-10 w-10 text-muted-foreground" />
-                              <p className="mt-2 text-sm text-muted-foreground">
-                                Cliquez pour sélectionner une image
-                              </p>
-                              <p className="text-xs text-muted-foreground">
-                                JPG, PNG, WebP • Max 5 Mo
-                              </p>
-                            </div>
-                          )}
+                        <div className="flex items-center justify-between">
+                          <Label>Photos de référence (optionnel)</Label>
+                          <span className="text-xs text-muted-foreground">
+                            {referenceImages.length}/4 images
+                          </span>
                         </div>
+                        <p className="text-xs text-muted-foreground mb-3">
+                          Ajoutez des photos pour montrer le rendu souhaité (main gauche, droite...)
+                        </p>
+
+                        {/* Liste des images */}
+                        <div className="space-y-3">
+                          {referenceImages.map((img) => (
+                            <motion.div
+                              key={img.id}
+                              initial={{ opacity: 0, height: 0 }}
+                              animate={{ opacity: 1, height: 'auto' }}
+                              exit={{ opacity: 0, height: 0 }}
+                              className="flex flex-col gap-2 p-3 rounded-xl border border-border/60 bg-secondary/30"
+                            >
+                              <div className="flex items-start gap-3">
+                                <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-lg border border-border/60">
+                                  <img
+                                    src={img.url}
+                                    alt="Aperçu"
+                                    className="h-full w-full object-cover"
+                                  />
+                                </div>
+
+                                <div className="flex-1 space-y-1.5">
+                                  <div className="flex items-center gap-2">
+                                    <Select
+                                      value={img.side}
+                                      onValueChange={(v) => handleSideChange(img.id, v)}
+                                    >
+                                      <SelectTrigger className="w-28 h-7 text-xs">
+                                        <SelectValue placeholder="Côté" />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        {SIDE_OPTIONS.map((option) => (
+                                          <SelectItem key={option.value} value={option.value}>
+                                            {option.label}
+                                          </SelectItem>
+                                        ))}
+                                      </SelectContent>
+                                    </Select>
+
+                                    <button
+                                      type="button"
+                                      onClick={() => handleImageRemove(img.id)}
+                                      className="p-1 rounded-full hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
+                                    >
+                                      <X className="h-3.5 w-3.5" />
+                                    </button>
+                                  </div>
+
+                                  <input
+                                    type="text"
+                                    placeholder="Légende (optionnel)"
+                                    value={img.caption || ''}
+                                    onChange={(e) => handleCaptionChange(img.id, e.target.value)}
+                                    className="w-full text-xs bg-transparent border-b border-transparent hover:border-border focus:border-primary focus:outline-none transition-colors"
+                                  />
+                                </div>
+                              </div>
+                            </motion.div>
+                          ))}
+                        </div>
+
+                        {/* Bouton d'ajout */}
+                        {referenceImages.length < 4 && (
+                          <div
+                            className="mt-3 border-2 border-dashed rounded-xl p-4 text-center transition-colors cursor-pointer hover:border-primary/40"
+                            onClick={() => {
+                              // Demander le côté avant l'upload
+                              const side = prompt('Quel côté ? (left, right, both, other)', 'left');
+                              if (side && SIDE_OPTIONS.some(o => o.value === side)) {
+                                document.getElementById('image-upload-input')?.click();
+                              } else {
+                                toast.error('Côté invalide');
+                              }
+                            }}
+                          >
+                            <input
+                              id="image-upload-input"
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) {
+                                  // Récupérer le côté depuis le prompt stocké
+                                  const side = prompt('Quel côté ? (left, right, both, other)', 'left');
+                                  if (side && SIDE_OPTIONS.some(o => o.value === side)) {
+                                    handleImageUpload(file, side);
+                                  } else {
+                                    toast.error('Côté invalide');
+                                  }
+                                }
+                                e.target.value = '';
+                              }}
+                            />
+                            <Plus className="mx-auto h-6 w-6 text-muted-foreground" />
+                            <p className="mt-0.5 text-xs text-muted-foreground">
+                              Ajouter une image
+                            </p>
+                          </div>
+                        )}
+
+                        {isUploading && (
+                          <div className="mt-2 flex items-center gap-2 text-xs text-primary">
+                            <div className="h-3 w-3 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                            Upload en cours...
+                          </div>
+                        )}
                       </div>
 
                       <div className="space-y-1.5">
@@ -677,7 +781,7 @@ export default function Booking() {
                 <Button variant="ghost" className="rounded-full" onClick={prev} disabled={step === 1}>
                   <ArrowLeft className="mr-2 h-4 w-4" /> Retour
                 </Button>
-                <Button className="rounded-full" onClick={next} disabled={!canNext || submitting}>
+                <Button className="rounded-full" onClick={next} disabled={!canNext || submitting || isUploading}>
                   {step === 4 ? (submitting ? 'Confirmation...' : 'Confirmer') : 'Suivant'}
                   {step < 4 && <ArrowRight className="ml-2 h-4 w-4" />}
                 </Button>

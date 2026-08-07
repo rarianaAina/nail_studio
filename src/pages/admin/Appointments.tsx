@@ -235,8 +235,8 @@ export default function Appointments() {
                               <Bell className="h-3.5 w-3.5" />
                             </span>
                           )}
-                          {a.referenceImage && (
-                            <span title="Image de référence" className="text-primary">
+                          {a.referenceImages && a.referenceImages.length > 0 && (
+                            <span title="Images de référence" className="text-primary">
                               <ImageIcon className="h-3.5 w-3.5" />
                             </span>
                           )}
@@ -291,6 +291,9 @@ export default function Appointments() {
                     <div className="flex items-center gap-1.5">
                       {a.status === 'confirmed' && reminderSettings?.enabled && (
                         <Bell className="h-3.5 w-3.5 text-primary" />
+                      )}
+                      {a.referenceImages && a.referenceImages.length > 0 && (
+                        <ImageIcon className="h-3.5 w-3.5 text-primary" />
                       )}
                       <span className={cn('shrink-0 rounded-full border px-2.5 py-0.5 text-xs', STATUS_COLORS[a.status])}>
                         {STATUS_LABELS[a.status]}
@@ -554,16 +557,26 @@ export default function Appointments() {
                 </div>
               </div>
 
-              {/* ✅ Image de référence - affichée uniquement si présente */}
-              {viewing.referenceImage && (
+              {/* ✅ Images de référence - affichées uniquement si présentes */}
+              {viewing.referenceImages && viewing.referenceImages.length > 0 && (
                 <div>
-                  <span className="text-muted-foreground">Image de référence</span>
-                  <div className="mt-1 rounded-xl overflow-hidden border border-border/60">
-                    <img
-                      src={viewing.referenceImage}
-                      alt="Référence client"
-                      className="max-h-48 w-full object-contain bg-secondary/30"
-                    />
+                  <span className="text-muted-foreground">Images de référence</span>
+                  <div className="mt-2 grid grid-cols-2 gap-2">
+                    {viewing.referenceImages.map((img, idx) => (
+                      <div key={idx} className="relative group">
+                        <img
+                          src={img.url}
+                          alt={`Référence ${img.side}`}
+                          className="rounded-lg border border-border/60 object-cover w-full h-28"
+                        />
+                        <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-xs p-1 rounded-b-lg">
+                          {img.side === 'left' ? 'Main gauche' :
+                           img.side === 'right' ? 'Main droite' :
+                           img.side === 'both' ? 'Les deux' : 'Autre'}
+                          {img.caption && ` - ${img.caption}`}
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
               )}

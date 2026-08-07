@@ -8,6 +8,14 @@ export interface ServiceItem {
   duration: number;
 }
 
+export interface ReferenceImage {
+  id: string;
+  url: string;
+  side: 'left' | 'right' | 'both' | 'other';
+  caption?: string;
+  file?: File; // ✅ Ajouté : pour l'upload temporaire (non stocké en base)
+}
+
 export interface Appointment {
   id: string;
   clientId?: string;
@@ -25,8 +33,8 @@ export interface Appointment {
     label: string;
     icon?: string;
   };
-  referenceImage?: string; // ✅ Nouveau
-  clientNotes?: string;     // ✅ Nouveau
+  referenceImages?: ReferenceImage[]; // ✅ Tableau d'images avec côté
+  clientNotes?: string;
   notes?: string;
   createdAt?: string;
   updatedAt?: string;
@@ -41,9 +49,9 @@ export interface CreateAppointmentDto {
   date: string;
   time: string;
   paymentMethodId?: string;
-  notes?: string;
-  referenceImage?: string;
+  referenceImages?: ReferenceImage[]; // ✅ Tableau d'images (sans les fichiers)
   clientNotes?: string;
+  notes?: string;
 }
 
 export interface UpdateAppointmentDto {
@@ -56,7 +64,7 @@ export interface UpdateAppointmentDto {
   time?: string;
   status?: AppointmentStatus;
   paymentMethodId?: string;
-  referenceImage?: string;
+  referenceImages?: ReferenceImage[]; // ✅ Tableau d'images (sans les fichiers)
   clientNotes?: string;
   notes?: string;
 }
