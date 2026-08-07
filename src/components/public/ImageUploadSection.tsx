@@ -1,8 +1,7 @@
 import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Upload, X, Plus, Image as ImageIcon } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { X, Plus } from 'lucide-react';
 import { Label } from '@/components/ui/label';
-import { cn } from '@/utils/cn';
 import { toast } from 'sonner';
 import type { ReferenceImage } from '@/types';
 
@@ -25,7 +24,7 @@ export function ImageUploadSection({
   maxImages = 4,
   disabled = false,
 }: ImageUploadSectionProps) {
-  const [isUploading, setIsUploading] = useState(false);
+  const [isUploading] = useState(false);
 
   const handleFileSelect = (file: File) => {
     if (!file.type.startsWith('image/')) {

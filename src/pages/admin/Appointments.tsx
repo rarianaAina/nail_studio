@@ -557,7 +557,7 @@ export default function Appointments() {
                 </div>
               </div>
 
-              {/* ✅ Images de référence */}
+              {/* Images de référence */}
               {viewing.referenceImages && viewing.referenceImages.length > 0 && (
                 <div>
                   <span className="text-muted-foreground">Images de référence</span>
@@ -634,7 +634,7 @@ export default function Appointments() {
                 </div>
               )}
 
-              {/* ✅ Notes client */}
+              {/* Notes client */}
               {viewing.clientNotes && (
                 <div>
                   <span className="text-muted-foreground">Description du rendu souhaité</span>

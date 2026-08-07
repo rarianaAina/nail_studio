@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { CalendarHeart, Check, Clock, ArrowLeft, ArrowRight, PartyPopper, Sparkles, ChevronLeft, ChevronRight, Image as X, Plus } from 'lucide-react';
+import { CalendarHeart, Check, Clock, ArrowLeft, ArrowRight, PartyPopper, Sparkles, ChevronLeft, ChevronRight, X, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -26,12 +26,6 @@ import type { BusinessHours, ReferenceImage } from '@/types';
 type Step = 1 | 2 | 3 | 4 | 5;
 
 const weekDays = ['L', 'M', 'M', 'J', 'V', 'S', 'D'];
-const SIDE_OPTIONS = [
-  { value: 'left', label: 'Main gauche' },
-  { value: 'right', label: 'Main droite' },
-  { value: 'both', label: 'Les deux' },
-  { value: 'other', label: 'Autre' },
-];
 
 const stepsMeta = [
   { n: 1, label: 'Prestation(s)' },
@@ -77,8 +71,10 @@ export default function Booking() {
   const [bookedSlots, setBookedSlots] = useState<string[]>([]);
   const [slotsByDate, setSlotsByDate] = useState<Record<string, number>>({});
 
-  // ✅ États pour les images de référence et les notes
-  const [referenceImages, setReferenceImages] = useState<ReferenceImage[]>([]);
+  // États pour les images de référence
+  const [leftHandImages, setLeftHandImages] = useState<ReferenceImage[]>([]);
+  const [rightHandImages, setRightHandImages] = useState<ReferenceImage[]>([]);
+  const [inspirationImages, setInspirationImages] = useState<ReferenceImage[]>([]);
   const [clientNotes, setClientNotes] = useState<string>('');
   const [isUploading, setIsUploading] = useState(false);
 
@@ -177,53 +173,46 @@ export default function Booking() {
     return arr;
   }, [calendarMonth]);
 
-  // ✅ Gestion de l'upload d'image
-  const handleImageUpload = (file: File, side: string) => {
-    // Vérifier le type
+  const handleImageUpload = (type: 'left' | 'right' | 'inspiration', file: File) => {
     if (!file.type.startsWith('image/')) {
       toast.error('Veuillez sélectionner une image');
       return;
     }
 
-    // Vérifier la taille (max 5 Mo)
     if (file.size > 5 * 1024 * 1024) {
       toast.error('L\'image ne doit pas dépasser 5 Mo');
       return;
     }
 
-    if (referenceImages.length >= 4) {
-      toast.error('Maximum 4 images autorisées');
-      return;
-    }
-
-    // Créer un aperçu
     const reader = new FileReader();
     reader.onload = () => {
       const newImage: ReferenceImage = {
-        id: Date.now().toString(),
-        file: file,
-        side: side as ReferenceImage['side'],
+        id: Date.now() + '-' + Math.random().toString(36).slice(2, 6),
         url: reader.result as string,
+        type: type,
+        file: file,
       };
-      setReferenceImages([...referenceImages, newImage]);
+
+      if (type === 'left') setLeftHandImages([...leftHandImages, newImage]);
+      else if (type === 'right') setRightHandImages([...rightHandImages, newImage]);
+      else setInspirationImages([...inspirationImages, newImage]);
     };
     reader.readAsDataURL(file);
   };
 
-  const handleImageRemove = (id: string) => {
-    setReferenceImages(referenceImages.filter(img => img.id !== id));
+  const handleImageRemove = (type: 'left' | 'right' | 'inspiration', id: string) => {
+    if (type === 'left') setLeftHandImages(leftHandImages.filter(img => img.id !== id));
+    else if (type === 'right') setRightHandImages(rightHandImages.filter(img => img.id !== id));
+    else setInspirationImages(inspirationImages.filter(img => img.id !== id));
   };
 
-  const handleSideChange = (id: string, side: string) => {
-    setReferenceImages(referenceImages.map(img => 
-      img.id === id ? { ...img, side: side as ReferenceImage['side'] } : img
-    ));
-  };
+  const handleCaptionChange = (type: 'left' | 'right' | 'inspiration', id: string, caption: string) => {
+    const updateFn = (images: ReferenceImage[]) =>
+      images.map(img => img.id === id ? { ...img, caption } : img);
 
-  const handleCaptionChange = (id: string, caption: string) => {
-    setReferenceImages(referenceImages.map(img => 
-      img.id === id ? { ...img, caption } : img
-    ));
+    if (type === 'left') setLeftHandImages(updateFn(leftHandImages));
+    else if (type === 'right') setRightHandImages(updateFn(rightHandImages));
+    else setInspirationImages(updateFn(inspirationImages));
   };
 
   const canNext =
@@ -238,11 +227,11 @@ export default function Booking() {
       setSubmitting(true);
       setIsUploading(true);
       try {
-        // ✅ Uploader toutes les images
+        const allImages = [...leftHandImages, ...rightHandImages, ...inspirationImages];
         let uploadedImages: ReferenceImage[] = [];
         
-        if (referenceImages.length > 0) {
-          const uploadPromises = referenceImages.map(async (img) => {
+        if (allImages.length > 0) {
+          const uploadPromises = allImages.map(async (img) => {
             if (img.file) {
               const url = await uploadImage(img.file, 'appointments', undefined, 'appointments');
               return { ...img, url, file: undefined };
@@ -296,6 +285,79 @@ export default function Booking() {
         : [...prev, serviceId]
     );
   };
+
+  const ImageUploadSection = ({ 
+    type, 
+    label, 
+    description, 
+    images,
+    maxImages = 4 
+  }: { 
+    type: 'left' | 'right' | 'inspiration';
+    label: string;
+    description: string;
+    images: ReferenceImage[];
+    maxImages?: number;
+  }) => (
+    <div className="space-y-2">
+      <div className="flex items-center justify-between">
+        <Label className="font-medium">{label}</Label>
+        <span className="text-xs text-muted-foreground">{images.length}/{maxImages}</span>
+      </div>
+      <p className="text-xs text-muted-foreground">{description}</p>
+
+      <div className="flex flex-wrap gap-2">
+        {images.map((img) => (
+          <motion.div
+            key={img.id}
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            className="relative group"
+          >
+            <div className="relative h-20 w-20 overflow-hidden rounded-lg border border-border/60">
+              <img src={img.url} alt={`${label} ${img.caption || ''}`} className="h-full w-full object-cover" />
+              <button
+                type="button"
+                onClick={() => handleImageRemove(type, img.id)}
+                className="absolute -right-1 -top-1 rounded-full bg-destructive p-0.5 text-destructive-foreground opacity-0 transition-opacity group-hover:opacity-100 hover:bg-destructive/90"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            </div>
+            <input
+              type="text"
+              placeholder="Légende..."
+              value={img.caption || ''}
+              onChange={(e) => handleCaptionChange(type, img.id, e.target.value)}
+              className="mt-1 w-full text-[10px] bg-transparent border-b border-transparent hover:border-border focus:border-primary focus:outline-none transition-colors"
+            />
+          </motion.div>
+        ))}
+
+        {images.length < maxImages && (
+          <div
+            className="flex h-20 w-20 cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-border/60 transition-colors hover:border-primary/40"
+            onClick={() => document.getElementById(`upload-${type}`)?.click()}
+          >
+            <input
+              id={`upload-${type}`}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) handleImageUpload(type, file);
+                e.target.value = '';
+              }}
+            />
+            <Plus className="h-5 w-5 text-muted-foreground" />
+            <span className="text-[8px] text-muted-foreground">Ajouter</span>
+          </div>
+        )}
+      </div>
+    </div>
+  );
 
   return (
     <div className="min-h-screen gradient-rose pt-24 pb-20">
@@ -583,125 +645,31 @@ export default function Booking() {
                       </Select>
                     </div>
 
-                    {/* ✅ Images de référence multiples */}
-                    <div className="space-y-4 border-t border-border/60 pt-4">
-                      <div>
-                        <div className="flex items-center justify-between">
-                          <Label>Photos de référence (optionnel)</Label>
-                          <span className="text-xs text-muted-foreground">
-                            {referenceImages.length}/4 images
-                          </span>
-                        </div>
-                        <p className="text-xs text-muted-foreground mb-3">
-                          Ajoutez des photos pour montrer le rendu souhaité (main gauche, droite...)
-                        </p>
+                    {/* Images de référence */}
+                    <div className="space-y-6 border-t border-border/60 pt-4">
+                      <ImageUploadSection
+                        type="left"
+                        label="Main gauche"
+                        description="Photos de la main gauche"
+                        images={leftHandImages}
+                        maxImages={4}
+                      />
 
-                        {/* Liste des images */}
-                        <div className="space-y-3">
-                          {referenceImages.map((img) => (
-                            <motion.div
-                              key={img.id}
-                              initial={{ opacity: 0, height: 0 }}
-                              animate={{ opacity: 1, height: 'auto' }}
-                              exit={{ opacity: 0, height: 0 }}
-                              className="flex flex-col gap-2 p-3 rounded-xl border border-border/60 bg-secondary/30"
-                            >
-                              <div className="flex items-start gap-3">
-                                <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-lg border border-border/60">
-                                  <img
-                                    src={img.url}
-                                    alt="Aperçu"
-                                    className="h-full w-full object-cover"
-                                  />
-                                </div>
+                      <ImageUploadSection
+                        type="right"
+                        label="Main droite"
+                        description="Photos de la main droite"
+                        images={rightHandImages}
+                        maxImages={4}
+                      />
 
-                                <div className="flex-1 space-y-1.5">
-                                  <div className="flex items-center gap-2">
-                                    <Select
-                                      value={img.side}
-                                      onValueChange={(v) => handleSideChange(img.id, v)}
-                                    >
-                                      <SelectTrigger className="w-28 h-7 text-xs">
-                                        <SelectValue placeholder="Côté" />
-                                      </SelectTrigger>
-                                      <SelectContent>
-                                        {SIDE_OPTIONS.map((option) => (
-                                          <SelectItem key={option.value} value={option.value}>
-                                            {option.label}
-                                          </SelectItem>
-                                        ))}
-                                      </SelectContent>
-                                    </Select>
-
-                                    <button
-                                      type="button"
-                                      onClick={() => handleImageRemove(img.id)}
-                                      className="p-1 rounded-full hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
-                                    >
-                                      <X className="h-3.5 w-3.5" />
-                                    </button>
-                                  </div>
-
-                                  <input
-                                    type="text"
-                                    placeholder="Légende (optionnel)"
-                                    value={img.caption || ''}
-                                    onChange={(e) => handleCaptionChange(img.id, e.target.value)}
-                                    className="w-full text-xs bg-transparent border-b border-transparent hover:border-border focus:border-primary focus:outline-none transition-colors"
-                                  />
-                                </div>
-                              </div>
-                            </motion.div>
-                          ))}
-                        </div>
-
-                        {/* Bouton d'ajout */}
-                        {referenceImages.length < 4 && (
-                          <div
-                            className="mt-3 border-2 border-dashed rounded-xl p-4 text-center transition-colors cursor-pointer hover:border-primary/40"
-                            onClick={() => {
-                              // Demander le côté avant l'upload
-                              const side = prompt('Quel côté ? (left, right, both, other)', 'left');
-                              if (side && SIDE_OPTIONS.some(o => o.value === side)) {
-                                document.getElementById('image-upload-input')?.click();
-                              } else {
-                                toast.error('Côté invalide');
-                              }
-                            }}
-                          >
-                            <input
-                              id="image-upload-input"
-                              type="file"
-                              accept="image/*"
-                              className="hidden"
-                              onChange={(e) => {
-                                const file = e.target.files?.[0];
-                                if (file) {
-                                  // Récupérer le côté depuis le prompt stocké
-                                  const side = prompt('Quel côté ? (left, right, both, other)', 'left');
-                                  if (side && SIDE_OPTIONS.some(o => o.value === side)) {
-                                    handleImageUpload(file, side);
-                                  } else {
-                                    toast.error('Côté invalide');
-                                  }
-                                }
-                                e.target.value = '';
-                              }}
-                            />
-                            <Plus className="mx-auto h-6 w-6 text-muted-foreground" />
-                            <p className="mt-0.5 text-xs text-muted-foreground">
-                              Ajouter une image
-                            </p>
-                          </div>
-                        )}
-
-                        {isUploading && (
-                          <div className="mt-2 flex items-center gap-2 text-xs text-primary">
-                            <div className="h-3 w-3 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-                            Upload en cours...
-                          </div>
-                        )}
-                      </div>
+                      <ImageUploadSection
+                        type="inspiration"
+                        label="Photos d'inspiration"
+                        description="Photos de référence pour le style souhaité"
+                        images={inspirationImages}
+                        maxImages={6}
+                      />
 
                       <div className="space-y-1.5">
                         <Label htmlFor="client-notes">Description du rendu souhaité (optionnel)</Label>
