@@ -11,9 +11,9 @@ export interface ServiceItem {
 export interface ReferenceImage {
   id: string;
   url: string;
-  side: 'left' | 'right' | 'both' | 'other';
+  type: 'left' | 'right' | 'inspiration';
   caption?: string;
-  file?: File; // ✅ Ajouté : pour l'upload temporaire (non stocké en base)
+  file?: File; // Pour l'upload temporaire
 }
 
 export interface Appointment {
@@ -33,7 +33,7 @@ export interface Appointment {
     label: string;
     icon?: string;
   };
-  referenceImages?: ReferenceImage[]; // ✅ Tableau d'images avec côté
+  referenceImages?: ReferenceImage[];
   clientNotes?: string;
   notes?: string;
   createdAt?: string;
@@ -49,7 +49,7 @@ export interface CreateAppointmentDto {
   date: string;
   time: string;
   paymentMethodId?: string;
-  referenceImages?: ReferenceImage[]; // ✅ Tableau d'images (sans les fichiers)
+  referenceImages?: ReferenceImage[];
   clientNotes?: string;
   notes?: string;
 }
@@ -64,12 +64,11 @@ export interface UpdateAppointmentDto {
   time?: string;
   status?: AppointmentStatus;
   paymentMethodId?: string;
-  referenceImages?: ReferenceImage[]; // ✅ Tableau d'images (sans les fichiers)
+  referenceImages?: ReferenceImage[];
   clientNotes?: string;
   notes?: string;
 }
 
-// ✅ EXPORT NORMAL (pas export type) pour les fonctions
 export const getTotalPrice = (appointment: Appointment): number => 
   appointment.services.reduce((sum, s) => sum + s.price, 0);
 

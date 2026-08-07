@@ -557,31 +557,84 @@ export default function Appointments() {
                 </div>
               </div>
 
-              {/* ✅ Images de référence - affichées uniquement si présentes */}
+              {/* ✅ Images de référence */}
               {viewing.referenceImages && viewing.referenceImages.length > 0 && (
                 <div>
                   <span className="text-muted-foreground">Images de référence</span>
-                  <div className="mt-2 grid grid-cols-2 gap-2">
-                    {viewing.referenceImages.map((img, idx) => (
-                      <div key={idx} className="relative group">
-                        <img
-                          src={img.url}
-                          alt={`Référence ${img.side}`}
-                          className="rounded-lg border border-border/60 object-cover w-full h-28"
-                        />
-                        <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-xs p-1 rounded-b-lg">
-                          {img.side === 'left' ? 'Main gauche' :
-                           img.side === 'right' ? 'Main droite' :
-                           img.side === 'both' ? 'Les deux' : 'Autre'}
-                          {img.caption && ` - ${img.caption}`}
+                  <div className="mt-2 space-y-3">
+                    {/* Main gauche */}
+                    {viewing.referenceImages.filter(img => img.type === 'left').length > 0 && (
+                      <div>
+                        <p className="text-xs font-medium text-muted-foreground">Main gauche</p>
+                        <div className="mt-1 flex flex-wrap gap-2">
+                          {viewing.referenceImages.filter(img => img.type === 'left').map((img, idx) => (
+                            <div key={idx} className="relative">
+                              <img
+                                src={img.url}
+                                alt={`Main gauche ${img.caption || ''}`}
+                                className="h-16 w-16 rounded-lg border border-border/60 object-cover"
+                              />
+                              {img.caption && (
+                                <span className="absolute bottom-0 left-0 right-0 truncate rounded-b-lg bg-black/60 px-1 text-[8px] text-white">
+                                  {img.caption}
+                                </span>
+                              )}
+                            </div>
+                          ))}
                         </div>
                       </div>
-                    ))}
+                    )}
+
+                    {/* Main droite */}
+                    {viewing.referenceImages.filter(img => img.type === 'right').length > 0 && (
+                      <div>
+                        <p className="text-xs font-medium text-muted-foreground">Main droite</p>
+                        <div className="mt-1 flex flex-wrap gap-2">
+                          {viewing.referenceImages.filter(img => img.type === 'right').map((img, idx) => (
+                            <div key={idx} className="relative">
+                              <img
+                                src={img.url}
+                                alt={`Main droite ${img.caption || ''}`}
+                                className="h-16 w-16 rounded-lg border border-border/60 object-cover"
+                              />
+                              {img.caption && (
+                                <span className="absolute bottom-0 left-0 right-0 truncate rounded-b-lg bg-black/60 px-1 text-[8px] text-white">
+                                  {img.caption}
+                                </span>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Inspiration */}
+                    {viewing.referenceImages.filter(img => img.type === 'inspiration').length > 0 && (
+                      <div>
+                        <p className="text-xs font-medium text-muted-foreground">Inspiration</p>
+                        <div className="mt-1 flex flex-wrap gap-2">
+                          {viewing.referenceImages.filter(img => img.type === 'inspiration').map((img, idx) => (
+                            <div key={idx} className="relative">
+                              <img
+                                src={img.url}
+                                alt={`Inspiration ${img.caption || ''}`}
+                                className="h-16 w-16 rounded-lg border border-border/60 object-cover"
+                              />
+                              {img.caption && (
+                                <span className="absolute bottom-0 left-0 right-0 truncate rounded-b-lg bg-black/60 px-1 text-[8px] text-white">
+                                  {img.caption}
+                                </span>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
 
-              {/* ✅ Notes client - affichées uniquement si présentes */}
+              {/* ✅ Notes client */}
               {viewing.clientNotes && (
                 <div>
                   <span className="text-muted-foreground">Description du rendu souhaité</span>
