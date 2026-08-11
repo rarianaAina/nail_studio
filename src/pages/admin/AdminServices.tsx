@@ -52,7 +52,7 @@ const blank: DraftService = {
   image: DEFAULT_IMAGE,
   additionalImages: [],
   popular: false,
-  sortOrder: 0,
+  sortOrder: undefined,
 };
 
 export default function AdminServices() {

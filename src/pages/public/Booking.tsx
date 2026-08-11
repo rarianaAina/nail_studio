@@ -406,6 +406,22 @@ export default function Booking() {
                   <div className="mt-6 grid gap-3 sm:grid-cols-2">
                     {services.map((s) => {
                       const isSelected = selectedServiceIds.includes(s.id);
+                      const [currentImageIndex, setCurrentImageIndex] = useState(0);
+                      const allImages = s.additionalImages && s.additionalImages.length > 0 
+                        ? [s.image, ...s.additionalImages] 
+                        : [s.image];
+                      const totalImages = allImages.length;
+
+                      const nextImage = (e: React.MouseEvent) => {
+                        e.stopPropagation();
+                        setCurrentImageIndex((prev) => (prev + 1) % totalImages);
+                      };
+
+                      const prevImage = (e: React.MouseEvent) => {
+                        e.stopPropagation();
+                        setCurrentImageIndex((prev) => (prev - 1 + totalImages) % totalImages);
+                      };
+
                       return (
                         <button
                           key={s.id}
@@ -417,10 +433,47 @@ export default function Booking() {
                               : 'border-border hover:border-primary/40'
                           )}
                         >
-                          <div className="relative h-16 w-16 flex-shrink-0">
-                            <img src={s.image} alt={s.name} className="h-16 w-16 rounded-xl object-cover" />
+                          <div className="relative h-16 w-16 flex-shrink-0 group/image">
+                            <img 
+                              src={allImages[currentImageIndex]} 
+                              alt={s.name} 
+                              className="h-16 w-16 rounded-xl object-cover transition-opacity duration-300" 
+                            />
                             
-                            {/* Images supplémentaires */}
+                            {/* Indicateur de position */}
+                            {totalImages > 1 && (
+                              <div className="absolute bottom-0.5 left-1/2 -translate-x-1/2 flex gap-0.5">
+                                {allImages.map((_, idx) => (
+                                  <span
+                                    key={idx}
+                                    className={cn(
+                                      'h-0.5 w-2 rounded-full transition-all',
+                                      idx === currentImageIndex ? 'bg-white w-3' : 'bg-white/50'
+                                    )}
+                                  />
+                                ))}
+                              </div>
+                            )}
+
+                            {/* Flèches de navigation */}
+                            {totalImages > 1 && (
+                              <>
+                                <button
+                                  onClick={prevImage}
+                                  className="absolute left-0.5 top-1/2 -translate-y-1/2 opacity-0 group-hover/image:opacity-100 transition-opacity bg-black/50 hover:bg-black/70 rounded-full p-0.5 text-white"
+                                >
+                                  <ChevronLeft className="h-3 w-3" />
+                                </button>
+                                <button
+                                  onClick={nextImage}
+                                  className="absolute right-0.5 top-1/2 -translate-y-1/2 opacity-0 group-hover/image:opacity-100 transition-opacity bg-black/50 hover:bg-black/70 rounded-full p-0.5 text-white"
+                                >
+                                  <ChevronRight className="h-3 w-3" />
+                                </button>
+                              </>
+                            )}
+
+                            {/* Badge du nombre d'images */}
                             {s.additionalImages && s.additionalImages.length > 0 && (
                               <div className="absolute -bottom-1 -right-1 flex gap-0.5">
                                 {s.additionalImages.slice(0, 3).map((img, idx) => (
@@ -486,7 +539,6 @@ export default function Booking() {
                   )}
                 </motion.div>
               )}
-
               {step === 2 && (
                 <motion.div key="s2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
                   <h2 className="font-display text-2xl font-semibold">Choisissez une date</h2>
