@@ -10,6 +10,8 @@ import {
   MapPin,
   Star,
   ArrowRight,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -19,6 +21,8 @@ import { useNailServices } from '@/hooks/useNailServices';
 import { useSettings } from '@/hooks/useSettings';
 import { supabase } from '@/lib/supabase';
 import { useSpecialInfos } from '@/hooks/useSpecialInfos';
+import { cn } from '@/utils/cn';
+import type { Service } from '@/types';
 
 const LOGO_URL = 'https://tzgcyehdjgqxljjttflj.supabase.co/storage/v1/object/public/images/logos/logo.webp';
 
@@ -36,6 +40,105 @@ const formatDuration = (minutes: number): string => {
   if (hours === 0) return `${mins}min`;
   if (mins === 0) return `${hours}h`;
   return `${hours}h${mins.toString().padStart(2, '0')}`;
+};
+
+// ✅ Composant ServiceCard avec carousel d'images
+const ServiceCard = ({ service }: { service: Service }) => {
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const allImages = service.additionalImages && service.additionalImages.length > 0 
+    ? [service.image, ...service.additionalImages] 
+    : [service.image];
+  const totalImages = allImages.length;
+
+  const nextImage = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setCurrentImageIndex((prev) => (prev + 1) % totalImages);
+  };
+
+  const prevImage = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setCurrentImageIndex((prev) => (prev - 1 + totalImages) % totalImages);
+  };
+
+  return (
+    <Card className="group h-full overflow-hidden border-border/60 bg-card shadow-soft transition-all hover:-translate-y-1 hover:shadow-glow">
+      <div className="relative aspect-[4/3] overflow-hidden group/image">
+        <img
+          src={allImages[currentImageIndex]}
+          alt={service.name}
+          className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+          loading="lazy"
+          decoding="async"
+        />
+        
+        {/* Indicateur de position */}
+        {totalImages > 1 && (
+          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1">
+            {allImages.map((_, idx) => (
+              <span
+                key={idx}
+                className={cn(
+                  'h-1 w-3 rounded-full transition-all',
+                  idx === currentImageIndex ? 'bg-white w-5' : 'bg-white/50'
+                )}
+              />
+            ))}
+          </div>
+        )}
+
+        {/* Flèches de navigation */}
+        {totalImages > 1 && (
+          <>
+            <button
+              onClick={prevImage}
+              className="absolute left-2 top-1/2 -translate-y-1/2 opacity-0 group-hover/image:opacity-100 transition-opacity bg-black/50 hover:bg-black/70 rounded-full p-1.5 text-white"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+            <button
+              onClick={nextImage}
+              className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover/image:opacity-100 transition-opacity bg-black/50 hover:bg-black/70 rounded-full p-1.5 text-white"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </button>
+          </>
+        )}
+
+        {/* Badge du nombre d'images supplémentaires */}
+        {service.additionalImages && service.additionalImages.length > 0 && (
+          <Badge className="absolute right-3 top-3 gap-1 rounded-full bg-black/60 text-white border-0">
+            <span className="text-xs">+{service.additionalImages.length}</span>
+          </Badge>
+        )}
+
+        {service.popular && (
+          <Badge className="absolute left-3 top-3 gap-1 rounded-full bg-primary text-primary-foreground shadow">
+            <Sparkles className="h-3 w-3" /> Populaire
+          </Badge>
+        )}
+      </div>
+      <CardContent className="p-5">
+        <div className="flex items-center justify-between">
+          <h2 className="font-display text-xl font-semibold">{service.name}</h2>
+          <span className="text-sm font-semibold text-primary">
+            {service.price === 0 ? 'Devis' : formatAriary(service.price)}
+          </span>
+        </div>
+        <p className="mt-2 line-clamp-2 text-sm text-muted-foreground">
+          {service.description}
+        </p>
+        <div className="mt-4 flex items-center justify-between">
+          <span className="flex items-center gap-1 text-xs text-muted-foreground">
+            <Clock className="h-3.5 w-3.5" />
+            {formatDuration(service.duration)}
+          </span>
+          <Button asChild size="sm" variant="secondary" className="rounded-full">
+            <Link to="/reservation">Réserver</Link>
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
 };
 
 export default function Home() {
@@ -267,42 +370,7 @@ export default function Home() {
                 {...fadeUp}
                 transition={{ duration: 0.5, delay: i * 0.08 }}
               >
-                <Card className="group h-full overflow-hidden border-border/60 bg-card shadow-soft transition-all hover:-translate-y-1 hover:shadow-glow">
-                  <div className="relative aspect-[4/3] overflow-hidden">
-                    <img
-                      src={s.image}
-                      alt={s.name}
-                      className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
-                      loading="lazy"
-                      decoding="async"
-                    />
-                    {s.popular && (
-                      <Badge className="absolute left-3 top-3 gap-1 rounded-full bg-primary text-primary-foreground shadow">
-                        <Sparkles className="h-3 w-3" /> Populaire
-                      </Badge>
-                    )}
-                  </div>
-                  <CardContent className="p-5">
-                    <div className="flex items-center justify-between">
-                      <h2 className="font-display text-xl font-semibold">{s.name}</h2>
-                      <span className="text-sm font-semibold text-primary">
-                        {s.price === 0 ? 'Devis' : formatAriary(s.price)}
-                      </span>
-                    </div>
-                    <p className="mt-2 line-clamp-2 text-sm text-muted-foreground">
-                      {s.description}
-                    </p>
-                    <div className="mt-4 flex items-center justify-between">
-                      <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                        <Clock className="h-3.5 w-3.5" />
-                        {formatDuration(s.duration)} {/* ✅ Affichage formaté */}
-                      </span>
-                      <Button asChild size="sm" variant="secondary" className="rounded-full">
-                        <Link to="/reservation">Réserver</Link>
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
+                <ServiceCard service={s} />
               </motion.div>
             ))}
           </div>
