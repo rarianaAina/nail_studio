@@ -417,7 +417,29 @@ export default function Booking() {
                               : 'border-border hover:border-primary/40'
                           )}
                         >
-                          <img src={s.image} alt={s.name} className="h-16 w-16 rounded-xl object-cover" />
+                          <div className="relative h-16 w-16 flex-shrink-0">
+                            <img src={s.image} alt={s.name} className="h-16 w-16 rounded-xl object-cover" />
+                            
+                            {/* Images supplémentaires */}
+                            {s.additionalImages && s.additionalImages.length > 0 && (
+                              <div className="absolute -bottom-1 -right-1 flex gap-0.5">
+                                {s.additionalImages.slice(0, 3).map((img, idx) => (
+                                  <img 
+                                    key={idx} 
+                                    src={img} 
+                                    alt="" 
+                                    className="h-5 w-5 rounded border border-white object-cover shadow-sm" 
+                                  />
+                                ))}
+                                {s.additionalImages.length > 3 && (
+                                  <span className="flex h-5 w-5 items-center justify-center rounded border border-white bg-background/80 text-[8px] font-medium shadow-sm">
+                                    +{s.additionalImages.length - 3}
+                                  </span>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                          
                           <div className="flex-1">
                             <div className="flex items-center justify-between">
                               <p className="font-medium">{s.name}</p>

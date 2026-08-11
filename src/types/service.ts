@@ -8,8 +8,10 @@ export interface Service {
   duration: number;
   price: number;
   image: string;
+  additionalImages?: string[]; // ✅ Nouveau : images supplémentaires
   popular?: boolean;
   active?: boolean;
+  sortOrder?: number; // ✅ Nouveau : ordre d'affichage
   createdAt?: string;
   updatedAt?: string;
 }
@@ -21,7 +23,9 @@ export interface CreateServiceDto {
   duration: number;
   price: number;
   image: string;
+  additionalImages?: string[]; // ✅ Nouveau
   popular?: boolean;
+  sortOrder?: number; // ✅ Nouveau
 }
 
 export interface UpdateServiceDto {
@@ -31,6 +35,8 @@ export interface UpdateServiceDto {
   duration?: number;
   price?: number;
   image?: string;
+  additionalImages?: string[]; // ✅ Nouveau
   popular?: boolean;
   active?: boolean;
+  sortOrder?: number; // ✅ Nouveau
 }
