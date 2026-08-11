@@ -27,11 +27,13 @@ const ServiceCard = ({ service }: { service: Service }) => {
   const totalImages = allImages.length;
 
   const nextImage = (e: React.MouseEvent) => {
+    e.preventDefault();
     e.stopPropagation();
     setCurrentImageIndex((prev) => (prev + 1) % totalImages);
   };
 
   const prevImage = (e: React.MouseEvent) => {
+    e.preventDefault();
     e.stopPropagation();
     setCurrentImageIndex((prev) => (prev - 1 + totalImages) % totalImages);
   };
@@ -40,6 +42,12 @@ const ServiceCard = ({ service }: { service: Service }) => {
   const displayPrice = (price: number) => {
     return price === 0 ? 'Devis' : formatAriary(price);
   };
+
+  // // Fonction pour gérer le clic sur la carte
+  // const handleCardClick = () => {
+  //   // Rediriger vers la page de réservation si nécessaire
+  //   // Ou ne rien faire si la carte n'est pas cliquable
+  // };
 
   return (
     <Card className="group h-full overflow-hidden border-border/60 bg-card shadow-soft transition-all hover:-translate-y-1 hover:shadow-glow">
@@ -52,7 +60,7 @@ const ServiceCard = ({ service }: { service: Service }) => {
         
         {/* Indicateur de position */}
         {totalImages > 1 && (
-          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1">
+          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1 z-10">
             {allImages.map((_, idx) => (
               <span
                 key={idx}
@@ -67,38 +75,45 @@ const ServiceCard = ({ service }: { service: Service }) => {
 
         {/* Flèches de navigation */}
         {totalImages > 1 && (
-          <>
+          <div className="absolute inset-0 flex items-center justify-between px-2 z-20">
             <button
+              type="button"
               onClick={prevImage}
-              className="absolute left-2 top-1/2 -translate-y-1/2 opacity-0 group-hover/image:opacity-100 transition-opacity bg-black/50 hover:bg-black/70 rounded-full p-1.5 text-white"
+              className="opacity-0 group-hover/image:opacity-100 transition-opacity bg-black/50 hover:bg-black/70 rounded-full p-1.5 text-white hover:scale-110 transform transition-transform"
+              aria-label="Image précédente"
             >
               <ChevronLeft className="h-4 w-4" />
             </button>
             <button
+              type="button"
               onClick={nextImage}
-              className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover/image:opacity-100 transition-opacity bg-black/50 hover:bg-black/70 rounded-full p-1.5 text-white"
+              className="opacity-0 group-hover/image:opacity-100 transition-opacity bg-black/50 hover:bg-black/70 rounded-full p-1.5 text-white hover:scale-110 transform transition-transform"
+              aria-label="Image suivante"
             >
               <ChevronRight className="h-4 w-4" />
             </button>
-          </>
+          </div>
         )}
 
         {/* Badge du nombre d'images supplémentaires */}
         {service.additionalImages && service.additionalImages.length > 0 && (
-          <Badge className="absolute right-3 top-3 gap-1 rounded-full bg-black/60 text-white border-0">
+          <Badge className="absolute right-3 top-3 gap-1 rounded-full bg-black/60 text-white border-0 z-10">
             <span className="text-xs">+{service.additionalImages.length}</span>
           </Badge>
         )}
 
-        <div className="absolute inset-0 bg-gradient-to-t from-foreground/40 via-transparent to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-foreground/40 via-transparent to-transparent pointer-events-none" />
         
         {service.popular && (
-          <Badge className="absolute left-3 top-3 gap-1 rounded-full bg-primary text-primary-foreground shadow">
+          <Badge className="absolute left-3 top-3 gap-1 rounded-full bg-primary text-primary-foreground shadow z-10">
             <Sparkles className="h-3 w-3" /> Populaire
           </Badge>
         )}
         
-        <Badge className="absolute right-3 top-3 rounded-full bg-white/90 text-foreground shadow" style={{ right: service.additionalImages && service.additionalImages.length > 0 ? '14' : '12' }}>
+        <Badge 
+          className="absolute top-3 rounded-full bg-white/90 text-foreground shadow z-10"
+          style={{ right: service.additionalImages && service.additionalImages.length > 0 ? '48px' : '12px' }}
+        >
           {service.category}
         </Badge>
       </div>
