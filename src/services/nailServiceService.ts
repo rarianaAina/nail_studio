@@ -9,8 +9,10 @@ interface ServiceRow {
   duration: number;
   price: number;
   image: string;
+  additional_images: string[] | null;
   popular: boolean;
   active: boolean;
+  sort_order: number | null;
   created_at: string | null;
   updated_at: string | null;
 }
@@ -24,8 +26,10 @@ function rowToService(r: ServiceRow): Service {
     duration: r.duration,
     price: r.price,
     image: r.image,
+    additionalImages: r.additional_images || [],
     popular: r.popular,
     active: r.active,
+    sortOrder: r.sort_order ?? 0,
     createdAt: r.created_at ?? undefined,
     updatedAt: r.updated_at ?? undefined,
   };
@@ -36,7 +40,7 @@ export const nailServiceService = {
     const { data, error } = await supabase
       .from('services')
       .select('*')
-      .order('created_at', { ascending: true });
+      .order('sort_order', { ascending: true, nullsFirst: false });
     if (error) throw error;
     return (data as ServiceRow[]).map(rowToService);
   },
@@ -46,7 +50,8 @@ export const nailServiceService = {
       .from('services')
       .select('*')
       .eq('popular', true)
-      .eq('active', true);
+      .eq('active', true)
+      .order('sort_order', { ascending: true, nullsFirst: false });
     if (error) throw error;
     return (data as ServiceRow[]).map(rowToService);
   },
@@ -56,7 +61,8 @@ export const nailServiceService = {
       .from('services')
       .select('*')
       .eq('category', category)
-      .eq('active', true);
+      .eq('active', true)
+      .order('sort_order', { ascending: true, nullsFirst: false });
     if (error) throw error;
     return (data as ServiceRow[]).map(rowToService);
   },
@@ -73,17 +79,28 @@ export const nailServiceService = {
   },
 
   async create(data: CreateServiceDto): Promise<Service> {
+    // ✅ Convertir camelCase en snake_case pour la DB
+    const dbData: Record<string, unknown> = {
+      name: data.name,
+      category: data.category,
+      description: data.description,
+      duration: data.duration,
+      price: data.price,
+      image: data.image,
+      popular: data.popular ?? false,
+      // ✅ active n'est pas dans CreateServiceDto, on met une valeur par défaut
+      active: true,
+      sort_order: data.sortOrder ?? 0,
+    };
+
+    // ✅ Gérer additionalImages
+    if (data.additionalImages && data.additionalImages.length > 0) {
+      dbData.additional_images = data.additionalImages;
+    }
+
     const { data: row, error } = await supabase
       .from('services')
-      .insert({
-        name: data.name,
-        category: data.category,
-        description: data.description,
-        duration: data.duration,
-        price: data.price,
-        image: data.image,
-        popular: data.popular ?? false,
-      })
+      .insert(dbData)
       .select()
       .single();
     if (error) throw error;
@@ -92,6 +109,7 @@ export const nailServiceService = {
 
   async update(id: string, data: UpdateServiceDto): Promise<Service> {
     const row: Record<string, unknown> = {};
+    
     if (data.name !== undefined) row.name = data.name;
     if (data.category !== undefined) row.category = data.category;
     if (data.description !== undefined) row.description = data.description;
@@ -100,6 +118,17 @@ export const nailServiceService = {
     if (data.image !== undefined) row.image = data.image;
     if (data.popular !== undefined) row.popular = data.popular;
     if (data.active !== undefined) row.active = data.active;
+    
+    // ✅ Convertir sortOrder en sort_order
+    if (data.sortOrder !== undefined) {
+      row.sort_order = data.sortOrder;
+    }
+    
+    // ✅ Gérer additionalImages
+    if (data.additionalImages !== undefined) {
+      row.additional_images = data.additionalImages;
+    }
+
     const { data: updated, error } = await supabase
       .from('services')
       .update(row)
