@@ -1,7 +1,6 @@
-// pages/admin/AdminServices.tsx
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Plus, Pencil, Trash2, Clock, Sparkles, Upload, X, Image as ImageIcon, GripVertical } from 'lucide-react';
+import { Plus, Pencil, Trash2, Clock, Sparkles, Upload, X, Image as ImageIcon } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -23,7 +22,6 @@ import { useNailServices } from '@/hooks/useNailServices';
 import { useConfig } from '@/hooks/useConfig';
 import { uploadImage } from '@/services/storageService';
 import { formatAriary } from '@/utils';
-import { cn } from '@/utils/cn';
 import type { Service } from '@/types';
 
 const DEFAULT_IMAGE = 'https://images.pexels.com/photos/3997389/pexels-photo-3997389.jpeg?auto=compress&cs=tinysrgb&w=800&h=600&fit=crop';
