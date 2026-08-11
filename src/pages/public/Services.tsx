@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Clock, Sparkles, CalendarHeart } from 'lucide-react';
+import { Clock, Sparkles, CalendarHeart, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -9,12 +9,118 @@ import { cn } from '@/utils/cn';
 import { formatAriary } from '@/utils';
 import { useNailServices } from '@/hooks/useNailServices';
 import { useActiveConfig } from '@/hooks/useActiveConfig';
+import type { Service } from '@/types';
 
 const fadeUp = {
   initial: { opacity: 0, y: 24 },
   whileInView: { opacity: 1, y: 0 },
   viewport: { once: true, margin: '-80px' },
   transition: { duration: 0.5 },
+};
+
+// ✅ Composant ServiceCard avec carousel d'images
+const ServiceCard = ({ service }: { service: Service }) => {
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const allImages = service.additionalImages && service.additionalImages.length > 0 
+    ? [service.image, ...service.additionalImages] 
+    : [service.image];
+  const totalImages = allImages.length;
+
+  const nextImage = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setCurrentImageIndex((prev) => (prev + 1) % totalImages);
+  };
+
+  const prevImage = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setCurrentImageIndex((prev) => (prev - 1 + totalImages) % totalImages);
+  };
+
+  // Fonction pour afficher le prix ou "Devis"
+  const displayPrice = (price: number) => {
+    return price === 0 ? 'Devis' : formatAriary(price);
+  };
+
+  return (
+    <Card className="group h-full overflow-hidden border-border/60 bg-card shadow-soft transition-all hover:-translate-y-1 hover:shadow-glow">
+      <div className="relative aspect-[4/3] overflow-hidden group/image">
+        <img 
+          src={allImages[currentImageIndex]} 
+          alt={service.name} 
+          className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" 
+        />
+        
+        {/* Indicateur de position */}
+        {totalImages > 1 && (
+          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1">
+            {allImages.map((_, idx) => (
+              <span
+                key={idx}
+                className={cn(
+                  'h-1 w-3 rounded-full transition-all',
+                  idx === currentImageIndex ? 'bg-white w-5' : 'bg-white/50'
+                )}
+              />
+            ))}
+          </div>
+        )}
+
+        {/* Flèches de navigation */}
+        {totalImages > 1 && (
+          <>
+            <button
+              onClick={prevImage}
+              className="absolute left-2 top-1/2 -translate-y-1/2 opacity-0 group-hover/image:opacity-100 transition-opacity bg-black/50 hover:bg-black/70 rounded-full p-1.5 text-white"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+            <button
+              onClick={nextImage}
+              className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover/image:opacity-100 transition-opacity bg-black/50 hover:bg-black/70 rounded-full p-1.5 text-white"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </button>
+          </>
+        )}
+
+        {/* Badge du nombre d'images supplémentaires */}
+        {service.additionalImages && service.additionalImages.length > 0 && (
+          <Badge className="absolute right-3 top-3 gap-1 rounded-full bg-black/60 text-white border-0">
+            <span className="text-xs">+{service.additionalImages.length}</span>
+          </Badge>
+        )}
+
+        <div className="absolute inset-0 bg-gradient-to-t from-foreground/40 via-transparent to-transparent" />
+        
+        {service.popular && (
+          <Badge className="absolute left-3 top-3 gap-1 rounded-full bg-primary text-primary-foreground shadow">
+            <Sparkles className="h-3 w-3" /> Populaire
+          </Badge>
+        )}
+        
+        <Badge className="absolute right-3 top-3 rounded-full bg-white/90 text-foreground shadow" style={{ right: service.additionalImages && service.additionalImages.length > 0 ? '14' : '12' }}>
+          {service.category}
+        </Badge>
+      </div>
+      <CardContent className="p-6">
+        <div className="flex items-start justify-between gap-3">
+          <h3 className="font-display text-xl font-semibold">{service.name}</h3>
+          <span className="whitespace-nowrap text-lg font-semibold text-primary">
+            {displayPrice(service.price)}
+          </span>
+        </div>
+        <p className="mt-2 text-sm text-muted-foreground">{service.description}</p>
+        <div className="mt-5 flex items-center justify-between">
+          <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <Clock className="h-3.5 w-3.5" /> {service.duration} min
+          </span>
+          <Button asChild size="sm" className="rounded-full">
+            <Link to="/reservation"><CalendarHeart className="mr-1.5 h-3.5 w-3.5" /> Réserver</Link>
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
 };
 
 export default function Services() {
@@ -28,11 +134,6 @@ export default function Services() {
     () => (active === 'Toutes' ? services : services.filter((s) => s.category === active)),
     [services, active]
   );
-
-  // Fonction pour afficher le prix ou "Devis"
-  const displayPrice = (price: number) => {
-    return price === 0 ? 'Devis' : formatAriary(price);
-  };
 
   return (
     <div>
@@ -72,35 +173,7 @@ export default function Services() {
           <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {filtered.map((s, i) => (
               <motion.div key={s.id} {...fadeUp} transition={{ duration: 0.4, delay: i * 0.05 }}>
-                <Card className="group h-full overflow-hidden border-border/60 bg-card shadow-soft transition-all hover:-translate-y-1 hover:shadow-glow">
-                  <div className="relative aspect-[4/3] overflow-hidden">
-                    <img src={s.image} alt={s.name} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-foreground/40 via-transparent to-transparent" />
-                    {s.popular && (
-                      <Badge className="absolute left-3 top-3 gap-1 rounded-full bg-primary text-primary-foreground shadow">
-                        <Sparkles className="h-3 w-3" /> Populaire
-                      </Badge>
-                    )}
-                    <Badge className="absolute right-3 top-3 rounded-full bg-white/90 text-foreground shadow">{s.category}</Badge>
-                  </div>
-                  <CardContent className="p-6">
-                    <div className="flex items-start justify-between gap-3">
-                      <h3 className="font-display text-xl font-semibold">{s.name}</h3>
-                      <span className="whitespace-nowrap text-lg font-semibold text-primary">
-                        {displayPrice(s.price)}
-                      </span>
-                    </div>
-                    <p className="mt-2 text-sm text-muted-foreground">{s.description}</p>
-                    <div className="mt-5 flex items-center justify-between">
-                      <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                        <Clock className="h-3.5 w-3.5" /> {s.duration} min
-                      </span>
-                      <Button asChild size="sm" className="rounded-full">
-                        <Link to="/reservation"><CalendarHeart className="mr-1.5 h-3.5 w-3.5" /> Réserver</Link>
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
+                <ServiceCard service={s} />
               </motion.div>
             ))}
           </div>
