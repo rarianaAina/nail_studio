@@ -32,21 +32,13 @@ export function useStats(): UseStatsReturn {
   const load = useCallback(async () => {
     try {
       setLoading(true);
-      const [stats, revMonth, revDay, apptMonth, popularity, cancRet] =
-        await Promise.all([
-          statsService.getDashboardStats(),
-          statsService.getRevenueByMonth(),
-          statsService.getRevenueByDay(),
-          statsService.getAppointmentsByMonth(),
-          statsService.getServicePopularity(),
-          statsService.getCancellationAndRetention(),
-        ]);
-      setDashboardStats(stats);
-      setRevenueByMonth(revMonth);
-      setRevenueByDay(revDay);
-      setAppointmentsByMonth(apptMonth);
-      setServicePopularity(popularity);
-      setCancellationAndRetention(cancRet);
+      const bundle = await statsService.getAll();
+      setDashboardStats(bundle.dashboardStats);
+      setRevenueByMonth(bundle.revenueByMonth);
+      setRevenueByDay(bundle.revenueByDay);
+      setAppointmentsByMonth(bundle.appointmentsByMonth);
+      setServicePopularity(bundle.servicePopularity);
+      setCancellationAndRetention(bundle.cancellationAndRetention);
       setError(null);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Erreur de chargement');
