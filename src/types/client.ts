@@ -7,6 +7,7 @@ export interface Client {
   notes?: string;
   visitCount: number;
   totalSpent: number;
+  loyaltyPoints: number;
   lastVisit?: string;
   createdAt?: string;
   updatedAt?: string;

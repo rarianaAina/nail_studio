@@ -11,6 +11,7 @@ interface ClientRow {
   visit_count: number;
   total_spent: number;
   last_visit: string | null;
+  loyalty_points: number | null;
   created_at: string | null;
   updated_at: string | null;
 }
@@ -25,6 +26,7 @@ function rowToClient(r: ClientRow): Client {
     notes: r.notes ?? undefined,
     visitCount: r.visit_count,
     totalSpent: r.total_spent,
+    loyaltyPoints: r.loyalty_points ?? 0,
     lastVisit: r.last_visit ?? undefined,
     createdAt: r.created_at ?? undefined,
     updatedAt: r.updated_at ?? undefined,

@@ -134,6 +134,18 @@ export const appointmentService = {
     return (data as AppointmentRow[]).map(rowToAppointment);
   },
 
+  /** Historique complet d'une cliente, du plus récent au plus ancien. */
+  async getByClientId(clientId: string): Promise<Appointment[]> {
+    const { data, error } = await supabase
+      .from('appointments')
+      .select('*')
+      .eq('client_id', clientId)
+      .order('date', { ascending: false })
+      .order('time', { ascending: false });
+    if (error) throw error;
+    return (data as AppointmentRow[]).map(rowToAppointment);
+  },
+
   async create(data: CreateAppointmentDto): Promise<Appointment> {
     if (!data.serviceIds || data.serviceIds.length === 0) {
       throw new Error('Au moins un service est requis');
