@@ -15,17 +15,21 @@ export default defineConfig({
   build: {
     rollupOptions: {
       output: {
-        // Sans découpage explicite, Rollup regroupait Recharts avec le hook de
-        // statistiques : ouvrir le tableau de bord téléchargeait 412 ko de
-        // librairie graphique dans un fragment qui changeait à chaque
-        // modification du code métier, invalidant le cache du navigateur.
         // Isoler les grosses librairies tierces leur donne un fragment stable,
-        // conservé d'une mise en production à l'autre.
+        // conservé d'une mise en production à l'autre plutôt qu'invalidé à
+        // chaque modification du code métier.
+        //
+        // Recharts en est volontairement exclu. Déclarer un fragment manuel le
+        // fait entrer dans le graphe initial : Vite émet alors un
+        // `modulepreload` dans index.html, et les 119 Ko de la librairie
+        // graphique étaient téléchargés sur toutes les pages — y compris
+        // l'accueil public, qui n'affiche aucun graphique. Laissé à Rollup, il
+        // reste dans le fragment des pages d'administration, chargées à la
+        // demande.
         manualChunks: {
           react: ['react', 'react-dom', 'react-router-dom'],
           supabase: ['@supabase/supabase-js'],
           motion: ['framer-motion'],
-          charts: ['recharts'],
         },
       },
     },
