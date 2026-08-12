@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
@@ -37,6 +37,8 @@ import { useAppointments } from '@/hooks/useAppointments';
 import { useNailServices } from '@/hooks/useNailServices';
 import { useAppointmentSettings } from '@/hooks/useAppointmentSettings';
 import { useLoyalty } from '@/hooks/useLoyalty';
+import ReviewDialog from '@/components/client/ReviewDialog';
+import { reviewService } from '@/services/reviewService';
 import { formatAriary, STATUS_COLORS, STATUS_LABELS } from '@/utils';
 import { getTotalPrice, getServiceNames } from '@/types';
 import { cn } from '@/utils/cn';
@@ -59,6 +61,21 @@ export default function ClientSpace() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const { appointments, updateStatus, refresh } = useAppointments();
+
+  // Rendez-vous ouvrant droit à un avis. La règle — confirmé ou terminé, et pas
+  // encore commenté — est évaluée en base, l'écran ne fait que l'afficher.
+  const [reviewable, setReviewable] = useState<string[]>([]);
+  const [reviewing, setReviewing] = useState<Appointment | null>(null);
+
+  const loadReviewable = useCallback(async () => {
+    try {
+      setReviewable(await reviewService.getReviewableAppointmentIds());
+    } catch {
+      setReviewable([]);
+    }
+  }, []);
+
+  useEffect(() => { loadReviewable(); }, [loadReviewable]);
   const { services } = useNailServices();
   const { settings: appointmentSettings } = useAppointmentSettings();
   const { points: loyaltyPoints, loading: loadingPoints } = useLoyalty(user?.id);
@@ -366,6 +383,16 @@ export default function ClientSpace() {
                           </p>
                         </div>
                         <div className="flex items-center gap-3">
+                          {reviewable.includes(a.id) && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="rounded-full"
+                              onClick={() => setReviewing(a)}
+                            >
+                              <Star className="mr-1.5 h-3.5 w-3.5" /> Donner mon avis
+                            </Button>
+                          )}
                           <span className="text-sm font-medium text-primary">{formatAriary(totalPrice)}</span>
                           <span className={cn('rounded-full border px-2.5 py-0.5 text-xs', STATUS_COLORS[a.status])}>
                             {STATUS_LABELS[a.status]}
@@ -379,6 +406,12 @@ export default function ClientSpace() {
             </CardContent>
           </Card>
         </motion.div>
+
+        <ReviewDialog
+          appointment={reviewing}
+          onClose={() => setReviewing(null)}
+          onSubmitted={loadReviewable}
+        />
 
         {/* Recommended services */}
         <motion.div {...fadeUp} transition={{ delay: 0.35 }}>

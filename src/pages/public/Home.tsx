@@ -21,6 +21,7 @@ import { useNailServices } from '@/hooks/useNailServices';
 import { useSettings } from '@/hooks/useSettings';
 import { supabase } from '@/lib/supabase';
 import { useSpecialInfos } from '@/hooks/useSpecialInfos';
+import { useReviews } from '@/hooks/useReviews';
 import { cn } from '@/utils/cn';
 import type { Service } from '@/types';
 
@@ -139,6 +140,7 @@ export default function Home() {
   const [galleryItems, setGalleryItems] = useState<any[]>([]);
   const [loadingGallery, setLoadingGallery] = useState(true);
   const { infos: specialInfos, loading: loadingInfos } = useSpecialInfos();
+  const { reviews, averageRating } = useReviews();
 
   const salonInfo = settings || {
     name: 'Harrys Studio',
@@ -422,6 +424,66 @@ export default function Home() {
           )}
         </div>
       </section>
+
+      {/* AVIS — n'apparaît qu'une fois des avis publiés */}
+      {reviews.length > 0 && (
+        <section className="bg-secondary/40 py-20 sm:py-28">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <motion.div {...fadeUp} className="text-center">
+              <p className="text-sm font-medium uppercase tracking-[0.25em] text-primary">
+                Elles en parlent
+              </p>
+              <h2 className="mt-3 font-display text-4xl font-semibold text-foreground sm:text-5xl">
+                Avis de nos clientes
+              </h2>
+              {averageRating > 0 && (
+                <p className="mt-4 flex items-center justify-center gap-2 text-sm text-muted-foreground">
+                  <span className="flex gap-0.5 text-primary">
+                    {[1, 2, 3, 4, 5].map((n) => (
+                      <Star
+                        key={n}
+                        className={cn('h-4 w-4', n <= Math.round(averageRating) ? 'fill-current' : 'opacity-30')}
+                      />
+                    ))}
+                  </span>
+                  <strong className="text-foreground">{averageRating.toFixed(1)}</strong>
+                  sur {reviews.length} avis
+                </p>
+              )}
+            </motion.div>
+
+            <div className="mt-12 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {reviews.slice(0, 6).map((r, i) => (
+                <motion.div
+                  key={r.id}
+                  {...fadeUp}
+                  transition={{ duration: 0.5, delay: Math.min(i * 0.08, 0.4) }}
+                  className="flex flex-col rounded-2xl border border-border/60 bg-background p-6 shadow-soft"
+                >
+                  <div className="flex gap-0.5 text-primary">
+                    {[1, 2, 3, 4, 5].map((n) => (
+                      <Star key={n} className={cn('h-4 w-4', n <= r.rating ? 'fill-current' : 'opacity-25')} />
+                    ))}
+                  </div>
+                  <p className="mt-4 flex-1 text-sm italic text-foreground/80">« {r.comment} »</p>
+                  {r.imageUrl && (
+                    <img
+                      src={r.imageUrl}
+                      alt={`Réalisation partagée par ${r.name}`}
+                      loading="lazy"
+                      className="mt-4 h-32 w-full rounded-xl object-cover"
+                    />
+                  )}
+                  <div className="mt-4 border-t border-border/60 pt-3">
+                    <p className="text-sm font-medium">{r.name}</p>
+                    {r.service && <p className="text-xs text-muted-foreground">{r.service}</p>}
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* COORDONNÉES */}
       <section className="py-20 sm:py-28">

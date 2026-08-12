@@ -35,6 +35,7 @@ const Statistics = lazy(() => import('@/pages/admin/Statistics'));
 const SettingsLayout = lazy(() => import('@/pages/admin/settings/index'));
 const Notifications = lazy(() => import('@/pages/admin/Notifications'));
 const GalleryManagement = lazy(() => import('@/pages/admin/GalleryManagement'));
+const Reviews = lazy(() => import('@/pages/admin/Reviews'));
 
 // ✅ Lazy loading des sous-pages des paramètres
 const GeneralSettings = lazy(() => import('@/pages/admin/settings/General'));
@@ -107,6 +108,7 @@ export default function AppRoutes() {
           <Route path="prestations" element={<AdminServices />} />
           <Route path="statistiques" element={<Statistics />} />
           <Route path="notifications" element={<Notifications />} />
+          <Route path="avis" element={<Reviews />} />
 
           {/* ✅ Paramètres avec sous-routes */}
           <Route path="parametres" element={<SettingsLayout />}>

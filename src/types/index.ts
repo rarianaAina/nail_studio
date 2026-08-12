@@ -23,7 +23,7 @@ export type {
   CreateServiceDto,
   UpdateServiceDto,
 } from './service';
-export type { Review, CreateReviewDto } from './review';
+export type { Review, ReviewStatus, SubmitReviewDto } from './review';
 export type { GalleryItem, CreateGalleryItemDto } from './gallery';
 export type { SalonSettings, BusinessHours, ColorPreset } from './settings';
 export type {
