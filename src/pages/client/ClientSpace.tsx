@@ -41,6 +41,7 @@ import ReviewDialog from '@/components/client/ReviewDialog';
 import { reviewService } from '@/services/reviewService';
 import { formatAriary, STATUS_COLORS, STATUS_LABELS } from '@/utils';
 import { getTotalPrice, getServiceNames } from '@/types';
+import { isPastDate } from '@/utils/date';
 import { cn } from '@/utils/cn';
 import type { Appointment } from '@/types';
 
@@ -93,11 +94,18 @@ export default function ClientSpace() {
       .sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time));
   }, [appointments, user]);
 
+  // La répartition tient compte de la date, pas seulement du statut : un
+  // rendez-vous confirmé dont la date est révolue restait sinon indéfiniment
+  // dans « à venir », et n'atteignait jamais l'historique où se trouve le
+  // bouton d'avis.
   const upcoming = myAppointments.filter(
-    (a) => a.status === 'confirmed' || a.status === 'pending'
+    (a) => (a.status === 'confirmed' || a.status === 'pending') && !isPastDate(a.date)
   );
   const past = myAppointments.filter(
-    (a) => a.status === 'completed' || a.status === 'cancelled'
+    (a) =>
+      a.status === 'completed' ||
+      a.status === 'cancelled' ||
+      ((a.status === 'confirmed' || a.status === 'pending') && isPastDate(a.date))
   );
 
   const totalSpent = myAppointments
