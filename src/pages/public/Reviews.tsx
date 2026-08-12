@@ -148,15 +148,27 @@ export default function Reviews() {
                       <Quote className="mt-3 h-4 w-4 text-primary/40" />
                       <p className="mt-1 flex-1 text-sm text-foreground/80">{r.comment}</p>
 
-                      {r.imageUrl && (
-                        <a href={r.imageUrl} target="_blank" rel="noopener noreferrer" className="mt-3">
-                          <img
-                            src={r.imageUrl}
-                            alt={`Réalisation partagée par ${r.name}`}
-                            loading="lazy"
-                            className="h-40 w-full rounded-xl border border-border/60 object-cover transition-transform hover:scale-[1.02]"
-                          />
-                        </a>
+                      {r.imageUrls.length > 0 && (
+                        <div
+                          className={cn(
+                            'mt-3 grid gap-2',
+                            r.imageUrls.length === 1 ? 'grid-cols-1' : 'grid-cols-2'
+                          )}
+                        >
+                          {r.imageUrls.map((url, i) => (
+                            <a key={url} href={url} target="_blank" rel="noopener noreferrer">
+                              <img
+                                src={url}
+                                alt={`Réalisation ${i + 1} partagée par ${r.name}`}
+                                loading="lazy"
+                                className={cn(
+                                  'w-full rounded-xl border border-border/60 object-cover transition-transform hover:scale-[1.02]',
+                                  r.imageUrls.length === 1 ? 'h-40' : 'h-28'
+                                )}
+                              />
+                            </a>
+                          ))}
+                        </div>
                       )}
 
                       {r.verified && (

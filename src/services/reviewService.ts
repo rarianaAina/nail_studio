@@ -10,7 +10,7 @@ interface ReviewRow {
   comment: string;
   service: string | null;
   service_ids: string[] | null;
-  image_url: string | null;
+  image_urls: string[] | null;
   verified: boolean;
   status: ReviewStatus;
   date: string;
@@ -29,7 +29,7 @@ function rowToReview(r: ReviewRow): Review {
     comment: r.comment,
     service: r.service ?? undefined,
     serviceIds: r.service_ids ?? [],
-    imageUrl: r.image_url ?? undefined,
+    imageUrls: r.image_urls ?? [],
     verified: r.verified,
     status: r.status,
     date: r.date,
@@ -91,7 +91,7 @@ export const reviewService = {
       p_appointment_id: dto.appointmentId,
       p_rating: dto.rating,
       p_comment: dto.comment,
-      p_image_url: dto.imageUrl ?? null,
+      p_image_urls: dto.imageUrls ?? [],
     });
     if (error) throw error;
     return data as string;

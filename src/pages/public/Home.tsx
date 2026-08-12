@@ -466,9 +466,9 @@ export default function Home() {
                     ))}
                   </div>
                   <p className="mt-4 flex-1 text-sm italic text-foreground/80">« {r.comment} »</p>
-                  {r.imageUrl && (
+                  {r.imageUrls.length > 0 && (
                     <img
-                      src={r.imageUrl}
+                      src={r.imageUrls[0]}
                       alt={`Réalisation partagée par ${r.name}`}
                       loading="lazy"
                       className="mt-4 h-32 w-full rounded-xl object-cover"

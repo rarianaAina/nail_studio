@@ -18,6 +18,9 @@ import { uploadImage } from '@/services/storageService';
 import { formatDate } from '@/utils/date';
 import { cn } from '@/utils/cn';
 
+/** Le contrôle est repris côté base : `submit_review()` refuse au-delà. */
+const MAX_PHOTOS = 6;
+
 interface ReviewDialogProps {
   appointment: Appointment | null;
   onClose: () => void;
@@ -28,7 +31,7 @@ export default function ReviewDialog({ appointment, onClose, onSubmitted }: Revi
   const [rating, setRating] = useState(0);
   const [hovered, setHovered] = useState(0);
   const [comment, setComment] = useState('');
-  const [photo, setPhoto] = useState<{ file: File; preview: string } | null>(null);
+  const [photos, setPhotos] = useState<Array<{ file: File; preview: string }>>([]);
   const [submitting, setSubmitting] = useState(false);
 
   if (!appointment) return null;
@@ -37,19 +40,37 @@ export default function ReviewDialog({ appointment, onClose, onSubmitted }: Revi
     setRating(0);
     setHovered(0);
     setComment('');
-    setPhoto(null);
+    photos.forEach((p) => URL.revokeObjectURL(p.preview));
+    setPhotos([]);
   };
 
-  const handlePhoto = (file: File) => {
-    if (!file.type.startsWith('image/')) {
-      toast.error('Veuillez sélectionner une image.');
-      return;
+  const handlePhotos = (files: FileList) => {
+    const retenus: Array<{ file: File; preview: string }> = [];
+
+    for (const file of Array.from(files)) {
+      if (photos.length + retenus.length >= MAX_PHOTOS) {
+        toast.error(`${MAX_PHOTOS} photos au maximum.`);
+        break;
+      }
+      if (!file.type.startsWith('image/')) {
+        toast.error(`« ${file.name} » n'est pas une image.`);
+        continue;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error(`« ${file.name} » dépasse 5 Mo.`);
+        continue;
+      }
+      retenus.push({ file, preview: URL.createObjectURL(file) });
     }
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error('L\'image ne doit pas dépasser 5 Mo.');
-      return;
-    }
-    setPhoto({ file, preview: URL.createObjectURL(file) });
+
+    if (retenus.length > 0) setPhotos((prev) => [...prev, ...retenus]);
+  };
+
+  const removePhoto = (index: number) => {
+    setPhotos((prev) => {
+      URL.revokeObjectURL(prev[index].preview);
+      return prev.filter((_, i) => i !== index);
+    });
   };
 
   const handleSubmit = async () => {
@@ -64,18 +85,19 @@ export default function ReviewDialog({ appointment, onClose, onSubmitted }: Revi
 
     setSubmitting(true);
     try {
-      // La photo n'est envoyée qu'une fois l'avis validé côté saisie, pour ne
-      // pas laisser de fichier orphelin si la cliente renonce.
-      let imageUrl: string | undefined;
-      if (photo) {
-        imageUrl = await uploadImage(photo.file, 'reviews', undefined, 'appointments');
+      // Les photos ne partent qu'une fois la saisie validée, pour ne pas
+      // laisser de fichiers orphelins si la cliente renonce. Envoi séquentiel :
+      // une rafale d'envois parallèles met en difficulté les connexions lentes.
+      const imageUrls: string[] = [];
+      for (const p of photos) {
+        imageUrls.push(await uploadImage(p.file, 'reviews', undefined, 'appointments'));
       }
 
       await reviewService.submit({
         appointmentId: appointment.id,
         rating,
         comment: comment.trim(),
-        imageUrl,
+        imageUrls,
       });
 
       toast.success('Merci ! Votre avis sera publié après relecture par le salon.');
@@ -144,39 +166,48 @@ export default function ReviewDialog({ appointment, onClose, onSubmitted }: Revi
           </div>
 
           <div className="space-y-2">
-            <Label>Une photo du résultat (facultatif)</Label>
-            {photo ? (
-              <div className="relative inline-block">
-                <img
-                  src={photo.preview}
-                  alt="Photo jointe à votre avis"
-                  className="h-28 w-28 rounded-xl border border-border/60 object-cover"
-                />
-                <button
-                  type="button"
-                  onClick={() => setPhoto(null)}
-                  aria-label="Retirer la photo"
-                  className="absolute -right-2 -top-2 rounded-full bg-destructive p-1 text-destructive-foreground"
-                >
-                  <X className="h-3.5 w-3.5" />
-                </button>
-              </div>
-            ) : (
-              <label className="flex h-28 w-28 cursor-pointer flex-col items-center justify-center gap-1 rounded-xl border-2 border-dashed border-border/60 text-muted-foreground transition-colors hover:border-primary/40">
-                <ImagePlus className="h-5 w-5" />
-                <span className="text-[10px]">Ajouter</span>
-                <input
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) handlePhoto(file);
-                    e.target.value = '';
-                  }}
-                />
-              </label>
-            )}
+            <div className="flex items-center justify-between">
+              <Label>Photos du résultat (facultatif)</Label>
+              <span className="text-xs text-muted-foreground">
+                {photos.length}/{MAX_PHOTOS}
+              </span>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {photos.map((p, i) => (
+                <div key={p.preview} className="relative">
+                  <img
+                    src={p.preview}
+                    alt={`Photo ${i + 1} jointe à votre avis`}
+                    className="h-24 w-24 rounded-xl border border-border/60 object-cover"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => removePhoto(i)}
+                    aria-label={`Retirer la photo ${i + 1}`}
+                    className="absolute -right-2 -top-2 rounded-full bg-destructive p-1 text-destructive-foreground"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              ))}
+
+              {photos.length < MAX_PHOTOS && (
+                <label className="flex h-24 w-24 cursor-pointer flex-col items-center justify-center gap-1 rounded-xl border-2 border-dashed border-border/60 text-muted-foreground transition-colors hover:border-primary/40">
+                  <ImagePlus className="h-5 w-5" />
+                  <span className="text-[10px]">Ajouter</span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    className="hidden"
+                    onChange={(e) => {
+                      if (e.target.files?.length) handlePhotos(e.target.files);
+                      e.target.value = '';
+                    }}
+                  />
+                </label>
+              )}
+            </div>
           </div>
 
           <p className="rounded-lg bg-secondary/60 p-3 text-xs text-muted-foreground">

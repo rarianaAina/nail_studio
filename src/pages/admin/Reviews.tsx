@@ -140,15 +140,19 @@ export default function Reviews() {
 
                   <p className="whitespace-pre-line text-sm text-foreground/85">{r.comment}</p>
 
-                  {r.imageUrl && (
-                    <a href={r.imageUrl} target="_blank" rel="noopener noreferrer">
-                      <img
-                        src={r.imageUrl}
-                        alt={`Photo jointe par ${r.name}`}
-                        loading="lazy"
-                        className="h-28 w-28 rounded-xl border border-border/60 object-cover transition-transform hover:scale-105"
-                      />
-                    </a>
+                  {r.imageUrls.length > 0 && (
+                    <div className="flex flex-wrap gap-2">
+                      {r.imageUrls.map((url, i) => (
+                        <a key={url} href={url} target="_blank" rel="noopener noreferrer">
+                          <img
+                            src={url}
+                            alt={`Photo ${i + 1} jointe par ${r.name}`}
+                            loading="lazy"
+                            className="h-28 w-28 rounded-xl border border-border/60 object-cover transition-transform hover:scale-105"
+                          />
+                        </a>
+                      ))}
+                    </div>
                   )}
 
                   <div className="flex flex-wrap gap-2 border-t border-border/60 pt-3">
