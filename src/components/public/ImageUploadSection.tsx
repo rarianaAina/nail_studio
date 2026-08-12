@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { X, Plus } from 'lucide-react';
 import { Label } from '@/components/ui/label';
@@ -24,8 +23,6 @@ export function ImageUploadSection({
   maxImages = 4,
   disabled = false,
 }: ImageUploadSectionProps) {
-  const [isUploading] = useState(false);
-
   const handleFileSelect = (file: File) => {
     if (!file.type.startsWith('image/')) {
       toast.error('Veuillez sélectionner une image');
@@ -135,13 +132,6 @@ export function ImageUploadSection({
           </div>
         )}
       </div>
-
-      {isUploading && (
-        <div className="flex items-center gap-2 text-xs text-primary">
-          <div className="h-3 w-3 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-          Upload en cours...
-        </div>
-      )}
     </div>
   );
 }
