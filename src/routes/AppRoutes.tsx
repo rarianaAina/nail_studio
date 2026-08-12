@@ -12,6 +12,11 @@ const Gallery = lazy(() => import('@/pages/public/Gallery'));
 const Contact = lazy(() => import('@/pages/public/Contact'));
 const Booking = lazy(() => import('@/pages/public/Booking'));
 
+// Pages légales
+const LegalNotice = lazy(() => import('@/pages/public/legal/LegalNotice'));
+const Privacy = lazy(() => import('@/pages/public/legal/Privacy'));
+const Terms = lazy(() => import('@/pages/public/legal/Terms'));
+
 // Auth pages
 const Auth = lazy(() => import('@/pages/auth/Auth'));
 const ForgotPassword = lazy(() => import('@/pages/auth/ForgotPassword'));
@@ -66,6 +71,9 @@ export default function AppRoutes() {
           <Route path="/contact" element={<Contact />} />
           <Route path="/reservation" element={<Booking />} />
           <Route path="/disponibilites" element={<Availability />} />
+          <Route path="/mentions-legales" element={<LegalNotice />} />
+          <Route path="/confidentialite" element={<Privacy />} />
+          <Route path="/conditions" element={<Terms />} />
         </Route>
 
         {/* Auth */}

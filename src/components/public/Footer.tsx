@@ -115,9 +115,24 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className="mt-12 flex flex-col items-center justify-between gap-3 border-t border-border/60 pt-6 text-xs text-muted-foreground sm:flex-row">
+        <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-border/60 pt-6 text-xs text-muted-foreground sm:flex-row">
           <p>© {new Date().getFullYear()} {salonInfo.name}. Tous droits réservés.</p>
-          <p>Conçu avec soin à Paris, France.</p>
+          <nav className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
+            {[
+              { to: '/mentions-legales', label: 'Mentions légales' },
+              { to: '/confidentialite', label: 'Confidentialité' },
+              { to: '/conditions', label: 'Conditions de réservation' },
+            ].map(({ to, label }) => (
+              <Link
+                key={to}
+                to={to}
+                onClick={scrollToTop}
+                className="transition-colors hover:text-primary"
+              >
+                {label}
+              </Link>
+            ))}
+          </nav>
         </div>
       </div>
     </footer>
