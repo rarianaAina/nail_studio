@@ -10,6 +10,11 @@ export default defineConfig({
       // Le service worker se met à jour sans intervention : une praticienne ne
       // doit pas avoir à réinstaller l'application après chaque déploiement.
       registerType: 'autoUpdate',
+      // Service worker écrit à la main : la génération automatique ne permet
+      // pas d'ajouter les gestionnaires de notifications.
+      strategies: 'injectManifest',
+      srcDir: 'src',
+      filename: 'sw.ts',
       includeAssets: ['icons/apple-touch-icon.png'],
       manifest: {
         name: 'Harrys Studio — Salon d\'onglerie',
@@ -41,36 +46,9 @@ export default defineConfig({
           { name: 'Mon espace', url: '/mon-espace' },
         ],
       },
-      workbox: {
-        // La coquille de l'application est mise en cache ; les données, non.
-        globPatterns: ['**/*.{js,css,html,woff2}'],
-        navigateFallbackDenylist: [/^\/api/, /\.xml$/, /robots\.txt$/],
-        runtimeCaching: [
-          {
-            // Images du salon : elles changent rarement et pèsent lourd.
-            urlPattern: /^https:\/\/[a-z0-9]+\.supabase\.co\/storage\/.*/i,
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'images-salon',
-              expiration: { maxEntries: 80, maxAgeSeconds: 60 * 60 * 24 * 30 },
-              cacheableResponse: { statuses: [0, 200] },
-            },
-          },
-          {
-            // Polices : immuables une fois téléchargées.
-            urlPattern: /^https:\/\/fonts\.(googleapis|gstatic)\.com\/.*/i,
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'polices',
-              expiration: { maxEntries: 20, maxAgeSeconds: 60 * 60 * 24 * 365 },
-              cacheableResponse: { statuses: [0, 200] },
-            },
-          },
-        ],
+      injectManifest: {
+        globPatterns: ['**/*.{js,css,html,woff2,png}'],
       },
-      // Les appels à l'API ne sont jamais mis en cache : un créneau réservé
-      // doit disparaître immédiatement, et un rendez-vous servi depuis le cache
-      // induirait la praticienne en erreur.
       devOptions: { enabled: false },
     }),
   ],

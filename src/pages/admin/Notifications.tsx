@@ -11,6 +11,7 @@ import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 import { useState } from 'react';
 import type { Reminder } from '@/types/reminder';
+import PushToggle from '@/components/admin/PushToggle';
 
 const RECIPIENT_ICON: Record<Reminder['recipients'], typeof User> = {
   client: User,
@@ -98,6 +99,8 @@ export default function Notifications() {
           </Button>
         </div>
       </div>
+
+      <PushToggle />
 
       {/* Config active */}
       {reminderSettings && (
