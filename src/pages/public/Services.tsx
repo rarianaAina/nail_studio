@@ -7,6 +7,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/utils/cn';
 import { formatAriary, formatDuration } from '@/utils';
+import ServiceRating from '@/components/public/ServiceRating';
+import { useServiceRatings } from '@/hooks/useReviews';
 import { useNailServices } from '@/hooks/useNailServices';
 import { useActiveConfig } from '@/hooks/useActiveConfig';
 import type { Service } from '@/types';
@@ -19,7 +21,7 @@ const fadeUp = {
 };
 
 // ✅ Composant ServiceCard avec carousel d'images
-const ServiceCard = ({ service }: { service: Service }) => {
+const ServiceCard = ({ service, rating }: { service: Service; rating?: { average: number; total: number } }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const allImages = service.additionalImages && service.additionalImages.length > 0 
     ? [service.image, ...service.additionalImages] 
@@ -126,9 +128,12 @@ const ServiceCard = ({ service }: { service: Service }) => {
         </div>
         <p className="mt-2 text-sm text-muted-foreground">{service.description}</p>
         <div className="mt-5 flex items-center justify-between">
-          <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <Clock className="h-3.5 w-3.5" /> {formatDuration(service.duration)}
-          </span>
+          <div className="flex flex-col gap-1">
+            <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <Clock className="h-3.5 w-3.5" /> {formatDuration(service.duration)}
+            </span>
+            <ServiceRating rating={rating} />
+          </div>
           <Button asChild size="sm" className="rounded-full">
             <Link to="/reservation"><CalendarHeart className="mr-1.5 h-3.5 w-3.5" /> Réserver</Link>
           </Button>
@@ -140,6 +145,7 @@ const ServiceCard = ({ service }: { service: Service }) => {
 
 export default function Services() {
   const { services } = useNailServices();
+  const { ratings } = useServiceRatings();
   const { categories } = useActiveConfig();
   const [active, setActive] = useState<string>('Toutes');
 
@@ -188,7 +194,7 @@ export default function Services() {
           <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {filtered.map((s, i) => (
               <motion.div key={s.id} {...fadeUp} transition={{ duration: 0.4, delay: i * 0.05 }}>
-                <ServiceCard service={s} />
+                <ServiceCard service={s} rating={ratings[s.id]} />
               </motion.div>
             ))}
           </div>

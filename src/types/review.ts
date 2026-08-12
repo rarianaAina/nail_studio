@@ -8,6 +8,8 @@ export interface Review {
   rating: number;
   comment: string;
   service?: string;
+  /** Identifiants des prestations commentées, pour un filtrage exact. */
+  serviceIds: string[];
   imageUrl?: string;
   /** Vrai par construction : un avis est toujours rattaché à un rendez-vous. */
   verified?: boolean;

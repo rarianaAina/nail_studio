@@ -12,6 +12,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { cn } from '@/utils/cn';
 import { formatAriary, formatDuration } from '@/utils';
 import { useNailServices } from '@/hooks/useNailServices';
+import { useServiceRatings } from '@/hooks/useReviews';
+import ServiceRating from '@/components/public/ServiceRating';
 import { useCreateAppointment } from '@/hooks/useAppointments';
 import { useAuth } from '@/hooks/useAuth';
 import { usePaymentMethods } from '@/hooks/usePaymentMethods';
@@ -43,11 +45,13 @@ const displayPrice = (price: number): string => {
 const ServiceCard = ({ 
   service, 
   isSelected, 
-  onToggle 
+  onToggle,
+  rating,
 }: { 
   service: Service; 
   isSelected: boolean; 
   onToggle: () => void;
+  rating?: { average: number; total: number };
 }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const allImages = service.additionalImages && service.additionalImages.length > 0 
@@ -146,6 +150,7 @@ const ServiceCard = ({
         </div>
         <p className="text-xs text-muted-foreground">{formatDuration(service.duration)}</p>
         <p className="mt-1 text-sm font-semibold text-primary">{displayPrice(service.price)}</p>
+        <ServiceRating rating={rating} className="mt-1" />
       </div>
     </button>
   );
@@ -153,6 +158,7 @@ const ServiceCard = ({
 
 export default function Booking() {
   const { services } = useNailServices();
+  const { ratings } = useServiceRatings();
   // Le tunnel ne fait qu'écrire : inutile de charger tout le carnet.
   const createAppointment = useCreateAppointment();
   const { user } = useAuth();
@@ -408,6 +414,7 @@ export default function Booking() {
                         service={s}
                         isSelected={selectedServiceIds.includes(s.id)}
                         onToggle={() => toggleService(s.id)}
+                        rating={ratings[s.id]}
                       />
                     ))}
                   </div>

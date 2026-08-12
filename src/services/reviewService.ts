@@ -9,6 +9,7 @@ interface ReviewRow {
   rating: number;
   comment: string;
   service: string | null;
+  service_ids: string[] | null;
   image_url: string | null;
   verified: boolean;
   status: ReviewStatus;
@@ -27,6 +28,7 @@ function rowToReview(r: ReviewRow): Review {
     rating: r.rating,
     comment: r.comment,
     service: r.service ?? undefined,
+    serviceIds: r.service_ids ?? [],
     imageUrl: r.image_url ?? undefined,
     verified: r.verified,
     status: r.status,
@@ -93,6 +95,19 @@ export const reviewService = {
     });
     if (error) throw error;
     return data as string;
+  },
+
+  /**
+   * Note moyenne et nombre d'avis par prestation. Calculé en base : les cartes
+   * n'ont pas besoin des avis eux-mêmes pour afficher une note.
+   */
+  async getServiceRatings(): Promise<Record<string, { average: number; total: number }>> {
+    const { data, error } = await supabase.rpc('service_ratings');
+    if (error) throw error;
+    const rows = (data as { service_id: string; average: number; total: number }[] | null) ?? [];
+    return Object.fromEntries(
+      rows.map((r) => [r.service_id, { average: Number(r.average), total: Number(r.total) }])
+    );
   },
 
   async moderate(id: string, status: Exclude<ReviewStatus, 'pending'>): Promise<Review> {

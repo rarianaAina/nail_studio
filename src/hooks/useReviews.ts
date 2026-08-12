@@ -60,3 +60,21 @@ export function useReviewModeration() {
     remove,
   };
 }
+
+const RATINGS_KEY = ['reviews', 'service-ratings'] as const;
+const NO_RATINGS: Record<string, { average: number; total: number }> = {};
+
+/**
+ * Note moyenne par prestation, indexée par identifiant.
+ *
+ * Alimente les cartes de prestation sans charger les avis : seul l'agrégat
+ * transite.
+ */
+export function useServiceRatings() {
+  const { data: ratings, loading } = useResource(
+    RATINGS_KEY,
+    () => reviewService.getServiceRatings(),
+    NO_RATINGS
+  );
+  return { ratings, loading };
+}

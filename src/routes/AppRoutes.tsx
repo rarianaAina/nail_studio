@@ -11,6 +11,7 @@ const Services = lazy(() => import('@/pages/public/Services'));
 const Gallery = lazy(() => import('@/pages/public/Gallery'));
 const Contact = lazy(() => import('@/pages/public/Contact'));
 const Booking = lazy(() => import('@/pages/public/Booking'));
+const PublicReviews = lazy(() => import('@/pages/public/Reviews'));
 
 // Pages légales
 const LegalNotice = lazy(() => import('@/pages/public/legal/LegalNotice'));
@@ -72,6 +73,7 @@ export default function AppRoutes() {
           <Route path="/contact" element={<Contact />} />
           <Route path="/reservation" element={<Booking />} />
           <Route path="/disponibilites" element={<Availability />} />
+          <Route path="/avis" element={<PublicReviews />} />
           <Route path="/mentions-legales" element={<LegalNotice />} />
           <Route path="/confidentialite" element={<Privacy />} />
           <Route path="/conditions" element={<Terms />} />
