@@ -25,4 +25,11 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
-supabase
+
+# Artefacts de compilation TypeScript
+*.tsbuildinfo
+
+# Supabase : on versionne le schéma (migrations/), on ignore le reste.
+# Les dossiers ci-dessous contiennent des jetons d'accès générés par `supabase link`.
+supabase/.temp/
+supabase/.branches/
