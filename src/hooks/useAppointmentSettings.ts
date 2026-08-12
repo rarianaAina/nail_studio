@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useState } from 'react';
 import type { AppointmentSettings, UpdateAppointmentSettingsDto } from '@/types/appointmentSettings';
 import { appointmentSettingsService } from '@/services/appointmentSettingsService';
+import { queryKeys } from '@/lib/queryClient';
+import { useResource, useCacheWriter } from './useResource';
 
 interface UseAppointmentSettingsReturn {
   settings: AppointmentSettings | null;
@@ -10,32 +11,20 @@ interface UseAppointmentSettingsReturn {
   refresh: () => Promise<void>;
 }
 
+const NONE: AppointmentSettings | null = null;
+
 export function useAppointmentSettings(): UseAppointmentSettingsReturn {
-  const [settings, setSettings] = useState<AppointmentSettings | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const load = useCallback(async () => {
-    try {
-      setLoading(true);
-      const data = await appointmentSettingsService.get();
-      setSettings(data);
-      setError(null);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Erreur de chargement');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    load();
-  }, [load]);
+  const { data: settings, loading, error, refresh } = useResource(
+    queryKeys.appointmentSettings,
+    () => appointmentSettingsService.get(),
+    NONE
+  );
+  const write = useCacheWriter<AppointmentSettings | null>(queryKeys.appointmentSettings, NONE);
 
   const updateSettings = async (data: UpdateAppointmentSettingsDto) => {
     const updated = await appointmentSettingsService.update(data);
-    setSettings(updated);
+    write(() => updated);
   };
 
-  return { settings, loading, error, updateSettings, refresh: load };
+  return { settings, loading, error, updateSettings, refresh };
 }

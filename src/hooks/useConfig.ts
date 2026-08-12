@@ -1,80 +1,92 @@
-// hooks/useConfig.ts
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback } from 'react';
 import type { ServiceCategoryConfig, TimeSlotConfig, CreateCategoryDto, CreateTimeSlotDto } from '@/types/config';
 import { configService } from '@/services/configService';
+import { queryKeys } from '@/lib/queryClient';
+import { useResource, useCacheWriter } from './useResource';
+
+interface ConfigBundle {
+  categories: ServiceCategoryConfig[];
+  timeSlots: TimeSlotConfig[];
+}
+
+const EMPTY: ConfigBundle = { categories: [], timeSlots: [] };
 
 export function useConfig() {
-  const [categories, setCategories] = useState<ServiceCategoryConfig[]>([]);
-  const [timeSlots, setTimeSlots] = useState<TimeSlotConfig[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  const load = useCallback(async () => {
-    try {
-      setLoading(true);
-      const [cats, slots] = await Promise.all([
+  const { data, loading, refresh } = useResource(
+    queryKeys.config,
+    async (): Promise<ConfigBundle> => {
+      const [categories, timeSlots] = await Promise.all([
         configService.getCategories(),
         configService.getTimeSlots(),
       ]);
-      setCategories(cats);
-      setTimeSlots(slots);
-    } catch {
-      // silent — admin pages handle empty states
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+      return { categories, timeSlots };
+    },
+    EMPTY
+  );
+  const write = useCacheWriter<ConfigBundle>(queryKeys.config, EMPTY);
 
-  useEffect(() => { load(); }, [load]);
+  const { categories, timeSlots } = data;
 
-  const createCategory = async (data: CreateCategoryDto) => {
-    const created = await configService.createCategory(data);
-    setCategories((prev) => [...prev, created]);
+  const createCategory = async (dto: CreateCategoryDto) => {
+    const created = await configService.createCategory(dto);
+    write((prev) => ({ ...prev, categories: [...prev.categories, created] }));
     return created;
   };
 
-  const updateCategory = async (id: string, data: Partial<ServiceCategoryConfig>) => {
-    await configService.updateCategory(id, data);
-    setCategories((prev) => prev.map((c) => (c.id === id ? { ...c, ...data } : c)));
+  const updateCategory = async (id: string, dto: Partial<ServiceCategoryConfig>) => {
+    await configService.updateCategory(id, dto);
+    write((prev) => ({
+      ...prev,
+      categories: prev.categories.map((c) => (c.id === id ? { ...c, ...dto } : c)),
+    }));
   };
 
   const deleteCategory = async (id: string) => {
     await configService.deleteCategory(id);
-    setCategories((prev) => prev.filter((c) => c.id !== id));
+    write((prev) => ({ ...prev, categories: prev.categories.filter((c) => c.id !== id) }));
   };
 
-  const createTimeSlot = async (data: CreateTimeSlotDto) => {
-    const created = await configService.createTimeSlot(data);
-    setTimeSlots((prev) => [...prev, created]);
+  const createTimeSlot = async (dto: CreateTimeSlotDto) => {
+    const created = await configService.createTimeSlot(dto);
+    write((prev) => ({ ...prev, timeSlots: [...prev.timeSlots, created] }));
     return created;
   };
 
-  const updateTimeSlot = async (id: string, data: Partial<TimeSlotConfig>) => {
-    await configService.updateTimeSlot(id, data);
-    setTimeSlots((prev) => prev.map((s) => (s.id === id ? { ...s, ...data } : s)));
+  const updateTimeSlot = async (id: string, dto: Partial<TimeSlotConfig>) => {
+    await configService.updateTimeSlot(id, dto);
+    write((prev) => ({
+      ...prev,
+      timeSlots: prev.timeSlots.map((s) => (s.id === id ? { ...s, ...dto } : s)),
+    }));
   };
 
   const deleteTimeSlot = async (id: string) => {
     await configService.deleteTimeSlot(id);
-    setTimeSlots((prev) => prev.filter((s) => s.id !== id));
+    write((prev) => ({ ...prev, timeSlots: prev.timeSlots.filter((s) => s.id !== id) }));
   };
 
-  const getTimeSlotsByDate = useCallback((date: string): TimeSlotConfig[] => {
-    return timeSlots.filter((slot) => slot.date === date);
-  }, [timeSlots]);
+  const getTimeSlotsByDate = useCallback(
+    (date: string): TimeSlotConfig[] => timeSlots.filter((slot) => slot.date === date),
+    [timeSlots]
+  );
 
-  const getActiveTimeSlotsByDate = useCallback((date: string): string[] => {
-    return timeSlots
-      .filter((slot) => slot.date === date && slot.active)
-      .sort((a, b) => a.sortOrder - b.sortOrder)
-      .map((slot) => slot.label);
-  }, [timeSlots]);
+  const getActiveTimeSlotsByDate = useCallback(
+    (date: string): string[] =>
+      timeSlots
+        .filter((slot) => slot.date === date && slot.active)
+        .sort((a, b) => a.sortOrder - b.sortOrder)
+        .map((slot) => slot.label),
+    [timeSlots]
+  );
 
-  const getActiveTimeSlots = useCallback((): string[] => {
-    return timeSlots
-      .filter((slot) => slot.active)
-      .sort((a, b) => a.sortOrder - b.sortOrder)
-      .map((slot) => slot.label);
-  }, [timeSlots]);
+  const getActiveTimeSlots = useCallback(
+    (): string[] =>
+      timeSlots
+        .filter((slot) => slot.active)
+        .sort((a, b) => a.sortOrder - b.sortOrder)
+        .map((slot) => slot.label),
+    [timeSlots]
+  );
 
   return {
     categories,
@@ -89,6 +101,6 @@ export function useConfig() {
     getTimeSlotsByDate,
     getActiveTimeSlotsByDate,
     getActiveTimeSlots,
-    refresh: load,
+    refresh,
   };
 }

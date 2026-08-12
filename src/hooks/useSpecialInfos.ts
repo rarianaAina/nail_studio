@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useState } from 'react';
 import type { SpecialInfo, CreateSpecialInfoDto, UpdateSpecialInfoDto } from '@/types';
 import { specialInfoService } from '@/services/specialInfoService';
+import { queryKeys } from '@/lib/queryClient';
+import { useResource, useCacheWriter } from './useResource';
 
 interface UseSpecialInfosReturn {
   infos: SpecialInfo[];
@@ -13,57 +14,38 @@ interface UseSpecialInfosReturn {
   toggleActive: (id: string, active: boolean) => Promise<SpecialInfo>;
 }
 
+const EMPTY: SpecialInfo[] = [];
+
 export function useSpecialInfos(): UseSpecialInfosReturn {
-  const [infos, setInfos] = useState<SpecialInfo[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const load = useCallback(async () => {
-    try {
-      setLoading(true);
-      const data = await specialInfoService.getActive();
-      setInfos(data);
-      setError(null);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Erreur de chargement');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => { load(); }, [load]);
+  const { data: infos, loading, error, refresh } = useResource(
+    queryKeys.specialInfos,
+    () => specialInfoService.getActive(),
+    EMPTY
+  );
+  const write = useCacheWriter<SpecialInfo[]>(queryKeys.specialInfos, EMPTY);
 
   const create = async (data: CreateSpecialInfoDto) => {
     const created = await specialInfoService.create(data);
-    setInfos((prev) => [...prev, created]);
+    write((prev) => [...prev, created]);
     return created;
   };
 
   const update = async (id: string, data: UpdateSpecialInfoDto) => {
     const updated = await specialInfoService.update(id, data);
-    setInfos((prev) => prev.map((i) => (i.id === id ? updated : i)));
+    write((prev) => prev.map((i) => (i.id === id ? updated : i)));
     return updated;
   };
 
   const deleteInfo = async (id: string) => {
     await specialInfoService.delete(id);
-    setInfos((prev) => prev.filter((i) => i.id !== id));
+    write((prev) => prev.filter((i) => i.id !== id));
   };
 
   const toggleActive = async (id: string, active: boolean) => {
     const updated = await specialInfoService.toggleActive(id, active);
-    setInfos((prev) => prev.map((i) => (i.id === id ? updated : i)));
+    write((prev) => prev.map((i) => (i.id === id ? updated : i)));
     return updated;
   };
 
-  return {
-    infos,
-    loading,
-    error,
-    refresh: load,
-    create,
-    update,
-    delete: deleteInfo,
-    toggleActive,
-  };
+  return { infos, loading, error, refresh, create, update, delete: deleteInfo, toggleActive };
 }

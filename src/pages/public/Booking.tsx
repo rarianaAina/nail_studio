@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { cn } from '@/utils/cn';
 import { formatAriary } from '@/utils';
 import { useNailServices } from '@/hooks/useNailServices';
-import { useAppointments } from '@/hooks/useAppointments';
+import { useCreateAppointment } from '@/hooks/useAppointments';
 import { useAuth } from '@/hooks/useAuth';
 import { usePaymentMethods } from '@/hooks/usePaymentMethods';
 import { useSettings } from '@/hooks/useSettings';
@@ -161,7 +161,8 @@ const ServiceCard = ({
 
 export default function Booking() {
   const { services } = useNailServices();
-  const { createAppointment } = useAppointments();
+  // Le tunnel ne fait qu'écrire : inutile de charger tout le carnet.
+  const createAppointment = useCreateAppointment();
   const { user } = useAuth();
   const { paymentMethods, loading: loadingPayments } = usePaymentMethods();
   const { settings } = useSettings();

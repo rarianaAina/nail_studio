@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useState } from 'react';
 import type { GalleryItem, CreateGalleryItemDto } from '@/types';
 import { galleryService } from '@/services/galleryService';
+import { queryKeys } from '@/lib/queryClient';
+import { useResource, useCacheWriter } from './useResource';
 
 interface UseGalleryReturn {
   items: GalleryItem[];
@@ -13,56 +14,38 @@ interface UseGalleryReturn {
   cleanupOrphans: () => Promise<number>;
 }
 
+const EMPTY: GalleryItem[] = [];
+
 export function useGallery(): UseGalleryReturn {
-  const [items, setItems] = useState<GalleryItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const load = useCallback(async () => {
-    try {
-      setLoading(true);
-      const data = await galleryService.getAll();
-      setItems(data);
-      setError(null);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Erreur de chargement');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => { load(); }, [load]);
+  const { data: items, loading, error, refresh } = useResource(
+    queryKeys.gallery,
+    () => galleryService.getAll(),
+    EMPTY
+  );
+  const write = useCacheWriter<GalleryItem[]>(queryKeys.gallery, EMPTY);
 
   const add = async (data: CreateGalleryItemDto, file: File) => {
     const created = await galleryService.create(data, file);
-    setItems(prev => [created, ...prev]);
+    write((prev) => [...prev, created]);
     return created;
   };
 
   const remove = async (id: string, imageUrl: string) => {
     await galleryService.delete(id, imageUrl);
-    setItems(prev => prev.filter(item => item.id !== id));
+    write((prev) => prev.filter((i) => i.id !== id));
   };
 
   const update = async (id: string, data: Partial<GalleryItem>) => {
     const updated = await galleryService.update(id, data);
-    setItems(prev => prev.map(item => item.id === id ? updated : item));
+    write((prev) => prev.map((i) => (i.id === id ? updated : i)));
     return updated;
   };
 
   const cleanupOrphans = async () => {
     const count = await galleryService.cleanupOrphans();
+    await refresh();
     return count;
   };
 
-  return {
-    items,
-    loading,
-    error,
-    refresh: load,
-    add,
-    remove,
-    update,
-    cleanupOrphans,
-  };
+  return { items, loading, error, refresh, add, remove, update, cleanupOrphans };
 }

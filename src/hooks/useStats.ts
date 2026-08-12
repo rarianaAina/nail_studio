@@ -1,11 +1,12 @@
-import { useCallback, useEffect, useState } from 'react';
 import type {
   DashboardStats,
   ChartDataPoint,
   ServicePopularity,
   CancellationDataPoint,
 } from '@/types';
-import { statsService } from '@/services/statsService';
+import { statsService, type StatsBundle } from '@/services/statsService';
+import { queryKeys } from '@/lib/queryClient';
+import { useResource } from './useResource';
 
 interface UseStatsReturn {
   dashboardStats: DashboardStats | null;
@@ -19,45 +20,31 @@ interface UseStatsReturn {
   refresh: () => Promise<void>;
 }
 
+const EMPTY = {
+  dashboardStats: null,
+  revenueByMonth: [],
+  revenueByDay: [],
+  appointmentsByMonth: [],
+  servicePopularity: [],
+  cancellationAndRetention: [],
+} as unknown as StatsBundle;
+
 export function useStats(): UseStatsReturn {
-  const [dashboardStats, setDashboardStats] = useState<DashboardStats | null>(null);
-  const [revenueByMonth, setRevenueByMonth] = useState<ChartDataPoint[]>([]);
-  const [revenueByDay, setRevenueByDay] = useState<ChartDataPoint[]>([]);
-  const [appointmentsByMonth, setAppointmentsByMonth] = useState<ChartDataPoint[]>([]);
-  const [servicePopularity, setServicePopularity] = useState<ServicePopularity[]>([]);
-  const [cancellationAndRetention, setCancellationAndRetention] = useState<CancellationDataPoint[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const load = useCallback(async () => {
-    try {
-      setLoading(true);
-      const bundle = await statsService.getAll();
-      setDashboardStats(bundle.dashboardStats);
-      setRevenueByMonth(bundle.revenueByMonth);
-      setRevenueByDay(bundle.revenueByDay);
-      setAppointmentsByMonth(bundle.appointmentsByMonth);
-      setServicePopularity(bundle.servicePopularity);
-      setCancellationAndRetention(bundle.cancellationAndRetention);
-      setError(null);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Erreur de chargement');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => { load(); }, [load]);
+  const { data, loading, error, refresh } = useResource(
+    queryKeys.stats,
+    () => statsService.getAll(),
+    EMPTY
+  );
 
   return {
-    dashboardStats,
-    revenueByMonth,
-    revenueByDay,
-    appointmentsByMonth,
-    servicePopularity,
-    cancellationAndRetention,
+    dashboardStats: data.dashboardStats ?? null,
+    revenueByMonth: data.revenueByMonth ?? [],
+    revenueByDay: data.revenueByDay ?? [],
+    appointmentsByMonth: data.appointmentsByMonth ?? [],
+    servicePopularity: data.servicePopularity ?? [],
+    cancellationAndRetention: data.cancellationAndRetention ?? [],
     loading,
     error,
-    refresh: load,
+    refresh,
   };
 }

@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useState } from 'react';
 import type { PaymentMethod, CreatePaymentMethodDto, UpdatePaymentMethodDto } from '@/types/payment';
 import { paymentService } from '@/services/paymentService';
+import { queryKeys } from '@/lib/queryClient';
+import { useResource, useCacheWriter } from './useResource';
 
 interface UsePaymentMethodsReturn {
   paymentMethods: PaymentMethod[];
@@ -14,59 +15,49 @@ interface UsePaymentMethodsReturn {
   reorder: (ids: string[]) => Promise<void>;
 }
 
+const EMPTY: PaymentMethod[] = [];
+
 export function usePaymentMethods(): UsePaymentMethodsReturn {
-  const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const load = useCallback(async () => {
-    try {
-      setLoading(true);
-      const data = await paymentService.getAll();
-      setPaymentMethods(data);
-      setError(null);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Erreur de chargement');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => { load(); }, [load]);
+  const { data: paymentMethods, loading, error, refresh } = useResource(
+    queryKeys.paymentMethods,
+    () => paymentService.getAll(),
+    EMPTY
+  );
+  const write = useCacheWriter<PaymentMethod[]>(queryKeys.paymentMethods, EMPTY);
 
   const createPaymentMethod = async (data: CreatePaymentMethodDto) => {
     const created = await paymentService.create(data);
-    setPaymentMethods((prev) => [...prev, created]);
+    write((prev) => [...prev, created]);
     return created;
   };
 
   const updatePaymentMethod = async (id: string, data: UpdatePaymentMethodDto) => {
     const updated = await paymentService.update(id, data);
-    setPaymentMethods((prev) => prev.map((p) => (p.id === id ? updated : p)));
+    write((prev) => prev.map((p) => (p.id === id ? updated : p)));
     return updated;
   };
 
   const deletePaymentMethod = async (id: string) => {
     await paymentService.delete(id);
-    setPaymentMethods((prev) => prev.filter((p) => p.id !== id));
+    write((prev) => prev.filter((p) => p.id !== id));
   };
 
   const toggleActive = async (id: string, active: boolean) => {
     const updated = await paymentService.toggleActive(id, active);
-    setPaymentMethods((prev) => prev.map((p) => (p.id === id ? updated : p)));
+    write((prev) => prev.map((p) => (p.id === id ? updated : p)));
     return updated;
   };
 
   const reorder = async (ids: string[]) => {
     await paymentService.reorder(ids);
-    await load(); // Recharger pour avoir le bon ordre
+    await refresh();
   };
 
   return {
     paymentMethods,
     loading,
     error,
-    refresh: load,
+    refresh,
     createPaymentMethod,
     updatePaymentMethod,
     deletePaymentMethod,

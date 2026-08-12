@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useState } from 'react';
 import type { SalonSettings } from '@/types';
 import { settingsService } from '@/services/settingsService';
+import { queryKeys } from '@/lib/queryClient';
+import { useResource, useCacheWriter } from './useResource';
 
 interface UseSettingsReturn {
   settings: SalonSettings | null;
@@ -10,37 +11,20 @@ interface UseSettingsReturn {
   refresh: () => Promise<void>;
 }
 
+const NONE: SalonSettings | null = null;
+
 export function useSettings(): UseSettingsReturn {
-  const [settings, setSettings] = useState<SalonSettings | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const load = useCallback(async () => {
-    try {
-      setLoading(true);
-      const data = await settingsService.get();
-      console.log('✅ Settings chargés:', data);
-      setSettings(data);
-      setError(null);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Erreur de chargement');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => { load(); }, [load]);
+  const { data: settings, loading, error, refresh } = useResource(
+    queryKeys.settings,
+    () => settingsService.get(),
+    NONE
+  );
+  const write = useCacheWriter<SalonSettings | null>(queryKeys.settings, NONE);
 
   const updateSettings = async (data: Partial<SalonSettings>) => {
     const updated = await settingsService.update(data);
-    setSettings(updated);
+    write(() => updated);
   };
 
-  return {
-    settings,
-    loading,
-    error,
-    updateSettings,
-    refresh: load,
-  };
+  return { settings, loading, error, updateSettings, refresh };
 }
