@@ -12,10 +12,23 @@ import { queryClient } from '@/lib/queryClient';
  * L'interface publique (`data`, `loading`, `error`, `refresh`) reproduit celle
  * des hooks précédents afin qu'aucune page n'ait à changer.
  */
-export function useResource<T>(key: QueryKey, fetcher: () => Promise<T>, fallback: T) {
+interface ResourceOptions {
+  /** Durée pendant laquelle la donnée est tenue pour fraîche, en millisecondes. */
+  staleTime?: number;
+  /** 'always' force une relecture à chaque montage, cache ou non. */
+  refetchOnMount?: boolean | 'always';
+}
+
+export function useResource<T>(
+  key: QueryKey,
+  fetcher: () => Promise<T>,
+  fallback: T,
+  options?: ResourceOptions
+) {
   const { data, isPending, error, refetch } = useQuery({
     queryKey: key,
     queryFn: fetcher,
+    ...options,
   });
 
   const refresh = useCallback(async () => {

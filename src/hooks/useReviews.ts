@@ -35,7 +35,11 @@ export function useReviewModeration() {
   const { data: reviews, loading, error, refresh } = useResource(
     MODERATION_KEY,
     () => reviewService.getAllForModeration(),
-    EMPTY_LIST
+    EMPTY_LIST,
+    // Une file de modération ne doit jamais être servie depuis le cache : un
+    // avis déposé après la dernière visite resterait invisible pendant toute
+    // la durée de fraîcheur, et la gérante conclurait qu'il n'est pas arrivé.
+    { staleTime: 0, refetchOnMount: 'always' }
   );
   const write = useCacheWriter<Review[]>(MODERATION_KEY, EMPTY_LIST);
 
