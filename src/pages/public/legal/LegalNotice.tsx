@@ -14,7 +14,7 @@ export default function LegalNotice() {
       badge="Mentions légales"
       title="Mentions légales"
       intro="Qui édite ce site, qui l’héberge, et à qui appartiennent les contenus qui s’y trouvent."
-      updatedAt="12 août 2026"
+      updatedAt="13 août 2026"
     >
       <LegalSection title="Éditeur du site">
         <ul className="space-y-1.5">
@@ -29,8 +29,11 @@ export default function LegalNotice() {
           )}
         </ul>
         <LegalTodo>
-          Forme juridique, numéro d’immatriculation au registre du commerce, numéro
-          d’identification fiscale et nom du directeur de la publication.
+          Mentions imposées par l’article 6 III-1 de la loi pour la confiance dans l’économie
+          numérique : forme juridique et capital social, numéro d’immatriculation au registre du
+          commerce et des sociétés avec la ville du greffe, numéro de TVA intracommunautaire, et
+          nom du directeur de la publication. Pour une activité artisanale, y ajouter le numéro au
+          répertoire des métiers.
         </LegalTodo>
       </LegalSection>
 
@@ -40,7 +43,8 @@ export default function LegalNotice() {
           photographies — sont hébergées par <strong>Supabase</strong>.
         </p>
         <LegalTodo>
-          Adresses postales et coordonnées de contact des deux hébergeurs.
+          La loi impose d’indiquer la dénomination, l’adresse et le numéro de téléphone de
+          l’hébergeur. À compléter pour Vercel Inc. et pour Supabase Inc.
         </LegalTodo>
       </LegalSection>
 

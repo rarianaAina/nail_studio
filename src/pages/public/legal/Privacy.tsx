@@ -12,7 +12,7 @@ export default function Privacy() {
       badge="Confidentialité"
       title="Politique de confidentialité"
       intro={`Quelles données ${name} collecte, pourquoi, combien de temps elles sont conservées, et comment en obtenir la suppression.`}
-      updatedAt="12 août 2026"
+      updatedAt="13 août 2026"
     >
       <LegalSection title="Responsable du traitement">
         <p>
@@ -65,7 +65,13 @@ export default function Privacy() {
           <li>Tenir notre comptabilité — nos obligations légales.</li>
         </ul>
         <p>
-          Vos données ne sont ni vendues, ni louées, ni transmises à des fins publicitaires.
+          Les bases légales correspondantes sont, selon les cas, l’exécution du contrat qui nous
+          lie, notre intérêt légitime à assurer la continuité des soins, votre consentement, et le
+          respect de nos obligations légales.
+        </p>
+        <p>
+          Vos données ne sont ni vendues, ni louées, ni transmises à des fins publicitaires. Elles
+          ne font l’objet d’aucune décision automatisée ni d’aucun profilage.
         </p>
       </LegalSection>
 
@@ -90,33 +96,60 @@ export default function Privacy() {
           <li><strong>Supabase</strong> — base de données, comptes et stockage des photographies.</li>
           <li><strong>Vercel</strong> — hébergement du site.</li>
         </ul>
+        <p>
+          Ces prestataires étant susceptibles d’opérer des serveurs hors de l’Union européenne, les
+          transferts éventuels sont encadrés par les clauses contractuelles types de la Commission
+          européenne.
+        </p>
         <LegalTodo>
-          Localisation exacte des serveurs des deux prestataires, à indiquer ici.
+          Région d’hébergement retenue chez Supabase et chez Vercel, à préciser ici. Si les serveurs
+          sont situés dans l’Union européenne, la mention de transfert ci-dessus doit être retirée.
         </LegalTodo>
       </LegalSection>
 
       <LegalSection title="Durée de conservation">
         <ul className="list-disc space-y-1.5 pl-5">
-          <li>Dossier cliente et historique : trois ans après votre dernier rendez-vous.</li>
+          <li>
+            Dossier cliente et historique : <strong>trois ans à compter de votre dernier
+            rendez-vous</strong>, conformément à la recommandation de la CNIL en matière de
+            prospection et de relation commerciale.
+          </li>
           <li>Photographies de référence : supprimées avec le dossier, ou plus tôt sur demande.</li>
-          <li>Pièces comptables : la durée imposée par la réglementation applicable.</li>
+          <li>
+            Pièces comptables : <strong>dix ans</strong>, en application de l'article L123-22 du
+            Code de commerce.
+          </li>
+          <li>Compte cliente : jusqu'à sa suppression, à votre initiative ou à la nôtre après trois ans d'inactivité.</li>
         </ul>
-        <LegalTodo>
-          Durées à valider avec un conseil juridique au regard de la réglementation malgache.
-        </LegalTodo>
       </LegalSection>
 
       <LegalSection title="Vos droits">
         <p>
-          Vous pouvez demander l’accès à vos données, leur rectification, leur suppression, ou vous
-          opposer à leur traitement. Depuis votre espace personnel, vous consultez déjà vos
-          rendez-vous et vos points de fidélité.
+          Le règlement général sur la protection des données vous reconnaît un droit d’accès, de
+          rectification, d’effacement, de limitation du traitement, d’opposition et de portabilité
+          de vos données. Lorsqu’un traitement repose sur votre consentement — le dépôt de photos,
+          par exemple — vous pouvez le retirer à tout moment, sans que cela remette en cause ce qui
+          a été fait auparavant.
         </p>
         <p>
-          Pour toute autre demande, écrivez à {email ? <a className="text-primary underline" href={`mailto:${email}`}>{email}</a> : 'l’adresse de contact du salon'}.
-          Nous répondons sous trente jours. La suppression de votre compte entraîne celle de vos
+          Depuis votre espace personnel, vous consultez déjà vos rendez-vous et vos points de
+          fidélité. Pour toute autre demande, écrivez à {email ? <a className="text-primary underline" href={`mailto:${email}`}>{email}</a> : 'l’adresse de contact du salon'}.
+          Nous répondons sous un mois. La suppression de votre compte entraîne celle de vos
           photographies et de vos notes de suivi ; les pièces comptables sont conservées lorsque la
           loi l’exige.
+        </p>
+        <p>
+          Si notre réponse ne vous satisfait pas, vous pouvez introduire une réclamation auprès de
+          la <strong>Commission nationale de l’informatique et des libertés</strong> —{' '}
+          <a
+            className="text-primary underline"
+            href="https://www.cnil.fr/fr/plaintes"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            cnil.fr
+          </a>{' '}
+          — 3 place de Fontenoy, TSA 80715, 75334 Paris Cedex 07.
         </p>
       </LegalSection>
 

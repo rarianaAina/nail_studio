@@ -1,5 +1,5 @@
 /**
- * Format a number as Malagasy Ariary.
+ * Formate un montant en euros.
  * e.g. 25000 → "25 000 €"
  */
 export const formatAriary = (amount: number): string =>

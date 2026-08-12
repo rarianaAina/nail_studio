@@ -25,7 +25,7 @@ export default function Terms() {
       badge="Conditions"
       title="Conditions de réservation"
       intro="Comment se déroulent la prise de rendez-vous, l’annulation et le règlement."
-      updatedAt="12 août 2026"
+      updatedAt="13 août 2026"
     >
       <LegalSection title="Objet">
         <p>
@@ -102,6 +102,15 @@ export default function Terms() {
         <p>
           Une prestation affichée sans tarif fait l’objet d’un devis établi sur place, selon le
           travail demandé.
+        </p>
+      </LegalSection>
+
+      <LegalSection title="Droit de rétractation">
+        <p>
+          Les prestations de soins corporels fournies à une date déterminée relèvent de l’exception
+          prévue à l’article L221-28 du Code de la consommation : le droit de rétractation de
+          quatorze jours ne s’y applique pas. Les conditions d’annulation décrites plus haut
+          demeurent, elles, pleinement applicables.
         </p>
       </LegalSection>
 
