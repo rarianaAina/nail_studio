@@ -21,7 +21,7 @@ import { toast } from 'sonner';
 import { useNailServices } from '@/hooks/useNailServices';
 import { useConfig } from '@/hooks/useConfig';
 import { uploadImage } from '@/services/storageService';
-import { formatAriary } from '@/utils';
+import { formatAriary, formatDuration } from '@/utils';
 import type { Service } from '@/types';
 
 const DEFAULT_IMAGE = 'https://images.pexels.com/photos/3997389/pexels-photo-3997389.jpeg?auto=compress&cs=tinysrgb&w=800&h=600&fit=crop';
@@ -33,14 +33,6 @@ const toHoursAndMinutes = (totalMinutes: number): { hours: number; minutes: numb
   const hours = Math.floor(totalMinutes / 60);
   const minutes = totalMinutes % 60;
   return { hours, minutes };
-};
-
-const formatDuration = (minutes: number): string => {
-  const hours = Math.floor(minutes / 60);
-  const mins = minutes % 60;
-  if (hours === 0) return `${mins}min`;
-  if (mins === 0) return `${hours}h`;
-  return `${hours}h${mins.toString().padStart(2, '0')}`;
 };
 
 const blank: DraftService = {

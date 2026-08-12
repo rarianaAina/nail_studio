@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/utils/cn';
-import { formatAriary } from '@/utils';
+import { formatAriary, formatDuration } from '@/utils';
 import { useNailServices } from '@/hooks/useNailServices';
 import { useActiveConfig } from '@/hooks/useActiveConfig';
 import type { Service } from '@/types';
@@ -127,7 +127,7 @@ const ServiceCard = ({ service }: { service: Service }) => {
         <p className="mt-2 text-sm text-muted-foreground">{service.description}</p>
         <div className="mt-5 flex items-center justify-between">
           <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <Clock className="h-3.5 w-3.5" /> {service.duration} min
+            <Clock className="h-3.5 w-3.5" /> {formatDuration(service.duration)}
           </span>
           <Button asChild size="sm" className="rounded-full">
             <Link to="/reservation"><CalendarHeart className="mr-1.5 h-3.5 w-3.5" /> Réserver</Link>

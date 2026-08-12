@@ -26,7 +26,7 @@ import { useReminderSettings } from '@/hooks/useReminderSettings';
 import { usePaymentMethods } from '@/hooks/usePaymentMethods';
 import { reminderService } from '@/services/reminderService';
 import { supabase } from '@/lib/supabase';
-import { formatAriary, STATUS_COLORS, STATUS_LABELS } from '@/utils';
+import { formatAriary, formatDuration, STATUS_COLORS, STATUS_LABELS } from '@/utils';
 import { getTotalPrice, getTotalDuration, getServiceNames } from '@/types';
 import type { Appointment, AppointmentStatus } from '@/types';
 
@@ -553,7 +553,7 @@ export default function Appointments() {
                 </div>
                 <div className="flex justify-between text-xs text-muted-foreground">
                   <span>Durée totale</span>
-                  <span>{getTotalDuration(viewing)} min</span>
+                  <span>{formatDuration(getTotalDuration(viewing))}</span>
                 </div>
               </div>
 

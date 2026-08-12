@@ -10,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/utils/cn';
-import { formatAriary } from '@/utils';
+import { formatAriary, formatDuration } from '@/utils';
 import { useNailServices } from '@/hooks/useNailServices';
 import { useCreateAppointment } from '@/hooks/useAppointments';
 import { useAuth } from '@/hooks/useAuth';
@@ -37,14 +37,6 @@ const stepsMeta = [
 
 const displayPrice = (price: number): string => {
   return price === 0 ? 'Devis' : formatAriary(price);
-};
-
-const formatDuration = (minutes: number): string => {
-  const hours = Math.floor(minutes / 60);
-  const mins = minutes % 60;
-  if (hours === 0) return `${mins}min`;
-  if (mins === 0) return `${hours}h`;
-  return `${hours}h${mins.toString().padStart(2, '0')}`;
 };
 
 // ✅ Composant extrait pour éviter l'erreur React #310

@@ -6,6 +6,22 @@ export const formatAriary = (amount: number): string =>
   new Intl.NumberFormat('fr-FR').format(amount) + ' €';
 
 /**
+ * Format a duration in minutes as hours and minutes.
+ * e.g. 45 → "45min", 120 → "2h", 135 → "2h15", 125 → "2h05"
+ *
+ * Les minutes résiduelles sont complétées à deux chiffres pour éviter la
+ * lecture ambiguë de "2h5".
+ */
+export const formatDuration = (minutes: number): string => {
+  const safe = Math.max(0, Math.round(minutes || 0));
+  const hours = Math.floor(safe / 60);
+  const mins = safe % 60;
+  if (hours === 0) return `${mins}min`;
+  if (mins === 0) return `${hours}h`;
+  return `${hours}h${mins.toString().padStart(2, '0')}`;
+};
+
+/**
  * Format a date string for display.
  * e.g. "2026-07-14" → "14 juil."
  */

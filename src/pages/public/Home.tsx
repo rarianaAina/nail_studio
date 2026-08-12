@@ -16,7 +16,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { formatAriary } from '@/utils';
+import { formatAriary, formatDuration } from '@/utils';
 import { useNailServices } from '@/hooks/useNailServices';
 import { useSettings } from '@/hooks/useSettings';
 import { supabase } from '@/lib/supabase';
@@ -34,14 +34,6 @@ const fadeUp = {
 };
 
 // ✅ Fonction pour formater la durée (ex: 85 → "1h25")
-const formatDuration = (minutes: number): string => {
-  const hours = Math.floor(minutes / 60);
-  const mins = minutes % 60;
-  if (hours === 0) return `${mins}min`;
-  if (mins === 0) return `${hours}h`;
-  return `${hours}h${mins.toString().padStart(2, '0')}`;
-};
-
 // ✅ Composant ServiceCard avec carousel d'images
 const ServiceCard = ({ service }: { service: Service }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
