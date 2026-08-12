@@ -139,128 +139,28 @@ export const appointmentService = {
       throw new Error('Au moins un service est requis');
     }
 
-    const { data: servicesData, error: servicesError } = await supabase
-      .from('services')
-      .select('id, name, price, duration')
-      .in('id', data.serviceIds);
+    // Toute la réservation est faite par une seule fonction serveur.
+    // Le navigateur enchaînait auparavant six requêtes — recherche de la
+    // cliente, création de la cliente, insertion, relecture du rendez-vous,
+    // lecture des paramètres de rappel, création du rappel — ce qui imposait
+    // d'ouvrir `clients`, `appointments` et `reminders` en accès anonyme.
+    // Les tarifs sont relus en base : seuls des identifiants sont transmis.
+    const { data: row, error } = await supabase.rpc('create_public_appointment', {
+      p_client_name: data.clientName,
+      p_phone: data.phone,
+      p_email: data.email ?? null,
+      p_service_ids: data.serviceIds,
+      p_date: data.date,
+      p_time: data.time,
+      p_payment_method_id: data.paymentMethodId ?? null,
+      p_reference_images: data.referenceImages ?? [],
+      p_client_notes: data.clientNotes ?? null,
+    });
 
-    if (servicesError) throw servicesError;
-    if (!servicesData || servicesData.length === 0) {
-      throw new Error('Services non trouvés');
-    }
+    if (error) throw error;
+    if (!row) throw new Error('La réservation n\'a pas pu être enregistrée.');
 
-    const services: ServiceItem[] = servicesData.map(s => ({
-      id: s.id,
-      name: s.name,
-      price: s.price,
-      duration: s.duration,
-    }));
-
-    const row = {
-      client_id: data.clientId ?? null,
-      client_name: data.clientName,
-      phone: data.phone,
-      email: data.email ?? null,
-      services: services,
-      date: data.date,
-      time: data.time,
-      status: 'pending',
-      payment_method_id: data.paymentMethodId ?? null,
-      reference_images: data.referenceImages || [], // ✅ Tableau d'images
-      client_notes: data.clientNotes ?? null,
-      notes: data.notes ?? null,
-    };
-
-    if (!row.client_id && row.email) {
-      const { data: existing } = await supabase
-        .from('clients')
-        .select('id')
-        .eq('email', row.email)
-        .maybeSingle();
-      if (existing) {
-        row.client_id = (existing as { id: string }).id;
-      } else {
-        const { data: created, error: clientErr } = await supabase
-          .from('clients')
-          .insert({
-            name: data.clientName,
-            phone: data.phone,
-            email: row.email,
-          })
-          .select('id')
-          .single();
-        if (!clientErr && created) {
-          row.client_id = (created as { id: string }).id;
-        }
-      }
-    }
-
-    const { error: insertError } = await supabase
-      .from('appointments')
-      .insert(row);
-    if (insertError) throw insertError;
-
-    const { data: rows, error: selError } = await supabase
-      .from('appointments')
-      .select(`
-        *,
-        payment_method:payment_method_id (
-          id,
-          name,
-          label,
-          icon
-        )
-      `)
-      .eq('client_name', data.clientName)
-      .eq('phone', data.phone)
-      .eq('date', data.date)
-      .eq('time', data.time)
-      .order('created_at', { ascending: false })
-      .limit(1);
-
-    if (selError) throw selError;
-    if (!rows || rows.length === 0) {
-      return {
-        id: '',
-        clientId: data.clientId,
-        clientName: data.clientName,
-        phone: data.phone,
-        email: data.email,
-        services: services,
-        date: data.date,
-        time: data.time,
-        status: 'pending',
-        paymentMethodId: data.paymentMethodId,
-        referenceImages: data.referenceImages || [],
-        clientNotes: data.clientNotes,
-        notes: data.notes,
-      };
-    }
-
-    const appointment = rowToAppointment(rows[0] as AppointmentRow);
-
-    try {
-      const settings = await reminderSettingsService.get();
-      if (settings.enabled) {
-        const serviceNames = appointment.services.map(s => s.name).join(' + ');
-        await reminderService.create({
-          appointmentId: appointment.id,
-          clientName: appointment.clientName,
-          clientPhone: appointment.phone,
-          clientEmail: appointment.email,
-          serviceName: serviceNames,
-          appointmentDate: appointment.date,
-          appointmentTime: appointment.time,
-          delayHours: settings.delayHours,
-          recipients: settings.recipients,
-        });
-        console.log(`✅ Rappel créé pour le rendez-vous ${appointment.id}`);
-      }
-    } catch (reminderError) {
-      console.error('Erreur lors de la création du rappel:', reminderError);
-    }
-
-    return appointment;
+    return rowToAppointment(row as AppointmentRow);
   },
 
   async update(id: string, data: UpdateAppointmentDto): Promise<Appointment> {

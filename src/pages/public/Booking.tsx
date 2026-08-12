@@ -263,12 +263,12 @@ export default function Booking() {
     if (!date) { setBookedSlots([]); return; }
     let mounted = true;
     (async () => {
-      const { data } = await supabase
-        .from('appointments')
-        .select('time')
-        .eq('date', date)
-        .in('status', ['pending', 'confirmed']);
-      if (mounted) setBookedSlots((data as { time: string }[] | null)?.map((r) => r.time) ?? []);
+      // Passe par une fonction serveur : la lecture directe de `appointments`
+      // exposait tout le carnet de rendez-vous pour n'en tirer que des heures.
+      const { data } = await supabase.rpc('get_booked_times', { p_date: date });
+      if (mounted) {
+        setBookedSlots((data as { booked_time: string }[] | null)?.map((r) => r.booked_time) ?? []);
+      }
     })();
     return () => { mounted = false; };
   }, [date]);
@@ -312,18 +312,9 @@ export default function Booking() {
           uploadedImages = await Promise.all(uploadPromises);
         }
 
-        let clientId: string | undefined;
-        if (isLoggedIn && user) {
-          const { data: clientRow } = await supabase
-            .from('clients')
-            .select('id')
-            .eq('user_id', user.id)
-            .maybeSingle();
-          clientId = (clientRow as { id: string } | null)?.id ?? undefined;
-        }
-        
+        // La cliente est résolue côté serveur à partir de l'email : plus besoin
+        // de lire la table `clients` depuis le navigateur.
         await createAppointment({
-          clientId,
           clientName: info.name,
           phone: info.phone,
           email: info.email,

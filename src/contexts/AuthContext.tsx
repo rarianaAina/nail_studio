@@ -155,50 +155,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       profile = rowToUser(updated as UserRow);
     }
 
-    // For client accounts: create or reuse a client row, then link any
-    // existing appointments booked anonymously with the same email.
+    // Pour un compte cliente : rattacher la fiche client et les rendez-vous
+    // pris en anonyme. Fait côté serveur — l'enchaînement précédent (recherche
+    // par email, création, mise à jour des rendez-vous) exigeait la lecture
+    // publique de `clients` et l'écriture libre de `appointments`.
+    // La fonction s'appuie sur `auth.email()` : un compte ne peut revendiquer
+    // que les fiches correspondant à sa propre identité.
     if (data.role === 'client') {
-      // Check if a client row already exists for this email (anon booking)
-      const { data: existingClient } = await supabase
-        .from('clients')
-        .select('id')
-        .eq('email', data.email)
-        .maybeSingle();
-
-      let clientId: string;
-
-      if (existingClient) {
-        // Associate the existing client row with the new account
-        const { data: updated, error: linkErr } = await supabase
-          .from('clients')
-          .update({ user_id: uid, name: data.name, phone: data.phone })
-          .eq('id', (existingClient as { id: string }).id)
-          .select()
-          .single();
-        if (linkErr) throw new Error('Erreur lors de la liaison du profil client.');
-        clientId = (updated as { id: string }).id;
-      } else {
-        // No existing client row — create a fresh one
-        const { data: created, error: clientErr } = await supabase
-          .from('clients')
-          .insert({
-            user_id: uid,
-            name: data.name,
-            phone: data.phone,
-            email: data.email,
-          })
-          .select()
-          .single();
-        if (clientErr) throw new Error('Erreur lors de la création du profil client.');
-        clientId = (created as { id: string }).id;
-      }
-
-      // Link all existing appointments with this email to the client row
-      await supabase
-        .from('appointments')
-        .update({ client_id: clientId })
-        .eq('email', data.email)
-        .is('client_id', 'null');
+      const { error: linkErr } = await supabase.rpc('link_client_account', {
+        p_name: data.name,
+        p_phone: data.phone,
+      });
+      if (linkErr) throw new Error('Erreur lors de la création du profil client.');
     }
 
     setUser(profile);
