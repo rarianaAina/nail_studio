@@ -9,7 +9,7 @@ interface UseLoyaltyReturn {
   loading: boolean;
   error: string | null;
   refresh: () => Promise<void>;
-  updateSettings: (pointsPerVisit: number) => Promise<void>;
+  updateSettings: (pointsPerEuro: number) => Promise<void>;
 }
 
 interface LoyaltyBundle {
@@ -33,8 +33,8 @@ export function useLoyalty(userId?: string): UseLoyaltyReturn {
   );
   const write = useCacheWriter<LoyaltyBundle>(key, EMPTY);
 
-  const updateSettings = async (pointsPerVisit: number) => {
-    const updated = await loyaltyService.updateSettings(pointsPerVisit);
+  const updateSettings = async (pointsPerEuro: number) => {
+    const updated = await loyaltyService.updateSettings(pointsPerEuro);
     write((prev) => ({ ...prev, settings: updated }));
   };
 

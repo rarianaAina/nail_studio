@@ -1,7 +1,6 @@
 import { motion } from 'framer-motion';
 import {
-  Bell, Clock, User, ShieldCheck, Users, CheckCircle2, AlertCircle, RefreshCw,
-} from 'lucide-react';
+  Bell, Clock, User, ShieldCheck, Users, CheckCircle2, AlertCircle, RefreshCw, Trash2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -52,7 +51,7 @@ function formatApptDate(date: string, time: string): string {
 }
 
 export default function Notifications() {
-  const { reminders, pending, loading, refresh } = useReminders();
+  const { reminders, pending, loading, refresh, remove } = useReminders();
   const { reminderSettings } = useReminderSettings();
   const [sending, setSending] = useState(false);
 
@@ -230,6 +229,23 @@ export default function Notifications() {
                           <Icon className="h-3 w-3" />
                           <span>{RECIPIENT_LABEL[r.recipients]}</span>
                         </div>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="mt-1 h-7 px-2 text-xs text-muted-foreground hover:text-rose-600"
+                          title="Supprimer ce rappel"
+                          onClick={async () => {
+                            if (!confirm(`Supprimer le rappel pour ${r.clientName} ?`)) return;
+                            try {
+                              await remove(r.id);
+                              toast.success('Rappel supprimé.');
+                            } catch {
+                              toast.error('Impossible de supprimer ce rappel.');
+                            }
+                          }}
+                        >
+                          <Trash2 className="mr-1 h-3.5 w-3.5" /> Supprimer
+                        </Button>
                       </div>
                     </motion.div>
                   );

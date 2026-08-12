@@ -1,9 +1,10 @@
 export interface LoyaltySettings {
   id: string;
-  pointsPerVisit: number;
+  /** Points attribués par euro dépensé. */
+  pointsPerEuro: number;
   updatedAt?: string;
 }
 
 export interface LoyaltySettingsUpdateDto {
-  pointsPerVisit?: number;
+  pointsPerEuro?: number;
 }

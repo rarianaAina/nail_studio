@@ -209,12 +209,6 @@ export const appointmentService = {
       (row as any).services = services;
     }
 
-    const { data: oldAppointment } = await supabase
-      .from('appointments')
-      .select('client_id, status')
-      .eq('id', id)
-      .single();
-
     const { data: updatedRow, error } = await supabase
       .from('appointments')
       .update(row)
@@ -234,39 +228,12 @@ export const appointmentService = {
     
     const appointment = rowToAppointment(updatedRow as AppointmentRow);
 
-    if (data.status === 'confirmed' && oldAppointment?.status !== 'confirmed') {
-      try {
-        const { data: loyaltySettings } = await supabase
-          .from('loyalty_settings')
-          .select('points_per_visit')
-          .maybeSingle();
+    // Les points de fidélité et le montant cumulé sont entretenus par un
+    // trigger sur `appointments` : les calculer aussi ici produisait deux
+    // écritures concurrentes sur la même colonne. Le bloc qui s'en chargeait
+    // lisait de surcroît `points_per_visit`, colonne inexistante — la colonne
+    // réelle est `points_per_euro`.
 
-        const pointsToAdd = loyaltySettings?.points_per_visit ?? 10;
-
-        if (appointment.clientId) {
-          const { data: client } = await supabase
-            .from('clients')
-            .select('loyalty_points')
-            .eq('id', appointment.clientId)
-            .single();
-
-          const currentPoints = client?.loyalty_points ?? 0;
-          
-          await supabase
-            .from('clients')
-            .update({ loyalty_points: currentPoints + pointsToAdd })
-            .eq('id', appointment.clientId);
-
-          console.log(`⭐ ${pointsToAdd} points de fidélité ajoutés pour ${appointment.clientName}`);
-        }
-      } catch (loyaltyError) {
-        console.error('Erreur lors de l\'ajout des points de fidélité:', loyaltyError);
-      }
-    }
-
-    // Un rendez-vous déjà passé ne doit pas engendrer de rappel : il serait
-    // programmé pour une date révolue. Le cas se produit quand
-    // l'administratrice confirme une saisie a posteriori.
     if (
       data.status === 'confirmed' &&
       !data.date && !data.time && !data.serviceIds &&

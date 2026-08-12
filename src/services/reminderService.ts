@@ -83,6 +83,12 @@ export const reminderService = {
     return rowToReminder(data as ReminderRow);
   },
 
+  /** Supprime un rappel précis, à la main depuis l'administration. */
+  async delete(id: string): Promise<void> {
+    const { error } = await supabase.from('reminders').delete().eq('id', id);
+    if (error) throw error;
+  },
+
   async deleteByAppointmentId(appointmentId: string): Promise<void> {
     const { error } = await supabase
       .from('reminders')

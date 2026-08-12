@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import type { Reminder } from '@/types';
 import { reminderService } from '@/services/reminderService';
 import { queryKeys } from '@/lib/queryClient';
-import { useResource } from './useResource';
+import { useResource, useCacheWriter } from './useResource';
 
 interface UseRemindersReturn {
   reminders: Reminder[];
@@ -10,6 +10,7 @@ interface UseRemindersReturn {
   loading: boolean;
   error: string | null;
   refresh: () => Promise<void>;
+  remove: (id: string) => Promise<void>;
 }
 
 const EMPTY: Reminder[] = [];
@@ -21,7 +22,14 @@ export function useReminders(): UseRemindersReturn {
     EMPTY
   );
 
+  const write = useCacheWriter<Reminder[]>(queryKeys.reminders, EMPTY);
+
   const pending = useMemo(() => reminders.filter((r) => !r.sent), [reminders]);
 
-  return { reminders, pending, loading, error, refresh };
+  const remove = async (id: string) => {
+    await reminderService.delete(id);
+    write((prev) => prev.filter((r) => r.id !== id));
+  };
+
+  return { reminders, pending, loading, error, refresh, remove };
 }
