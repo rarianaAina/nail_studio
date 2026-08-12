@@ -1,5 +1,6 @@
 import { Outlet } from 'react-router-dom';
 import AdminSidebar from '@/components/admin/AdminSidebar';
+import InstallPrompt from '@/components/InstallPrompt';
 
 export default function AdminLayout() {
   return (
@@ -10,6 +11,7 @@ export default function AdminLayout() {
           <Outlet />
         </main>
       </div>
+      <InstallPrompt message="Installez l'application pour retrouver votre agenda en un geste, et recevoir les réservations directement sur votre téléphone." />
     </div>
   );
 }
