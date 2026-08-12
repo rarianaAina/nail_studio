@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { useSettings } from '@/hooks/useSettings';
+import Seo from '@/components/Seo';
 
 const fadeUp = {
   initial: { opacity: 0, y: 24 },
@@ -29,6 +30,10 @@ export default function Contact() {
 
   return (
     <div>
+      <Seo
+        title="Contact et accès"
+        description="Adresse, téléphone, horaires d'ouverture et accès au salon. Contactez-nous pour toute question sur nos prestations."
+      />
       <section className="gradient-rose pt-32 pb-16">
         <div className="mx-auto max-w-7xl px-4 text-center sm:px-6 lg:px-8">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>

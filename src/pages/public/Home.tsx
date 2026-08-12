@@ -24,6 +24,7 @@ import { useSpecialInfos } from '@/hooks/useSpecialInfos';
 import { useReviews } from '@/hooks/useReviews';
 import { cn } from '@/utils/cn';
 import type { Service } from '@/types';
+import Seo from '@/components/Seo';
 
 const LOGO_URL = 'https://tzgcyehdjgqxljjttflj.supabase.co/storage/v1/object/public/images/logos/logo.webp';
 
@@ -186,6 +187,10 @@ export default function Home() {
 
   return (
     <div className="overflow-hidden">
+      <Seo
+        title="Salon d'onglerie — pose de gel, manucure et nail art"
+        description="Salon d'onglerie : pose de gel, semi-permanent, manucure, beauté des pieds et nail art. Réservez votre rendez-vous en ligne en quelques minutes."
+      />
       {/* HERO */}
       <section className="relative min-h-[92vh] gradient-rose">
         <div className="absolute inset-0 bg-grid opacity-40" />

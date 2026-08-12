@@ -7,6 +7,7 @@ import { useReviews } from '@/hooks/useReviews';
 import { useNailServices } from '@/hooks/useNailServices';
 import { formatDate } from '@/utils/date';
 import { cn } from '@/utils/cn';
+import Seo from '@/components/Seo';
 
 const fadeUp = {
   initial: { opacity: 0, y: 24 },
@@ -52,6 +53,10 @@ export default function Reviews() {
 
   return (
     <div>
+      <Seo
+        title="Avis de nos clientes"
+        description="Les avis de nos clientes, tous déposés après un rendez-vous au salon. Notes et commentaires par prestation."
+      />
       <section className="gradient-rose pt-32 pb-14">
         <div className="mx-auto max-w-3xl px-4 text-center sm:px-6 lg:px-8">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>

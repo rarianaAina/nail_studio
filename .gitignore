@@ -33,3 +33,7 @@ dist-ssr
 # Les dossiers ci-dessous contiennent des jetons d'accès générés par `supabase link`.
 supabase/.temp/
 supabase/.branches/
+
+# Fichiers de référencement générés au build depuis VITE_SITE_URL
+public/sitemap.xml
+public/robots.txt

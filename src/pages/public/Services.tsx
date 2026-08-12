@@ -12,6 +12,7 @@ import { useServiceRatings } from '@/hooks/useReviews';
 import { useNailServices } from '@/hooks/useNailServices';
 import { useActiveConfig } from '@/hooks/useActiveConfig';
 import type { Service } from '@/types';
+import Seo from '@/components/Seo';
 
 const fadeUp = {
   initial: { opacity: 0, y: 24 },
@@ -158,6 +159,10 @@ export default function Services() {
 
   return (
     <div>
+      <Seo
+        title="Prestations et tarifs"
+        description="Découvrez nos prestations d'onglerie : pose de gel, semi-permanent, manucure, nail art. Tarifs et durées détaillés, réservation en ligne."
+      />
       <section className="gradient-rose pt-32 pb-16">
         <div className="mx-auto max-w-7xl px-4 text-center sm:px-6 lg:px-8">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>

@@ -4,6 +4,7 @@ import { Sparkles } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/lib/supabase';
 import { cn } from '@/lib/utils';
+import Seo from '@/components/Seo';
 
 const fadeUp = {
   initial: { opacity: 0, y: 24 },
@@ -54,6 +55,10 @@ export default function Gallery() {
 
   return (
     <div>
+      <Seo
+        title="Galerie de nos réalisations"
+        description="Nos réalisations en photos : nail art, poses de gel, semi-permanent et manucures. Trouvez l'inspiration pour votre prochain rendez-vous."
+      />
       <section className="gradient-rose pt-32 pb-16">
         <div className="mx-auto max-w-7xl px-4 text-center sm:px-6 lg:px-8">
           <motion.div

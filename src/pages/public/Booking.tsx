@@ -24,6 +24,7 @@ import { toDateString, isPastDate } from '@/utils/date';
 import { uploadImage } from '@/services/storageService';
 import { ImageUploadSection } from '@/components/public/ImageUploadSection';
 import type { BusinessHours, ReferenceImage, Service } from '@/types';
+import Seo from '@/components/Seo';
 
 type Step = 1 | 2 | 3 | 4 | 5;
 
@@ -365,6 +366,10 @@ export default function Booking() {
 
   return (
     <div className="min-h-screen gradient-rose pt-24 pb-20">
+      <Seo
+        title="Prendre rendez-vous en ligne"
+        description="Réservez votre rendez-vous en ligne : choisissez vos prestations, votre date et votre créneau. Confirmation par le salon."
+      />
       <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center">
           <Badge variant="secondary" className="mb-4 gap-1.5 rounded-full border border-primary/20 bg-white/70 px-4 py-1.5 text-xs text-primary backdrop-blur">

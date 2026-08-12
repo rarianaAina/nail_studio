@@ -8,6 +8,7 @@ import { toDateString, isPastDate } from '@/utils/date';
 import { cn } from '@/utils/cn';
 import { useSettings } from '@/hooks/useSettings';
 import type { BusinessHours } from '@/types';
+import Seo from '@/components/Seo';
 
 const weekDays = ['L', 'M', 'M', 'J', 'V', 'S', 'D'];
 
@@ -104,6 +105,10 @@ export default function Availability() {
 
   return (
     <div>
+      <Seo
+        title="Créneaux disponibles"
+        description="Consultez les créneaux disponibles du salon, jour par jour, avant de réserver votre rendez-vous."
+      />
       {/* Hero */}
       <section className="gradient-rose pt-32 pb-16">
         <div className="mx-auto max-w-7xl px-4 text-center sm:px-6 lg:px-8">
