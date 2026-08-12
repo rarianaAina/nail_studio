@@ -1,7 +1,7 @@
 // pages/admin/Appointments.tsx
 import { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Search, Eye, Pencil, Check, X, CalendarPlus, Bell, Image as ImageIcon } from 'lucide-react';
+import { Search, Eye, Pencil, Check, CheckCheck, X, CalendarPlus, Bell, Image as ImageIcon } from 'lucide-react';
 import { useNailServices } from '@/hooks/useNailServices';
 import { useClients } from '@/hooks/useClients';
 import {
@@ -274,8 +274,22 @@ export default function Appointments() {
                             <Pencil className="h-4 w-4" />
                           </Button>
                           {a.status === 'pending' && (
-                            <Button size="icon" variant="ghost" className="h-8 w-8 text-emerald-600" onClick={() => handleStatus(a.id, 'confirmed')}>
+                            <Button size="icon" variant="ghost" className="h-8 w-8 text-emerald-600" title="Confirmer" onClick={() => handleStatus(a.id, 'confirmed')}>
                               <Check className="h-4 w-4" />
+                            </Button>
+                          )}
+                          {/* Le statut « terminé » n'était atteignable par
+                              aucun bouton : un rendez-vous confirmé le restait
+                              indéfiniment. */}
+                          {a.status === 'confirmed' && (
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="h-8 w-8 text-emerald-600"
+                              title="Marquer comme terminé"
+                              onClick={() => handleStatus(a.id, 'completed')}
+                            >
+                              <CheckCheck className="h-4 w-4" />
                             </Button>
                           )}
                           {a.status !== 'cancelled' && a.status !== 'completed' && (

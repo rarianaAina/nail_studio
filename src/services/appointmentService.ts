@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase';
+import { isPastDate } from '@/utils/date';
 import type { Appointment, AppointmentStatus, CreateAppointmentDto, UpdateAppointmentDto, ServiceItem, ReferenceImage } from '@/types';
 import { reminderSettingsService } from './reminderSettingsService';
 import { reminderService } from './reminderService';
@@ -263,7 +264,14 @@ export const appointmentService = {
       }
     }
 
-    if (data.status === 'confirmed' && !data.date && !data.time && !data.serviceIds) {
+    // Un rendez-vous déjà passé ne doit pas engendrer de rappel : il serait
+    // programmé pour une date révolue. Le cas se produit quand
+    // l'administratrice confirme une saisie a posteriori.
+    if (
+      data.status === 'confirmed' &&
+      !data.date && !data.time && !data.serviceIds &&
+      !isPastDate(appointment.date)
+    ) {
       try {
         const settings = await reminderSettingsService.get();
         if (settings.enabled) {
@@ -288,7 +296,7 @@ export const appointmentService = {
       }
     }
 
-    if (data.date || data.time) {
+    if ((data.date || data.time) && !isPastDate(appointment.date)) {
       try {
         await reminderService.deleteByAppointmentId(id);
         
