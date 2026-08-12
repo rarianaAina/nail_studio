@@ -10,25 +10,14 @@ import {
 } from './statsService';
 
 /**
- * Les colonnes `price` et `service_name` sont héritées : les rendez-vous
- * antérieurs à la bascule les renseignent, les récents laissent tout dans le
- * JSONB `services`. Les deux formes doivent coexister.
+ * Les prestations vivent dans le JSONB `services`. Les colonnes héritées
+ * `price` et `service_name` ont été reprises dans ce JSONB puis supprimées de
+ * la table.
  */
 const jsonbRow = (over: Partial<AppointmentStatsRow> = {}): AppointmentStatsRow => ({
   date: '2026-08-12',
   status: 'completed',
   services: [{ id: 's1', name: 'Pose gel', price: 60, duration: 120 }],
-  price: null,
-  service_name: null,
-  ...over,
-});
-
-const legacyRow = (over: Partial<AppointmentStatsRow> = {}): AppointmentStatsRow => ({
-  date: '2026-08-12',
-  status: 'completed',
-  services: null,
-  price: 40,
-  service_name: 'Manucure',
   ...over,
 });
 
@@ -43,15 +32,11 @@ describe('rowRevenue', () => {
     expect(rowRevenue(row)).toBe(85);
   });
 
-  it('se replie sur la colonne héritée quand le JSONB est vide', () => {
-    expect(rowRevenue(legacyRow())).toBe(40);
-    expect(rowRevenue(jsonbRow({ services: [], price: 40 }))).toBe(40);
-  });
-
   // C'est précisément le bug d'origine : `0 + null` vaut 0 en JavaScript, si
   // bien que le chiffre d'affaires tombait à zéro sans lever d'erreur.
-  it('renvoie 0 plutôt que NaN quand tout est absent', () => {
-    expect(rowRevenue(jsonbRow({ services: null, price: null }))).toBe(0);
+  it('renvoie 0 plutôt que NaN quand les prestations sont absentes', () => {
+    expect(rowRevenue(jsonbRow({ services: null }))).toBe(0);
+    expect(rowRevenue(jsonbRow({ services: [] }))).toBe(0);
   });
 });
 
@@ -66,12 +51,8 @@ describe('rowServiceNames', () => {
     expect(rowServiceNames(row)).toEqual(['Pose gel', 'Beauté des pieds']);
   });
 
-  it('se replie sur la colonne héritée', () => {
-    expect(rowServiceNames(legacyRow())).toEqual(['Manucure']);
-  });
-
   it('renvoie une liste vide quand rien n’est exploitable', () => {
-    expect(rowServiceNames(jsonbRow({ services: null, service_name: null }))).toEqual([]);
+    expect(rowServiceNames(jsonbRow({ services: null }))).toEqual([]);
   });
 });
 

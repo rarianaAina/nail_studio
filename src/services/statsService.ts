@@ -17,40 +17,28 @@ interface ServiceEntry {
 }
 
 /**
- * La table `appointments` porte deux générations de colonnes :
- * - héritées : `price` / `service_name`, une seule prestation par rendez-vous ;
- * - actuelles : `services` (JSONB), plusieurs prestations par rendez-vous.
+ * Les prestations d'un rendez-vous vivent dans le JSONB `services`.
  *
- * `appointmentService.create()` n'alimente plus que `services`, laissant les
- * colonnes héritées à NULL. Les agrégats lus depuis `price` renvoyaient donc 0
- * pour tout rendez-vous récent — sans lever d'erreur, `0 + null` valant 0 en
- * JavaScript. D'où un chiffre d'affaires silencieusement faux.
- *
- * Les deux formes sont lues ici, avec repli sur les colonnes héritées, afin de
- * conserver l'historique antérieur à la bascule.
+ * Les colonnes héritées `price` et `service_name` — un seul soin par
+ * rendez-vous — ont été reprises dans ce JSONB puis supprimées. Le repli qui
+ * les lisait n'a plus d'objet.
  */
 interface AppointmentStatsRow {
   date: string;
   status: string;
   services: ServiceEntry[] | null;
-  price: number | null;
-  service_name: string | null;
 }
 
-/** Montant d'un rendez-vous : somme du JSONB, à défaut la colonne héritée. */
+/** Montant d'un rendez-vous : somme des prestations. */
 export function rowRevenue(r: AppointmentStatsRow): number {
-  if (Array.isArray(r.services) && r.services.length > 0) {
-    return r.services.reduce((sum, s) => sum + (Number(s.price) || 0), 0);
-  }
-  return Number(r.price) || 0;
+  if (!Array.isArray(r.services)) return 0;
+  return r.services.reduce((sum, s) => sum + (Number(s.price) || 0), 0);
 }
 
-/** Prestations d'un rendez-vous : noms du JSONB, à défaut la colonne héritée. */
+/** Noms des prestations d'un rendez-vous. */
 export function rowServiceNames(r: AppointmentStatsRow): string[] {
-  if (Array.isArray(r.services) && r.services.length > 0) {
-    return r.services.map((s) => s.name).filter(Boolean);
-  }
-  return r.service_name ? [r.service_name] : [];
+  if (!Array.isArray(r.services)) return [];
+  return r.services.map((s) => s.name).filter(Boolean);
 }
 
 /**
@@ -242,7 +230,7 @@ export const statsService = {
     const prevMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString();
 
     const [appointmentsResult, clientsResult, newThisMonth, newPrevMonth] = await Promise.all([
-      supabase.from('appointments').select('date, status, services, price, service_name'),
+      supabase.from('appointments').select('date, status, services'),
       supabase.from('clients').select('*', { count: 'exact', head: true }),
       // Nouvelles clientes du mois, et du mois précédent, pour l'écart affiché
       // sur le tableau de bord. Deux comptages sans transfert de lignes.
