@@ -18,7 +18,7 @@ import { usePaymentMethods } from '@/hooks/usePaymentMethods';
 import { useSettings } from '@/hooks/useSettings';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
-import { toDateString } from '@/utils/date';
+import { toDateString, isPastDate } from '@/utils/date';
 import { uploadImage } from '@/services/storageService';
 import { ImageUploadSection } from '@/components/public/ImageUploadSection';
 import type { BusinessHours, ReferenceImage, Service } from '@/types';
@@ -485,7 +485,9 @@ export default function Booking() {
                             const isToday = iso === toDateString(new Date());
                             const isSelected = iso === date;
                             const isDayOpen = isDayAvailable(iso);
-                            const hasAvailableSlots = hasSlots(iso) && isDayOpen;
+                            // Une date révolue n'est jamais réservable, même si
+                            // des créneaux y sont encore déclarés.
+                            const hasAvailableSlots = hasSlots(iso) && isDayOpen && !isPastDate(iso);
                             
                             return (
                               <button

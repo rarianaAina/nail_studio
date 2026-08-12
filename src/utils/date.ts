@@ -42,6 +42,16 @@ export const isToday = (dateStr: string): boolean => {
 };
 
 /**
+ * Vérifie si une date est révolue, la journée en cours ne l'étant pas.
+ *
+ * La comparaison porte sur les chaînes 'YYYY-MM-DD', dont l'ordre
+ * lexicographique coïncide avec l'ordre chronologique. Passer par des objets
+ * `Date` exposerait aux décalages de fuseau qui ont déjà faussé les agrégats.
+ */
+export const isPastDate = (dateStr: string): boolean =>
+  dateStr < toDateString(new Date());
+
+/**
  * Formate une date courte (ex: "20 août")
  */
 export const formatDateShort = (dateStr: string, locale: string = 'fr-FR'): string => {

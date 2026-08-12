@@ -8,7 +8,7 @@ import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
 import { cn } from '@/utils/cn';
 import { useConfig } from '@/hooks/useConfig';
-import { toDateString, isToday } from '@/utils/date';
+import { toDateString, isToday, isPastDate } from '@/utils/date';
 
 const weekdays = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
 
@@ -44,8 +44,13 @@ export default function TimeSlotsSettings() {
     return grouped;
   }, [timeSlots]);
 
+  // Une date révolue reste consultable, mais n'est plus modifiable : ses
+  // créneaux appartiennent à l'historique et ne peuvent plus être réservés.
+  const isLocked = isPastDate(selectedDate);
+
   const handleAdd = async () => {
     if (!newSlot.trim()) return;
+    if (isLocked) return;
     try {
       await createTimeSlot({
         date: selectedDate,
@@ -62,6 +67,10 @@ export default function TimeSlotsSettings() {
 
   const handleCopy = async (fromDate: string, toDate: string) => {
     if (fromDate === toDate) return;
+    if (isPastDate(toDate)) {
+      toast.error('Impossible de modifier une date déjà passée.');
+      return;
+    }
     
     const sourceSlots = timeSlots.filter((s) => s.date === fromDate);
     if (sourceSlots.length === 0) {
@@ -201,6 +210,7 @@ export default function TimeSlotsSettings() {
               <Button
                 variant="outline"
                 size="sm"
+                disabled={isLocked}
                 onClick={() => {
                   const fromDate = prompt('Copier depuis quelle date ? (YYYY-MM-DD)');
                   if (fromDate) handleCopy(fromDate, selectedDate);
@@ -209,6 +219,13 @@ export default function TimeSlotsSettings() {
                 <Copy className="mr-1.5 h-3.5 w-3.5" /> Copier depuis
               </Button>
             </div>
+
+            {isLocked && (
+              <div className="mb-3 rounded-lg border border-border/60 bg-secondary px-3 py-2 text-xs text-muted-foreground">
+                Cette date est passée : ses créneaux sont consultables mais ne
+                peuvent plus être modifiés.
+              </div>
+            )}
 
             <div className="flex flex-wrap gap-2 min-h-[50px]">
               {daySlots.length === 0 ? (
@@ -229,17 +246,19 @@ export default function TimeSlotsSettings() {
                     <span>{s.label}</span>
                     <Switch
                       checked={s.active}
+                      disabled={isLocked}
                       onCheckedChange={(v) => updateTimeSlot(s.id, { active: v })}
                       className="scale-75"
                     />
                     <button
+                      disabled={isLocked}
                       onClick={() => {
                         if (confirm(`Supprimer le créneau ${s.label} ?`)) {
                           deleteTimeSlot(s.id);
                           toast.success('Créneau supprimé.');
                         }
                       }}
-                      className="text-muted-foreground hover:text-rose-600 transition-colors"
+                      className="text-muted-foreground transition-colors hover:text-rose-600 disabled:cursor-not-allowed disabled:opacity-30"
                     >
                       <Trash2 className="h-3.5 w-3.5" />
                     </button>
@@ -252,11 +271,12 @@ export default function TimeSlotsSettings() {
               <Input
                 type="time"
                 value={newSlot}
+                disabled={isLocked}
                 onChange={(e) => setNewSlot(e.target.value)}
                 className="w-32"
                 placeholder="HH:MM"
               />
-              <Button variant="outline" onClick={handleAdd}>
+              <Button variant="outline" disabled={isLocked} onClick={handleAdd}>
                 <Plus className="mr-1.5 h-4 w-4" /> Ajouter
               </Button>
             </div>

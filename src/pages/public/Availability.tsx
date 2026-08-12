@@ -4,7 +4,7 @@ import { Sparkles, Clock, ChevronLeft, ChevronRight, CheckCircle2 } from 'lucide
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/lib/supabase';
-import { toDateString } from '@/utils/date';
+import { toDateString, isPastDate } from '@/utils/date';
 import { cn } from '@/utils/cn';
 import { useSettings } from '@/hooks/useSettings';
 import type { BusinessHours } from '@/types';
@@ -168,7 +168,7 @@ export default function Availability() {
                       const isToday = iso === toDateString(new Date());
                       const isSelected = iso === selectedDate;
                       const isDayOpen = isDayAvailable(iso);
-                      const hasAvailableSlots = hasSlots(iso) && isDayOpen;
+                      const hasAvailableSlots = hasSlots(iso) && isDayOpen && !isPastDate(iso);
                       
                       return (
                         <button
