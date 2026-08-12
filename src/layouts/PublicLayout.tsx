@@ -2,6 +2,7 @@ import { Outlet } from 'react-router-dom';
 import Navbar from '@/components/public/Navbar';
 import Footer from '@/components/public/Footer';
 import StructuredData from '@/components/StructuredData';
+import InstallPrompt from '@/components/InstallPrompt';
 
 export default function PublicLayout() {
   return (
@@ -13,6 +14,7 @@ export default function PublicLayout() {
         <Outlet />
       </main>
       <Footer />
+      <InstallPrompt />
     </div>
   );
 }
