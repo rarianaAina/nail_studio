@@ -105,11 +105,15 @@ export default function ReviewDialog({ appointment, onClose, onSubmitted }: Revi
       onSubmitted();
       onClose();
     } catch (error) {
-      const code = (error as { code?: string })?.code;
+      const { code, message } = (error as { code?: string; message?: string }) ?? {};
       if (code === '23505') {
         toast.error('Un avis a déjà été déposé pour ce rendez-vous.');
       } else if (code === '42501') {
         toast.error('Ce rendez-vous ne permet pas de déposer un avis.');
+      } else if (code === '22023' && message) {
+        // Refus de saisie : la base formule un message compréhensible — note
+        // hors bornes, commentaire vide, rendez-vous encore à venir.
+        toast.error(message);
       } else {
         toast.error('Une erreur est survenue. Veuillez réessayer.');
       }
