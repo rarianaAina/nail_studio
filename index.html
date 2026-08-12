@@ -111,6 +111,23 @@
       <link rel="stylesheet" href="/assets/index.css" />
     </noscript>
     
+    <!-- Socle de données structurées, présent dès le HTML : Google indexe en
+         deux temps et le rendu JavaScript peut tarder de plusieurs jours. Le
+         composant StructuredData réécrit ce même bloc — identifiant identique —
+         dès que les paramètres du salon sont chargés, pour y ajouter adresse,
+         horaires, réseaux sociaux et note moyenne. -->
+    <script type="application/ld+json" id="donnees-structurees-salon">
+      {
+        "@context": "https://schema.org",
+        "@type": "BeautySalon",
+        "name": "Harrys Studio",
+        "description": "Salon d'onglerie : pose de gel, semi-permanent, manucure et nail art.",
+        "priceRange": "€€",
+        "currenciesAccepted": "EUR",
+        "address": { "@type": "PostalAddress", "addressCountry": "FR" }
+      }
+    </script>
+
     <title data-default>Harrys Studio — Salon d'onglerie</title>
     <meta
       name="description"
