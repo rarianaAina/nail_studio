@@ -79,7 +79,16 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="preconnect" href="https://tzgcyehdjgqxljjttflj.supabase.co" />
-    <link rel="preconnect" href="https://images.pexels.com" />
+
+    <!-- Image la plus grande de l'accueil. Sans ce préchargement, le navigateur
+         ne la découvre qu'après avoir exécuté le JavaScript et rendu le
+         composant : le LCP attend toute la chaîne. -->
+    <link
+      rel="preload"
+      as="image"
+      fetchpriority="high"
+      href="https://tzgcyehdjgqxljjttflj.supabase.co/storage/v1/object/public/images/services/1785598830482-uymrlg1.webp"
+    />
     
     <!-- ✅ Chargement non bloquant des polices -->
     <link
@@ -100,17 +109,10 @@
       />
     </noscript>
     
-    <!-- ✅ CSS principal chargé en différé -->
-    <link
-      rel="preload"
-      as="style"
-      href="/assets/index.css"
-      onload="this.onload=null;this.rel='stylesheet'"
-    />
-    <noscript>
-      <link rel="stylesheet" href="/assets/index.css" />
-    </noscript>
-    
+    <!-- La feuille de style principale est injectée par Vite sous un nom
+         haché. Ne pas la référencer à la main ici : un chemin fixe ne pointe
+         sur rien et la réécriture SPA renvoie alors index.html. -->
+
     <!-- Socle de données structurées, présent dès le HTML : Google indexe en
          deux temps et le rendu JavaScript peut tarder de plusieurs jours. Le
          composant StructuredData réécrit ce même bloc — identifiant identique —
