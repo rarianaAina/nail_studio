@@ -14,7 +14,6 @@ import { formatAriary } from '@/utils';
 import { useNailServices } from '@/hooks/useNailServices';
 import { useAppointments } from '@/hooks/useAppointments';
 import { useAuth } from '@/hooks/useAuth';
-import { useActiveConfig } from '@/hooks/useActiveConfig';
 import { usePaymentMethods } from '@/hooks/usePaymentMethods';
 import { useSettings } from '@/hooks/useSettings';
 import { supabase } from '@/lib/supabase';
@@ -164,7 +163,6 @@ export default function Booking() {
   const { services } = useNailServices();
   const { createAppointment } = useAppointments();
   const { user } = useAuth();
-  const { getActiveTimeSlotsByDate } = useActiveConfig();
   const { paymentMethods, loading: loadingPayments } = usePaymentMethods();
   const { settings } = useSettings();
   const navigate = useNavigate();
@@ -181,7 +179,6 @@ export default function Booking() {
     email: user?.email ?? '',
   });
   const [submitting, setSubmitting] = useState(false);
-  const [bookedSlots, setBookedSlots] = useState<string[]>([]);
   const [slotsByDate, setSlotsByDate] = useState<Record<string, number>>({});
 
   // États pour les images de référence
@@ -217,10 +214,11 @@ export default function Booking() {
     [selectedServices]
   );
 
-  const availableSlots = useMemo(() => {
-    if (!date) return [];
-    return getActiveTimeSlotsByDate(date);
-  }, [date, getActiveTimeSlotsByDate]);
+  // Créneaux réellement libres pour la durée choisie. Le calcul est fait côté
+  // serveur : il doit tenir compte des rendez-vous déjà pris — que le navigateur
+  // n'a plus le droit de lire — et du temps de préparation configuré.
+  const [availableSlots, setAvailableSlots] = useState<string[]>([]);
+  const [loadingSlots, setLoadingSlots] = useState(false);
 
   const isDayAvailable = (dateStr: string): boolean => {
     const dayName = new Date(dateStr + 'T00:00:00').toLocaleDateString('fr-FR', { weekday: 'long' });
@@ -260,18 +258,27 @@ export default function Booking() {
   };
 
   useEffect(() => {
-    if (!date) { setBookedSlots([]); return; }
+    if (!date) { setAvailableSlots([]); return; }
     let mounted = true;
+    setLoadingSlots(true);
     (async () => {
-      // Passe par une fonction serveur : la lecture directe de `appointments`
-      // exposait tout le carnet de rendez-vous pour n'en tirer que des heures.
-      const { data } = await supabase.rpc('get_booked_times', { p_date: date });
-      if (mounted) {
-        setBookedSlots((data as { booked_time: string }[] | null)?.map((r) => r.booked_time) ?? []);
+      // La durée conditionne la disponibilité : un créneau libre pour une
+      // manucure de 30 min ne l'est pas forcément pour une pose de 2h30.
+      const { data, error } = await supabase.rpc('get_available_times', {
+        p_date: date,
+        p_duration_minutes: totalDuration,
+      });
+      if (!mounted) return;
+      if (error) {
+        console.error(error);
+        setAvailableSlots([]);
+      } else {
+        setAvailableSlots((data as { slot_label: string }[] | null)?.map((r) => r.slot_label) ?? []);
       }
+      setLoadingSlots(false);
     })();
     return () => { mounted = false; };
-  }, [date]);
+  }, [date, totalDuration]);
 
   const calendarCells = useMemo(() => {
     const year = calendarMonth.getFullYear();
@@ -328,7 +335,16 @@ export default function Booking() {
         setStep(5);
       } catch (error) {
         console.error(error);
-        toast.error('Une erreur est survenue. Veuillez réessayer.');
+        // 23505 : une autre cliente a validé ce créneau pendant la saisie. On
+        // renvoie à l'étape du choix de créneau plutôt que d'afficher une
+        // erreur générique, et on rafraîchit la liste.
+        if ((error as { code?: string })?.code === '23505') {
+          toast.error('Ce créneau vient d\'être réservé. Merci d\'en choisir un autre.');
+          setTime('');
+          setStep(3);
+        } else {
+          toast.error('Une erreur est survenue. Veuillez réessayer.');
+        }
       } finally {
         setSubmitting(false);
         setIsUploading(false);
@@ -541,27 +557,31 @@ export default function Booking() {
                     Créneaux disponibles pour le {date ? new Date(date + 'T00:00:00').toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' }) : ''}
                   </p>
                   <div className="mt-6 grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-5">
-                    {availableSlots.map((t: string) => {
-                      const taken = bookedSlots.includes(t);
-                      return (
-                        <button
-                          key={t}
-                          disabled={taken}
-                          onClick={() => setTime(t)}
-                          className={cn(
-                            'flex items-center justify-center gap-1.5 rounded-xl border py-2.5 text-sm transition-all disabled:opacity-30 disabled:line-through',
-                            time === t
-                              ? 'border-primary bg-primary text-primary-foreground shadow-glow'
-                              : 'border-border hover:border-primary/40'
-                          )}
-                        >
-                          <Clock className="h-3.5 w-3.5" /> {t}
-                        </button>
-                      );
-                    })}
-                    {availableSlots.length === 0 && (
+                    {/* Les créneaux renvoyés sont déjà filtrés selon la durée
+                        choisie : ceux qui restent sont tous réservables. */}
+                    {availableSlots.map((t: string) => (
+                      <button
+                        key={t}
+                        onClick={() => setTime(t)}
+                        className={cn(
+                          'flex items-center justify-center gap-1.5 rounded-xl border py-2.5 text-sm transition-all',
+                          time === t
+                            ? 'border-primary bg-primary text-primary-foreground shadow-glow'
+                            : 'border-border hover:border-primary/40'
+                        )}
+                      >
+                        <Clock className="h-3.5 w-3.5" /> {t}
+                      </button>
+                    ))}
+                    {loadingSlots && (
                       <div className="col-span-full py-8 text-center text-sm text-muted-foreground">
-                        Aucun créneau disponible pour ce jour.
+                        Recherche des créneaux…
+                      </div>
+                    )}
+                    {!loadingSlots && availableSlots.length === 0 && (
+                      <div className="col-span-full py-8 text-center text-sm text-muted-foreground">
+                        Aucun créneau libre pour {formatDuration(totalDuration)} ce jour-là.
+                        Essayez une autre date, ou retirez une prestation.
                       </div>
                     )}
                   </div>

@@ -80,6 +80,31 @@ export default function CancellationSettings() {
             />
           </div>
 
+          <div className="space-y-2 border-t border-border/60 pt-6">
+            <Label htmlFor="prep-minutes">Temps de préparation</Label>
+            <div className="flex items-center gap-2">
+              <Input
+                id="prep-minutes"
+                type="number"
+                min={0}
+                max={120}
+                step={5}
+                value={settings?.preparationMinutes ?? 15}
+                onChange={(e) => updateSettings({
+                  preparationMinutes: Number(e.target.value)
+                })}
+                className="w-24"
+              />
+              <span className="text-sm text-muted-foreground">minutes après chaque prestation</span>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Nettoyage du poste et battement avant la cliente suivante. Ce temps
+              s'ajoute à la durée de chaque prestation pour déterminer les créneaux
+              encore réservables : une pose de 2h à 9h00 occupe le poste jusqu'à
+              11h{String(settings?.preparationMinutes ?? 15).padStart(2, '0')}.
+            </p>
+          </div>
+
           <div className="flex justify-end pt-2">
             <Button className="rounded-full" onClick={handleSave}>
               <Save className="mr-2 h-4 w-4" /> Enregistrer

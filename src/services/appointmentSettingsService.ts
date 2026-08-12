@@ -6,6 +6,7 @@ interface AppointmentSettingsRow {
   cancellation_deadline_hours: number;
   cancellation_deadline_label: string;
   allow_cancellation: boolean;
+  preparation_minutes: number | null;
   updated_at: string | null;
 }
 
@@ -15,6 +16,7 @@ function rowToSettings(r: AppointmentSettingsRow): AppointmentSettings {
     cancellationDeadlineHours: r.cancellation_deadline_hours,
     cancellationDeadlineLabel: r.cancellation_deadline_label,
     allowCancellation: r.allow_cancellation,
+    preparationMinutes: r.preparation_minutes ?? 15,
     updatedAt: r.updated_at ?? undefined,
   };
 }
@@ -65,6 +67,9 @@ export const appointmentSettingsService = {
     }
     if (data.allowCancellation !== undefined) {
       row.allow_cancellation = data.allowCancellation;
+    }
+    if (data.preparationMinutes !== undefined) {
+      row.preparation_minutes = data.preparationMinutes;
     }
 
     if (existing) {

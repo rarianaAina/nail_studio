@@ -6,7 +6,6 @@ import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/lib/supabase';
 import { toDateString } from '@/utils/date';
 import { cn } from '@/utils/cn';
-import { useActiveConfig } from '@/hooks/useActiveConfig';
 import { useSettings } from '@/hooks/useSettings';
 import type { BusinessHours } from '@/types';
 
@@ -21,7 +20,6 @@ const fadeUp = {
 
 export default function Availability() {
   const { settings } = useSettings();
-  const { getActiveTimeSlotsByDate } = useActiveConfig();
   
   const [selectedDate, setSelectedDate] = useState<string>(toDateString(new Date()));
   const [calendarMonth, setCalendarMonth] = useState(() => {
@@ -57,13 +55,28 @@ export default function Availability() {
     fetchSlotsForMonth();
   }, [calendarMonth]);
 
-  // Charger les créneaux pour la date sélectionnée
+  // Charger les créneaux pour la date sélectionnée.
+  // Sans prestation choisie, la durée transmise est nulle : la fonction renvoie
+  // alors les créneaux qu'aucun rendez-vous n'occupe déjà. La liste affichée
+  // reflète donc les disponibilités réelles, et non la grille brute.
   useEffect(() => {
-    if (selectedDate) {
-      const slots = getActiveTimeSlotsByDate(selectedDate);
-      setAvailableSlots(slots);
-    }
-  }, [selectedDate, getActiveTimeSlotsByDate]);
+    if (!selectedDate) { setAvailableSlots([]); return; }
+    let mounted = true;
+    (async () => {
+      const { data, error } = await supabase.rpc('get_available_times', {
+        p_date: selectedDate,
+        p_duration_minutes: 0,
+      });
+      if (!mounted) return;
+      if (error) {
+        console.error(error);
+        setAvailableSlots([]);
+      } else {
+        setAvailableSlots((data as { slot_label: string }[] | null)?.map((r) => r.slot_label) ?? []);
+      }
+    })();
+    return () => { mounted = false; };
+  }, [selectedDate]);
 
   const isDayAvailable = (dateStr: string): boolean => {
     const dayName = new Date(dateStr + 'T00:00:00').toLocaleDateString('fr-FR', { weekday: 'long' });
