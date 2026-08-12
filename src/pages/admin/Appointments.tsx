@@ -33,7 +33,7 @@ import type { Appointment, AppointmentStatus } from '@/types';
 const FILTERS: ('Tous' | AppointmentStatus)[] = ['Tous', 'pending', 'confirmed', 'completed', 'cancelled'];
 
 export default function Appointments() {
-  const { appointments, updateStatus, createAppointment, refresh } = useAppointments();
+  const { appointments, updateStatus, createAppointment, updateAppointment, refresh } = useAppointments();
   const { reminderSettings } = useReminderSettings();
   const { services } = useNailServices();
   const { clients } = useClients();
@@ -43,6 +43,9 @@ export default function Appointments() {
   const [viewing, setViewing] = useState<Appointment | null>(null);
   const [showCreate, setShowCreate] = useState(false);
   const [creating, setCreating] = useState(false);
+  // Rendez-vous en cours de modification. Le même formulaire sert aux deux
+  // usages : les champs sont identiques, seul l'enregistrement diffère.
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [newAppt, setNewAppt] = useState({
     clientId: '',
     clientName: '',
@@ -247,7 +250,27 @@ export default function Appointments() {
                           <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => setViewing(a)}>
                             <Eye className="h-4 w-4" />
                           </Button>
-                          <Button size="icon" variant="ghost" className="h-8 w-8">
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-8 w-8"
+                            title="Modifier"
+                            onClick={() => {
+                              setEditingId(a.id);
+                              setNewAppt({
+                                clientId: a.clientId ?? '',
+                                clientName: a.clientName,
+                                phone: a.phone,
+                                email: a.email ?? '',
+                                serviceIds: a.services.map((s) => s.id),
+                                date: a.date,
+                                time: a.time,
+                                paymentMethodId: a.paymentMethodId ?? '',
+                                notes: a.notes ?? '',
+                              });
+                              setShowCreate(true);
+                            }}
+                          >
                             <Pencil className="h-4 w-4" />
                           </Button>
                           {a.status === 'pending' && (
@@ -332,11 +355,23 @@ export default function Appointments() {
         </CardContent>
       </Card>
 
-      <Dialog open={showCreate} onOpenChange={(o) => !o && setShowCreate(o)}>
+      <Dialog
+        open={showCreate}
+        onOpenChange={(o) => {
+          if (!o) {
+            setShowCreate(false);
+            setEditingId(null);
+          }
+        }}
+      >
         <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle>Nouveau rendez-vous</DialogTitle>
-            <DialogDescription>Créez un rendez-vous pour une cliente.</DialogDescription>
+            <DialogTitle>{editingId ? 'Modifier le rendez-vous' : 'Nouveau rendez-vous'}</DialogTitle>
+            <DialogDescription>
+              {editingId
+                ? 'Les modifications sont enregistrées immédiatement.'
+                : 'Créez un rendez-vous pour une cliente.'}
+            </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div className="space-y-1.5">
@@ -463,12 +498,33 @@ export default function Appointments() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowCreate(false)}>Annuler</Button>
+            <Button variant="outline" onClick={() => { setShowCreate(false); setEditingId(null); }}>Annuler</Button>
             <Button
               disabled={creating || !newAppt.clientName || !newAppt.phone || newAppt.serviceIds.length === 0 || !newAppt.date}
+              title={editingId ? 'Enregistrer les modifications' : 'Créer le rendez-vous'}
               onClick={async () => {
                 setCreating(true);
                 try {
+                  if (editingId) {
+                    // En modification, la cliente ne change pas : seuls les
+                    // détails du rendez-vous sont réenregistrés.
+                    await updateAppointment(editingId, {
+                      clientName: newAppt.clientName,
+                      phone: newAppt.phone,
+                      email: newAppt.email || undefined,
+                      serviceIds: newAppt.serviceIds,
+                      date: newAppt.date,
+                      time: newAppt.time,
+                      paymentMethodId: newAppt.paymentMethodId || undefined,
+                      notes: newAppt.notes || undefined,
+                    });
+                    toast.success('Rendez-vous modifié.');
+                    setShowCreate(false);
+                    setEditingId(null);
+                    await refresh();
+                    return;
+                  }
+
                   let clientId = newAppt.clientId || undefined;
                   let clientName = newAppt.clientName;
                   let phone = newAppt.phone;
