@@ -1,6 +1,54 @@
 // services/storageService.ts
 import { supabase } from '@/lib/supabase';
 
+/** Extension correspondant au type réellement produit par le navigateur. */
+export function extensionPourType(mime: string): string {
+  if (mime === 'image/webp') return 'webp';
+  if (mime === 'image/jpeg') return 'jpg';
+  if (mime === 'image/png') return 'png';
+  return 'bin';
+}
+
+/**
+ * Encode le canevas dans le premier format que le navigateur sait produire.
+ *
+ * `toBlob` retombe silencieusement sur PNG lorsque le format demandé n'est pas
+ * pris en charge — comportement prévu par la spécification, le paramètre de
+ * qualité étant alors ignoré. Sans vérification, une photo de 600 × 800
+ * ressortait en PNG de 700 Ko au lieu d'un WebP de 60 Ko, et le fichier était
+ * malgré tout nommé « .webp ».
+ *
+ * L'ordre compte : WebP d'abord, JPEG ensuite. PNG n'est jamais un bon choix
+ * pour une photographie, et c'était pourtant le repli imposé.
+ */
+function encoder(canvas: HTMLCanvasElement, qualite: number): Promise<Blob> {
+  const formats = ['image/webp', 'image/jpeg'];
+
+  const essayer = (index: number): Promise<Blob> =>
+    new Promise((resolve, reject) => {
+      const format = formats[index];
+      canvas.toBlob(
+        (blob) => {
+          if (!blob) return reject(new Error('Encodage impossible'));
+
+          // Le type obtenu peut différer du type demandé : c'est précisément
+          // ce silence qu'il faut détecter.
+          if (blob.type === format) return resolve(blob);
+
+          if (index + 1 < formats.length) return resolve(essayer(index + 1));
+
+          // Plus aucun format à tenter : on garde ce que le navigateur a
+          // produit plutôt que d'échouer, l'importation doit aboutir.
+          resolve(blob);
+        },
+        format,
+        qualite
+      );
+    });
+
+  return essayer(0);
+}
+
 // ✅ Fonction pour compresser l'image avant upload
 async function compressImage(file: File): Promise<File> {
   return new Promise((resolve, reject) => {
@@ -33,23 +81,17 @@ async function compressImage(file: File): Promise<File> {
         const ctx = canvas.getContext('2d');
         ctx?.drawImage(img, 0, 0, width, height);
 
-        // Convertir en WebP avec qualité 80%
-        canvas.toBlob(
-          (blob) => {
-            if (blob) {
-              const compressedFile = new File(
-                [blob],
-                file.name.replace(/\.[^.]+$/, '.webp'),
-                { type: 'image/webp' }
-              );
-              resolve(compressedFile);
-            } else {
-              reject(new Error('Compression failed'));
-            }
-          },
-          'image/webp',
-          0.8
-        );
+        // L'extension suit le format réellement obtenu, et non celui demandé.
+        encoder(canvas, 0.8)
+          .then((blob) => {
+            const extension = extensionPourType(blob.type);
+            resolve(
+              new File([blob], file.name.replace(/\.[^.]+$/, `.${extension}`), {
+                type: blob.type,
+              })
+            );
+          })
+          .catch(reject);
       };
       img.onerror = reject;
     };
