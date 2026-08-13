@@ -23,6 +23,7 @@ import {
   Cell,
   Legend,
 } from 'recharts';
+import type { ValueType } from 'recharts/types/component/DefaultTooltipContent';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAppointments } from '@/hooks/useAppointments';
 import { useClients } from '@/hooks/useClients';
@@ -97,21 +98,21 @@ export default function Dashboard() {
   const pieData = servicePopularity.map((s) => ({ name: s.name, value: s.percentage }));
 
   // Formatters avec typage permissif pour Recharts
-  const formatCurrencyTooltip = (value: any): string => {
+  const formatCurrencyTooltip = (value?: ValueType): string => {
     if (typeof value === 'number') {
       return formatAriary(value);
     }
     return String(value ?? '0');
   };
 
-  const formatMillionsYAxis = (value: any): string => {
+  const formatMillionsYAxis = (value?: ValueType): string => {
     if (typeof value === 'number') {
       return `${(value / 1000000).toFixed(1)}M`;
     }
     return String(value ?? '0');
   };
 
-  const formatPercentageTooltip = (value: any): string => {
+  const formatPercentageTooltip = (value?: ValueType): string => {
     if (typeof value === 'number') {
       return `${value}%`;
     }

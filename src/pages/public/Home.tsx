@@ -135,10 +135,18 @@ const ServiceCard = ({ service }: { service: Service }) => {
   );
 };
 
+/** Colonnes réellement sélectionnées par la requête de galerie. */
+interface ElementGalerie {
+  id: string;
+  title: string;
+  category: string;
+  image: string;
+}
+
 export default function Home() {
   const { services } = useNailServices();
   const { settings } = useSettings();
-  const [galleryItems, setGalleryItems] = useState<any[]>([]);
+  const [galleryItems, setGalleryItems] = useState<ElementGalerie[]>([]);
   const [loadingGallery, setLoadingGallery] = useState(true);
   const { infos: specialInfos, loading: loadingInfos } = useSpecialInfos();
   const { reviews, averageRating } = useReviews();

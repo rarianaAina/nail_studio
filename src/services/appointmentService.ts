@@ -10,12 +10,12 @@ interface AppointmentRow {
   client_name: string;
   phone: string;
   email: string | null;
-  services: any; // JSONB
+  services: ServiceItem[] | null; // JSONB
   date: string;
   time: string;
   status: string;
   payment_method_id: string | null;
-  reference_images: any; // ✅ JSONB pour les images multiples
+  reference_images: ReferenceImage[] | null; // JSONB, plusieurs images
   client_notes: string | null;
   notes: string | null;
   created_at: string | null;
@@ -23,8 +23,8 @@ interface AppointmentRow {
 }
 
 function rowToAppointment(r: AppointmentRow): Appointment {
-  const services = (r.services as ServiceItem[]) || [];
-  const referenceImages = (r.reference_images as ReferenceImage[]) || [];
+  const services = r.services ?? [];
+  const referenceImages = r.reference_images ?? [];
   
   return {
     id: r.id,
@@ -206,7 +206,7 @@ export const appointmentService = {
         duration: s.duration,
       }));
 
-      (row as any).services = services;
+      (row as Record<string, unknown>).services = services;
     }
 
     const { data: updatedRow, error } = await supabase

@@ -13,8 +13,16 @@ const fadeUp = {
   transition: { duration: 0.5 },
 };
 
+/** Colonnes réellement sélectionnées par la requête de galerie. */
+interface ElementGalerie {
+  id: string;
+  title: string;
+  category: string;
+  image: string;
+}
+
 export default function Gallery() {
-  const [galleryItems, setGalleryItems] = useState<any[]>([]);
+  const [galleryItems, setGalleryItems] = useState<ElementGalerie[]>([]);
   const [loading, setLoading] = useState(true);
   const [active, setActive] = useState('Toutes');
 

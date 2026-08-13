@@ -10,6 +10,7 @@ import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
 import { cn } from '@/utils/cn';
 import { useSpecialInfos } from '@/hooks/useSpecialInfos';
+import type { SpecialInfo } from '@/types';
 
 export default function SpecialInfosSettings() {
   const { infos, loading, create, update, delete: deleteInfo, toggleActive } = useSpecialInfos();
@@ -31,7 +32,7 @@ export default function SpecialInfosSettings() {
     }
   };
 
-  const handleEdit = (info: any) => {
+  const handleEdit = (info: SpecialInfo) => {
     setEditingId(info.id);
     setEditData({ title: info.title, content: info.content, icon: info.icon || '✨' });
   };

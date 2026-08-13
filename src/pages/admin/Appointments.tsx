@@ -542,7 +542,7 @@ export default function Appointments() {
                   let clientId = newAppt.clientId || undefined;
                   let clientName = newAppt.clientName;
                   let phone = newAppt.phone;
-                  let email = newAppt.email || undefined;
+                  const email = newAppt.email || undefined;
 
                   if (!clientId && email) {
                     const { data: existing } = await supabase

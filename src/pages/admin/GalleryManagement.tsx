@@ -8,6 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { useGallery } from '@/hooks/useGallery';
+import type { GalleryItem } from '@/types';
 import { toast } from 'sonner';
 
 const CATEGORIES = ['Vernis', 'Nail Art', 'Prothèses', 'Manucure', 'Pédicure', 'Autre'];
@@ -60,7 +61,7 @@ export default function GalleryManagement() {
     }
   };
 
-  const handleEdit = (item: any) => {
+  const handleEdit = (item: GalleryItem) => {
     setEditingId(item.id);
     setEditItem({
       title: item.title,
@@ -79,7 +80,7 @@ export default function GalleryManagement() {
     }
   };
 
-  const handleDelete = async (item: any) => {
+  const handleDelete = async (item: GalleryItem) => {
     if (!confirm(`Supprimer "${item.title}" ? L'image sera aussi supprimée du stockage.`)) return;
     try {
       await remove(item.id, item.image);

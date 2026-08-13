@@ -1,0 +1,52 @@
+name: Vérifications
+
+# Sur les pull requests et sur main. Le second cas couvre les fusions faites en
+# local, qui n'ouvrent aucune pull request.
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+# Une nouvelle poussée annule la vérification en cours sur la même branche :
+# inutile de valider un état déjà remplacé.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verifier:
+    name: Typage, tests et construction
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      # `npm ci` plutôt que `npm install` : installe exactement le
+      # package-lock, sans le modifier au passage.
+      - name: Installer les dépendances
+        run: npm ci
+
+      - name: Typage
+        run: npm run typecheck
+
+      # Les avertissements restants tiennent au fonctionnement du
+      # rafraîchissement à chaud et ne sont pas corrigeables sans découper des
+      # fichiers de la bibliothèque d'interface. Seules les erreurs bloquent.
+      - name: Style
+        run: npx eslint src
+
+      - name: Tests
+        run: npm test
+
+      # La construction est vérifiée en dernier : elle est la plus lente, et
+      # les trois étapes précédentes attrapent l'essentiel des régressions.
+      # VITE_SITE_URL est absente : le script de référencement l'annonce et
+      # passe son tour, ce qui est le comportement attendu hors production.
+      - name: Construction
+        run: npm run build

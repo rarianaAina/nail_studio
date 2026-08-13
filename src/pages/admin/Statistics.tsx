@@ -3,6 +3,7 @@ import {
   ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid,
   LineChart, Line, PieChart, Pie, Cell, Legend,
 } from 'recharts';
+import type { ValueType } from 'recharts/types/component/DefaultTooltipContent';
 import { TrendingUp, Wallet, XCircle, Heart } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useStats } from '@/hooks/useStats';
@@ -48,35 +49,35 @@ export default function Statistics() {
   ];
 
   // Formatters avec un typage permissif
-  const formatAriaryTooltip = (value: any): string => {
+  const formatAriaryTooltip = (value?: ValueType): string => {
     if (typeof value === 'number') {
       return formatAriary(value);
     }
     return String(value ?? '0');
   };
 
-  const formatCurrencyYAxis = (value: any): string => {
+  const formatCurrencyYAxis = (value?: ValueType): string => {
     if (typeof value === 'number') {
       return `${value / 1000}k`;
     }
     return String(value ?? '0');
   };
 
-  const formatMillionsYAxis = (value: any): string => {
+  const formatMillionsYAxis = (value?: ValueType): string => {
     if (typeof value === 'number') {
       return `${value / 1000000}M`;
     }
     return String(value ?? '0');
   };
 
-  const formatPercentageYAxis = (value: any): string => {
+  const formatPercentageYAxis = (value?: ValueType): string => {
     if (typeof value === 'number') {
       return `${value}%`;
     }
     return String(value ?? '0%');
   };
 
-  const formatPercentageTooltip = (value: any): string => {
+  const formatPercentageTooltip = (value?: ValueType): string => {
     if (typeof value === 'number') {
       return `${value}%`;
     }

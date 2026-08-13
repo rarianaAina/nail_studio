@@ -9,6 +9,7 @@ import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
 import { cn } from '@/utils/cn';
 import { usePaymentMethods } from '@/hooks/usePaymentMethods';
+import type { PaymentMethod } from '@/types/payment';
 
 export default function PaymentMethodsSettings() {
   const {
@@ -43,7 +44,7 @@ export default function PaymentMethodsSettings() {
     }
   };
 
-  const handleEditPayment = (method: any) => {
+  const handleEditPayment = (method: PaymentMethod) => {
     setEditingPaymentId(method.id);
     setEditPaymentData({ name: method.name, label: method.label, icon: method.icon || '' });
   };

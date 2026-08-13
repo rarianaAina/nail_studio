@@ -5,7 +5,10 @@ import reactRefresh from 'eslint-plugin-react-refresh';
 import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
-  { ignores: ['dist'] },
+  // `.vite` et `dev-dist` contiennent des dépendances pré-empaquetées : les
+  // analyser produisait des erreurs venant de code tiers, sans rapport avec le
+  // projet. `supabase/functions` est du Deno, hors de cette configuration.
+  { ignores: ['dist', 'dev-dist', '.vite', 'public', 'supabase/functions'] },
   {
     extends: [js.configs.recommended, ...tseslint.configs.recommended],
     files: ['**/*.{ts,tsx}'],
@@ -22,6 +25,12 @@ export default tseslint.config(
       'react-refresh/only-export-components': [
         'warn',
         { allowConstantExport: true },
+      ],
+      // Un préfixe `_` marque une valeur volontairement écartée — typiquement
+      // les champs retirés par déstructuration.
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        { varsIgnorePattern: '^_', argsIgnorePattern: '^_', caughtErrors: 'none' },
       ],
     },
   }
