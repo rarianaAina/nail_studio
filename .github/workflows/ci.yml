@@ -22,9 +22,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Node 22 au minimum : le client Supabase s'appuie sur le WebSocket
+      # natif, absent avant Node 21. Les tests important indirectement
+      # `lib/supabase` échouaient à l'instanciation du client.
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
 
       # `npm ci` plutôt que `npm install` : installe exactement le
