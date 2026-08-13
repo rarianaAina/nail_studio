@@ -105,11 +105,20 @@ export default function Dashboard() {
     return String(value ?? '0');
   };
 
-  const formatMillionsYAxis = (value?: ValueType): string => {
-    if (typeof value === 'number') {
-      return `${(value / 1000000).toFixed(1)}M`;
-    }
-    return String(value ?? '0');
+  /**
+   * Graduation de l'axe des montants.
+   *
+   * Elle divisait par un million et suffixait « M » — un vestige de l'époque
+   * où les montants étaient en ariary. En euros, un chiffre d'affaires de
+   * salon ne dépasse pas quelques milliers : toutes les graduations
+   * affichaient « 0.0M ».
+   *
+   * Le millier reste abrégé, au-delà l'axe deviendrait illisible.
+   */
+  const formatMontantYAxis = (value?: ValueType): string => {
+    if (typeof value !== 'number') return String(value ?? '0');
+    if (value >= 1000) return `${(value / 1000).toFixed(value % 1000 === 0 ? 0 : 1)}k €`;
+    return `${Math.round(value)} €`;
   };
 
   const formatPercentageTooltip = (value?: ValueType): string => {
@@ -184,7 +193,7 @@ export default function Dashboard() {
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
                   <XAxis dataKey="mois" tickLine={false} axisLine={false} fontSize={12} />
                   <YAxis 
-                    tickFormatter={formatMillionsYAxis} 
+                    tickFormatter={formatMontantYAxis} 
                     tickLine={false} 
                     axisLine={false} 
                     fontSize={12} 
