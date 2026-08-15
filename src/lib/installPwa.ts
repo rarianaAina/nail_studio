@@ -46,6 +46,24 @@ export function estInstallee(): boolean {
   );
 }
 
+/**
+ * Appareil Apple mobile.
+ *
+ * Safari n'émet jamais `beforeinstallprompt` : l'installation y est purement
+ * manuelle, par le menu de partage. Sans détection, bannière et bouton
+ * resteraient invisibles sur iPhone, et l'installation inaccessible faute
+ * d'être connue.
+ *
+ * iPadOS 13 et suivants se déclarent « Macintosh » : la présence d'un écran
+ * tactile lève l'ambiguïté.
+ */
+export function estIOS(): boolean {
+  if (typeof navigator === 'undefined') return false;
+  const ua = navigator.userAgent;
+  const tactileSurMac = /Macintosh/.test(ua) && navigator.maxTouchPoints > 1;
+  return /iPad|iPhone|iPod/.test(ua) || tactileSurMac;
+}
+
 export function estInstallable(): boolean {
   return invitation !== null;
 }

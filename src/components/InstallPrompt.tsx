@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Download, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useInstallApp } from '@/hooks/useInstallApp';
+import IosInstallGuide from '@/components/IosInstallGuide';
 
 /**
  * Durée pendant laquelle la bannière reste silencieuse après un refus.
@@ -41,8 +42,9 @@ interface InstallPromptProps {
 }
 
 export default function InstallPrompt({ message }: InstallPromptProps) {
-  const { installable, installee, installer } = useInstallApp();
+  const { installable, installee, ios, installer } = useInstallApp();
   const [masquee, setMasquee] = useState(true);
+  const [guideOuvert, setGuideOuvert] = useState(false);
 
   // Le stockage local n'est lu qu'après le montage : le consulter pendant le
   // rendu ferait diverger le premier affichage.
@@ -50,9 +52,15 @@ export default function InstallPrompt({ message }: InstallPromptProps) {
     setMasquee(silencieuse());
   }, []);
 
-  if (!installable || installee || masquee) return null;
+  if (installee || masquee || (!installable && !ios)) return null;
 
   const lancer = async () => {
+    // Sur iPhone, l'installation est manuelle : on montre la marche à suivre
+    // et on laisse la bannière ouverte, le temps de la lire.
+    if (ios) {
+      setGuideOuvert(true);
+      return;
+    }
     const accepte = await installer();
     if (!accepte) reporter();
     setMasquee(true);
@@ -76,7 +84,7 @@ export default function InstallPrompt({ message }: InstallPromptProps) {
           </p>
           <div className="mt-3 flex gap-2">
             <Button size="sm" className="rounded-full" onClick={lancer}>
-              Installer
+              {ios ? 'Comment faire' : 'Installer'}
             </Button>
             <Button size="sm" variant="ghost" className="rounded-full" onClick={refuser}>
               Plus tard
@@ -91,6 +99,17 @@ export default function InstallPrompt({ message }: InstallPromptProps) {
           <X className="h-4 w-4" />
         </button>
       </div>
+
+      {ios && (
+        <IosInstallGuide
+          ouvert={guideOuvert}
+          onClose={() => {
+            setGuideOuvert(false);
+            reporter();
+            setMasquee(true);
+          }}
+        />
+      )}
     </div>
   );
 }

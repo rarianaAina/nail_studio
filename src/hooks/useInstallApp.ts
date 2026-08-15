@@ -1,5 +1,6 @@
 import { useCallback, useSyncExternalStore } from 'react';
 import {
+  estIOS,
   estInstallable,
   estInstallee,
   proposerInstallation,
@@ -11,6 +12,8 @@ interface UseInstallAppReturn {
   installable: boolean;
   /** Vrai lorsque l'application est déjà lancée depuis l'écran d'accueil. */
   installee: boolean;
+  /** Vrai sur iPhone et iPad, où l'installation se fait à la main. */
+  ios: boolean;
   installer: () => Promise<boolean>;
 }
 
@@ -30,5 +33,5 @@ export function useInstallApp(): UseInstallAppReturn {
 
   const installer = useCallback(() => proposerInstallation(), []);
 
-  return { installable, installee: estInstallee(), installer };
+  return { installable, installee: estInstallee(), ios: estIOS(), installer };
 }
