@@ -64,6 +64,21 @@ export function estIOS(): boolean {
   return /iPad|iPhone|iPod/.test(ua) || tactileSurMac;
 }
 
+/**
+ * Sur iPhone, l'ajout à l'écran d'accueil n'existe que dans Safari.
+ *
+ * Chrome, Firefox et Edge s'y appuient pourtant sur le même moteur — Apple
+ * l'impose — mais n'exposent pas cette fonction. Une visiteuse arrivant par un
+ * lien ouvert depuis Instagram ou Gmail se trouve presque toujours dans un de
+ * ces navigateurs, ou dans une vue intégrée à l'application.
+ */
+export function estSafariIOS(): boolean {
+  if (!estIOS() || typeof navigator === 'undefined') return false;
+  const ua = navigator.userAgent;
+  // CriOS : Chrome. FxiOS : Firefox. EdgiOS : Edge. OPiOS : Opera.
+  return !/CriOS|FxiOS|EdgiOS|OPiOS|GSA/.test(ua);
+}
+
 export function estInstallable(): boolean {
   return invitation !== null;
 }

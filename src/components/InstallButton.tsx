@@ -22,7 +22,7 @@ interface InstallButtonProps {
  * ancien, par exemple.
  */
 export default function InstallButton({ className, label }: InstallButtonProps) {
-  const { installable, installee, ios, installer } = useInstallApp();
+  const { installable, installee, ios, safariIOS, installer } = useInstallApp();
   const [guideOuvert, setGuideOuvert] = useState(false);
 
   // Sur iPhone, `installable` est toujours faux : Safari n'émet aucune
@@ -50,7 +50,7 @@ export default function InstallButton({ className, label }: InstallButtonProps) 
         {label ?? "Installer l'application"}
       </button>
 
-      {ios && <IosInstallGuide ouvert={guideOuvert} onClose={() => setGuideOuvert(false)} />}
+      {ios && <IosInstallGuide ouvert={guideOuvert} safari={safariIOS} onClose={() => setGuideOuvert(false)} />}
     </>
   );
 }

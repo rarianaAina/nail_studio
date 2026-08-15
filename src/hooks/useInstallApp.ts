@@ -1,6 +1,7 @@
 import { useCallback, useSyncExternalStore } from 'react';
 import {
   estIOS,
+  estSafariIOS,
   estInstallable,
   estInstallee,
   proposerInstallation,
@@ -14,6 +15,8 @@ interface UseInstallAppReturn {
   installee: boolean;
   /** Vrai sur iPhone et iPad, où l'installation se fait à la main. */
   ios: boolean;
+  /** Faux dans Chrome, Firefox ou une vue intégrée : l'ajout y est impossible. */
+  safariIOS: boolean;
   installer: () => Promise<boolean>;
 }
 
@@ -33,5 +36,11 @@ export function useInstallApp(): UseInstallAppReturn {
 
   const installer = useCallback(() => proposerInstallation(), []);
 
-  return { installable, installee: estInstallee(), ios: estIOS(), installer };
+  return {
+    installable,
+    installee: estInstallee(),
+    ios: estIOS(),
+    safariIOS: estSafariIOS(),
+    installer,
+  };
 }

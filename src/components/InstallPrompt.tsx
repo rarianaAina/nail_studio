@@ -42,7 +42,7 @@ interface InstallPromptProps {
 }
 
 export default function InstallPrompt({ message }: InstallPromptProps) {
-  const { installable, installee, ios, installer } = useInstallApp();
+  const { installable, installee, ios, safariIOS, installer } = useInstallApp();
   const [masquee, setMasquee] = useState(true);
   const [guideOuvert, setGuideOuvert] = useState(false);
 
@@ -103,6 +103,7 @@ export default function InstallPrompt({ message }: InstallPromptProps) {
       {ios && (
         <IosInstallGuide
           ouvert={guideOuvert}
+          safari={safariIOS}
           onClose={() => {
             setGuideOuvert(false);
             reporter();
