@@ -21,6 +21,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useReminders } from '@/hooks/useReminders';
 import { toast } from 'sonner';
 import { cn } from '@/utils/cn';
+import InstallButton from '@/components/InstallButton';
 
 const items = [
   { to: '/admin', label: 'Tableau de bord', icon: LayoutDashboard, end: true },
@@ -97,6 +98,10 @@ export default function AdminSidebar() {
             </div>
           </div>
         </div>
+        {/* Toujours disponible : la praticienne doit pouvoir installer
+            l'application au moment qui lui convient, sans dépendre du passage
+            d'une bannière. */}
+        <InstallButton className="w-full justify-start rounded-xl px-4 py-2 text-muted-foreground" />
         <Button
           variant="ghost"
           onClick={onLogout}

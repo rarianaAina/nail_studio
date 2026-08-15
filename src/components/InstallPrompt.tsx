@@ -1,58 +1,66 @@
 import { useEffect, useState } from 'react';
 import { Download, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useInstallApp } from '@/hooks/useInstallApp';
 
-/** Événement propre à Chrome, absent des types standards du DOM. */
-interface BeforeInstallPromptEvent extends Event {
-  prompt: () => Promise<void>;
-  userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
+/**
+ * Durée pendant laquelle la bannière reste silencieuse après un refus.
+ *
+ * Un refus définitif fermerait la porte pour toujours : une visiteuse qui
+ * écarte la bannière lors de sa première visite n'aurait plus jamais
+ * l'occasion d'installer, alors qu'elle peut très bien le vouloir après
+ * quelques rendez-vous. Un mois laisse le temps d'oublier sans harceler.
+ *
+ * Le bouton permanent du menu, lui, reste disponible pendant ce silence.
+ */
+const SILENCE_JOURS = 30;
+const CLE_REFUS = 'installation-reportee-jusqu-au';
+
+function silencieuse(): boolean {
+  const jusquA = localStorage.getItem(CLE_REFUS);
+  if (!jusquA) return false;
+  const echeance = Number(jusquA);
+  // Valeur illisible — ancien format, stockage altéré : on repart à zéro.
+  if (!Number.isFinite(echeance)) {
+    localStorage.removeItem(CLE_REFUS);
+    return false;
+  }
+  return Date.now() < echeance;
 }
 
-const CLE_REFUS = 'installation-refusee';
+function reporter() {
+  localStorage.setItem(
+    CLE_REFUS,
+    String(Date.now() + SILENCE_JOURS * 24 * 60 * 60 * 1000)
+  );
+}
 
 interface InstallPromptProps {
   /** Texte adapté au public : la praticienne et les clientes n'installent pas pour les mêmes raisons. */
   message?: string;
 }
 
-/**
- * Invitation discrète à installer l'application.
- *
- * Chrome propose déjà l'installation de lui-même, mais par un menu que
- * personne n'ouvre. Une invitation visible change nettement le taux
- * d'installation — ce qui compte surtout pour la praticienne, l'application
- * installée étant la condition des notifications de réservation.
- */
 export default function InstallPrompt({ message }: InstallPromptProps) {
-  const [invite, setInvite] = useState<BeforeInstallPromptEvent | null>(null);
+  const { installable, installee, installer } = useInstallApp();
+  const [masquee, setMasquee] = useState(true);
 
+  // Le stockage local n'est lu qu'après le montage : le consulter pendant le
+  // rendu ferait diverger le premier affichage.
   useEffect(() => {
-    if (localStorage.getItem(CLE_REFUS)) return;
-
-    const onPrompt = (e: Event) => {
-      // Empêcher l'invitation native, pour la déclencher au moment choisi.
-      e.preventDefault();
-      setInvite(e as BeforeInstallPromptEvent);
-    };
-
-    window.addEventListener('beforeinstallprompt', onPrompt);
-    return () => window.removeEventListener('beforeinstallprompt', onPrompt);
+    setMasquee(silencieuse());
   }, []);
 
-  // L'événement n'est émis que si l'application est installable et ne l'est pas
-  // déjà : aucune bannière ne s'affiche une fois installée.
-  if (!invite) return null;
+  if (!installable || installee || masquee) return null;
 
-  const installer = async () => {
-    await invite.prompt();
-    const { outcome } = await invite.userChoice;
-    if (outcome === 'dismissed') localStorage.setItem(CLE_REFUS, '1');
-    setInvite(null);
+  const lancer = async () => {
+    const accepte = await installer();
+    if (!accepte) reporter();
+    setMasquee(true);
   };
 
   const refuser = () => {
-    localStorage.setItem(CLE_REFUS, '1');
-    setInvite(null);
+    reporter();
+    setMasquee(true);
   };
 
   return (
@@ -67,7 +75,7 @@ export default function InstallPrompt({ message }: InstallPromptProps) {
             {message ?? 'Accédez au salon depuis votre écran d\'accueil, sans passer par le navigateur.'}
           </p>
           <div className="mt-3 flex gap-2">
-            <Button size="sm" className="rounded-full" onClick={installer}>
+            <Button size="sm" className="rounded-full" onClick={lancer}>
               Installer
             </Button>
             <Button size="sm" variant="ghost" className="rounded-full" onClick={refuser}>

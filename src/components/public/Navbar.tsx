@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Menu, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import InstallButton from '@/components/InstallButton';
 
 const LOGO_URL = 'https://tzgcyehdjgqxljjttflj.supabase.co/storage/v1/object/public/images/logos/logo.webp';
 
@@ -131,6 +132,10 @@ export default function Navbar() {
               <Button asChild className="rounded-full">
                 <Link to="/reservation">Prendre rendez-vous</Link>
               </Button>
+              {/* Placé dans le menu mobile seulement : l'installation ne
+                  concerne en pratique que les téléphones. Le bouton disparaît
+                  de lui-même si le navigateur ne la propose pas. */}
+              <InstallButton className="mt-2 justify-center py-2 text-muted-foreground" />
             </div>
           </motion.div>
         )}

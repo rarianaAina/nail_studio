@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { CalendarHeart, Phone, Mail, MapPin, Facebook, Instagram, MessageCircle } from 'lucide-react';
 import { useSettings } from '@/hooks/useSettings';
+import InstallButton from '@/components/InstallButton';
 
 export default function Footer() {
   const { settings } = useSettings();
@@ -118,6 +119,7 @@ export default function Footer() {
         <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-border/60 pt-6 text-xs text-muted-foreground sm:flex-row">
           <p>© {new Date().getFullYear()} {salonInfo.name}. Tous droits réservés.</p>
           <nav className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
+            <InstallButton className="text-xs" />
             {[
               { to: '/mentions-legales', label: 'Mentions légales' },
               { to: '/confidentialite', label: 'Confidentialité' },
