@@ -15,6 +15,10 @@ interface BusinessSettingsRow {
   primary_color: string | null;
   accent_color: string | null;
   logo_url: string | null;
+  hero_title: string | null;
+  hero_title_accent: string | null;
+  hero_subtitle: string | null;
+  hero_image_url: string | null;
   created_at: string | null;
   updated_at: string | null;
 }
@@ -34,6 +38,10 @@ function rowToSettings(r: BusinessSettingsRow): SalonSettings {
     primaryColor: r.primary_color ?? undefined,
     accentColor: r.accent_color ?? undefined,
     logoUrl: r.logo_url ?? undefined,
+    heroTitle: r.hero_title ?? undefined,
+    heroTitleAccent: r.hero_title_accent ?? undefined,
+    heroSubtitle: r.hero_subtitle ?? undefined,
+    heroImageUrl: r.hero_image_url ?? undefined,
     updatedAt: r.updated_at ?? undefined,
   };
 }
@@ -94,6 +102,10 @@ export const settingsService = {
     if (data.primaryColor !== undefined) row.primary_color = data.primaryColor;
     if (data.accentColor !== undefined) row.accent_color = data.accentColor;
     if (data.logoUrl !== undefined) row.logo_url = data.logoUrl;
+    if (data.heroTitle !== undefined) row.hero_title = data.heroTitle;
+    if (data.heroTitleAccent !== undefined) row.hero_title_accent = data.heroTitleAccent;
+    if (data.heroSubtitle !== undefined) row.hero_subtitle = data.heroSubtitle;
+    if (data.heroImageUrl !== undefined) row.hero_image_url = data.heroImageUrl;
 
     if (existing) {
       const { data: updated, error } = await supabase

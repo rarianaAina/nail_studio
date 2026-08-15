@@ -29,19 +29,56 @@ export default function GeneralSettings() {
     email: '',
   });
   const [logoUrl, setLogoUrl] = useState<string>(DEFAULT_LOGO);
+  const [hero, setHero] = useState({ heroTitle: '', heroTitleAccent: '', heroSubtitle: '' });
+  const [heroImageUrl, setHeroImageUrl] = useState<string>('');
+  const [heroUploading, setHeroUploading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   useEffect(() => {
     if (!settings) return;
-    const { hours: _h, primaryColor: _p, accentColor: _a, logoUrl: _l, updatedAt: _u, id: _i, ...rest } = settings;
+    const {
+      hours: _h, primaryColor: _p, accentColor: _a, logoUrl: _l, updatedAt: _u, id: _i,
+      heroTitle: _t, heroTitleAccent: _ta, heroSubtitle: _st, heroImageUrl: _hi,
+      ...rest
+    } = settings;
     setInfo(rest);
     setLogoUrl(settings.logoUrl || DEFAULT_LOGO);
+    setHero({
+      heroTitle: settings.heroTitle ?? '',
+      heroTitleAccent: settings.heroTitleAccent ?? '',
+      heroSubtitle: settings.heroSubtitle ?? '',
+    });
+    setHeroImageUrl(settings.heroImageUrl ?? '');
   }, [settings]);
 
   const save = async () => {
-    await updateSettings({ ...info, logoUrl });
+    await updateSettings({ ...info, logoUrl, ...hero, heroImageUrl });
     toast.success('Paramètres enregistrés.');
+  };
+
+  const handleHeroUpload = async (file: File) => {
+    if (!file.type.startsWith('image/')) {
+      toast.error('Veuillez sélectionner une image.');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('L\'image ne doit pas dépasser 5 Mo.');
+      return;
+    }
+    setHeroUploading(true);
+    try {
+      const url = await uploadImage(file, 'hero');
+      setHeroImageUrl(url);
+      // Enregistrement immédiat : sans cela, quitter l'onglet sans cliquer sur
+      // « Enregistrer » laisserait un fichier en ligne que rien ne référence.
+      await updateSettings({ heroImageUrl: url });
+      toast.success('Image du bandeau mise à jour.');
+    } catch {
+      toast.error('Le téléversement a échoué.');
+    } finally {
+      setHeroUploading(false);
+    }
   };
 
   // ✅ Gestion de l'upload du logo avec compression automatique et renommage
@@ -193,6 +230,89 @@ export default function GeneralSettings() {
                     Compression en cours...
                   </div>
                 )}
+              </div>
+            </div>
+          </div>
+
+          <div className="sm:col-span-2 space-y-4 border-t border-border/60 pt-6">
+            <div>
+              <h3 className="font-display text-lg font-semibold">Bandeau d'accueil</h3>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Le premier bloc que voient vos visiteuses. Laissez un champ vide pour
+                revenir au texte d'origine.
+              </p>
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-1.5">
+                <Label htmlFor="hero-title">Titre, première ligne</Label>
+                <Input
+                  id="hero-title"
+                  value={hero.heroTitle}
+                  onChange={(e) => setHero((p) => ({ ...p, heroTitle: e.target.value }))}
+                  placeholder="L'art des ongles,"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="hero-accent">Titre, seconde ligne</Label>
+                <Input
+                  id="hero-accent"
+                  value={hero.heroTitleAccent}
+                  onChange={(e) => setHero((p) => ({ ...p, heroTitleAccent: e.target.value }))}
+                  placeholder={`sublimé avec ${info.name || 'votre salon'}`}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Affichée en italique, dans la couleur d'accentuation.
+                </p>
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="hero-subtitle">Texte d'introduction</Label>
+              <Textarea
+                id="hero-subtitle"
+                rows={3}
+                value={hero.heroSubtitle}
+                onChange={(e) => setHero((p) => ({ ...p, heroSubtitle: e.target.value }))}
+                placeholder="Des mains soignées, des ongles sublimes…"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Image du bandeau</Label>
+              <div className="flex flex-wrap items-start gap-4">
+                <div className="h-32 w-[102px] shrink-0 overflow-hidden rounded-xl border border-border/60 bg-secondary">
+                  {heroImageUrl ? (
+                    <img src={heroImageUrl} alt="Bandeau d'accueil" className="h-full w-full object-cover" />
+                  ) : (
+                    <div className="grid h-full place-items-center px-2 text-center text-[10px] text-muted-foreground">
+                      Image d'origine
+                    </div>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  <Button variant="outline" disabled={heroUploading} asChild>
+                    <label className="cursor-pointer">
+                      <Upload className="mr-2 h-4 w-4" />
+                      {heroUploading ? 'Téléversement…' : 'Téléverser une image'}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        disabled={heroUploading}
+                        onChange={(e) => {
+                          const f = e.target.files?.[0];
+                          if (f) handleHeroUpload(f);
+                          e.target.value = '';
+                        }}
+                      />
+                    </label>
+                  </Button>
+                  <p className="max-w-xs text-xs text-muted-foreground">
+                    Format portrait recommandé, 4 sur 5. L'image est compressée
+                    automatiquement et enregistrée dès le téléversement.
+                  </p>
+                </div>
               </div>
             </div>
           </div>

@@ -26,6 +26,11 @@ import { cn } from '@/utils/cn';
 import type { Service } from '@/types';
 import Seo from '@/components/Seo';
 
+/** Image du bandeau tant qu'aucune n'a été téléversée. Elle est aussi
+ *  préchargée dans index.html : les deux valeurs doivent rester identiques. */
+const HERO_PAR_DEFAUT =
+  'https://tzgcyehdjgqxljjttflj.supabase.co/storage/v1/object/public/images/services/1785598830482-uymrlg1.webp';
+
 const LOGO_URL = 'https://tzgcyehdjgqxljjttflj.supabase.co/storage/v1/object/public/images/logos/logo.webp';
 
 const fadeUp = {
@@ -171,6 +176,16 @@ export default function Home() {
     ],
   };
 
+  // Repli sur les textes d'origine : le bandeau ne doit jamais s'afficher vide,
+  // ni pendant le chargement des paramètres, ni si un champ est laissé vierge.
+  const heroTitre = settings?.heroTitle?.trim() || "L'art des ongles,";
+  const heroTitreAccent =
+    settings?.heroTitleAccent?.trim() || `sublimé avec ${salonInfo.name}`;
+  const heroSousTitre =
+    settings?.heroSubtitle?.trim() ||
+    'Des mains soignées, des ongles sublimes. Découvrez un univers de raffinement où chaque geste est pensé pour révéler votre beauté.';
+  const heroImage = settings?.heroImageUrl?.trim() || HERO_PAR_DEFAUT;
+
   // Récupérer les images de la galerie
   useEffect(() => {
     const fetchGallery = async () => {
@@ -219,12 +234,11 @@ export default function Home() {
               <Sparkles className="h-3.5 w-3.5" /> Salon d'onglerie haut de gamme
             </Badge>
             <h1 className="font-display text-5xl font-semibold leading-[1.05] text-balance text-foreground sm:text-6xl lg:text-7xl">
-              L'art des ongles,
-              <span className="block italic text-primary">sublimé avec {salonInfo.name}</span>
+              {heroTitre}
+              <span className="block italic text-primary">{heroTitreAccent}</span>
             </h1>
             <p className="mx-auto mt-6 max-w-xl text-base text-foreground/70 lg:mx-0">
-              Des mains soignées, des ongles sublimes. Découvrez un univers de
-              raffinement où chaque geste est pensé pour révéler votre beauté.
+              {heroSousTitre}
             </p>
             <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row lg:justify-start">
               <Button asChild size="lg" className="rounded-full px-7 shadow-glow">
@@ -279,8 +293,8 @@ export default function Home() {
           >
             <div className="relative aspect-[4/5] overflow-hidden rounded-[2rem] shadow-glow ring-1 ring-primary/10">
               <img
-                src="https://tzgcyehdjgqxljjttflj.supabase.co/storage/v1/object/public/images/services/1785598830482-uymrlg1.webp"
-                alt="Réalisation Harrys Studio"
+                src={heroImage}
+                alt={`Réalisation ${salonInfo.name}`}
                 className="h-full w-full object-cover"
                 fetchPriority="high"
                 loading="eager"

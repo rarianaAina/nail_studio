@@ -22,6 +22,12 @@ export interface SalonSettings {
   instagram: string;
   email: string;
   hours: BusinessHours[];
+  /** Bandeau d'accueil. Le titre est en deux parties : la seconde est composée
+   *  en italique et dans la couleur d'accentuation. */
+  heroTitle?: string;
+  heroTitleAccent?: string;
+  heroSubtitle?: string;
+  heroImageUrl?: string;
   primaryColor?: string;
   accentColor?: string;
   logoUrl?: string;
