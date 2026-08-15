@@ -9,6 +9,7 @@ import { useAppointments } from '@/hooks/useAppointments';
 import { formatAriary, STATUS_COLORS, STATUS_LABELS } from '@/utils';
 import { getTotalPrice, getServiceNames } from '@/types';
 import type { AppointmentStatus } from '@/types';
+import { toDateString } from '@/utils/date';
 
 const weekdays = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
 
@@ -19,7 +20,7 @@ export default function CalendarPage() {
     const d = new Date();
     return new Date(d.getFullYear(), d.getMonth(), 1);
   });
-  const [selected, setSelected] = useState<string | null>(new Date().toISOString().slice(0, 10));
+  const [selected, setSelected] = useState<string | null>(toDateString(new Date()));
 
   const cells = useMemo(() => {
     const year = cursor.getFullYear();
@@ -72,9 +73,12 @@ export default function CalendarPage() {
               ))}
               {cells.map((d, i) => {
                 if (!d) return <div key={i} className="min-h-[56px] rounded-xl bg-secondary/20 sm:min-h-[80px]" />;
-                const iso = d.toISOString().slice(0, 10);
+                // Composantes locales, et non `toISOString()` : la conversion
+                // UTC faisait interroger la veille dans tout fuseau en avance
+                // sur Greenwich — la case du 30 affichait les rendez-vous du 29.
+                const iso = toDateString(d);
                 const appts = byDate[iso] ?? [];
-                const isToday = iso === new Date().toISOString().slice(0, 10);
+                const isToday = iso === toDateString(new Date());
                 const isSelected = iso === selected;
                 return (
                   <button

@@ -29,6 +29,7 @@ import { supabase } from '@/lib/supabase';
 import { formatAriary, formatDuration, STATUS_COLORS, STATUS_LABELS } from '@/utils';
 import { getTotalPrice, getTotalDuration, getServiceNames } from '@/types';
 import type { Appointment, AppointmentStatus } from '@/types';
+import { parseDate } from '@/utils/date';
 
 const FILTERS: ('Tous' | AppointmentStatus)[] = ['Tous', 'pending', 'confirmed', 'completed', 'cancelled'];
 
@@ -225,7 +226,7 @@ export default function Appointments() {
                       </TableCell>
                       <TableCell className="font-medium text-primary">{formatAriary(totalPrice)}</TableCell>
                       <TableCell>
-                        {new Date(a.date).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })}
+                        {parseDate(a.date).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })}
                       </TableCell>
                       <TableCell>{a.time}</TableCell>
                       <TableCell>
@@ -340,7 +341,7 @@ export default function Appointments() {
                   <p className="mt-2 text-sm truncate">{serviceNames}</p>
                   <div className="mt-2 flex items-center justify-between">
                     <span className="text-xs text-muted-foreground">
-                      {new Date(a.date).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })} • {a.time}
+                      {parseDate(a.date).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })} • {a.time}
                     </span>
                     <span className="text-sm font-semibold text-primary">{formatAriary(totalPrice)}</span>
                   </div>

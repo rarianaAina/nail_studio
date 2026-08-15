@@ -1,3 +1,5 @@
+import { toDateString, parseDate } from './date';
+
 /**
  * Formate un montant en euros.
  * e.g. 25000 → "25 000 €"
@@ -26,7 +28,7 @@ export const formatDuration = (minutes: number): string => {
  * e.g. "2026-07-14" → "14 juil."
  */
 export const formatShortDate = (iso: string): string =>
-  new Date(iso).toLocaleDateString('fr-FR', {
+  parseDate(iso).toLocaleDateString('fr-FR', {
     day: '2-digit',
     month: 'short',
   });
@@ -36,7 +38,7 @@ export const formatShortDate = (iso: string): string =>
  * e.g. "2026-07-14" → "lundi 14 juillet 2026"
  */
 export const formatFullDate = (iso: string): string =>
-  new Date(iso).toLocaleDateString('fr-FR', {
+  parseDate(iso).toLocaleDateString('fr-FR', {
     weekday: 'long',
     day: 'numeric',
     month: 'long',
@@ -44,15 +46,17 @@ export const formatFullDate = (iso: string): string =>
   });
 
 /**
- * Get today's ISO date string.
+ * Date du jour au format 'YYYY-MM-DD'.
+ *
+ * `toISOString()` convertit vers UTC : dans tout fuseau en avance sur
+ * Greenwich — Paris comme Antananarivo — une date locale sérialisée ainsi
+ * recule d'un jour. Les composantes locales évitent cette conversion.
  */
-export const todayISO = (): string => new Date().toISOString().slice(0, 10);
+export const todayISO = (): string => toDateString(new Date());
 
-/**
- * Get ISO date string offset from today.
- */
+/** Date décalée de N jours, au format 'YYYY-MM-DD'. */
 export const isoOffset = (days: number): string => {
   const d = new Date();
   d.setDate(d.getDate() + days);
-  return d.toISOString().slice(0, 10);
+  return toDateString(d);
 };

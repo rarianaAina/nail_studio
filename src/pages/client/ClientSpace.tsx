@@ -41,7 +41,7 @@ import ReviewDialog from '@/components/client/ReviewDialog';
 import { reviewService } from '@/services/reviewService';
 import { formatAriary, STATUS_COLORS, STATUS_LABELS } from '@/utils';
 import { getTotalPrice, getServiceNames } from '@/types';
-import { isPastDate } from '@/utils/date';
+import { isPastDate, parseDate } from '@/utils/date';
 import { cn } from '@/utils/cn';
 import type { Appointment } from '@/types';
 
@@ -326,7 +326,7 @@ export default function ClientSpace() {
                         <div>
                           <p className="font-medium">{serviceNames}</p>
                           <p className="text-xs text-muted-foreground">
-                            {new Date(a.date).toLocaleDateString('fr-FR', {
+                            {parseDate(a.date).toLocaleDateString('fr-FR', {
                               weekday: 'long',
                               day: 'numeric',
                               month: 'long',
@@ -383,7 +383,7 @@ export default function ClientSpace() {
                         <div>
                           <p className="text-sm font-medium">{serviceNames}</p>
                           <p className="text-xs text-muted-foreground">
-                            {new Date(a.date).toLocaleDateString('fr-FR', {
+                            {parseDate(a.date).toLocaleDateString('fr-FR', {
                               day: 'numeric',
                               month: 'long',
                               year: 'numeric',
