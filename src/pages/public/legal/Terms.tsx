@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { useSettings } from '@/hooks/useSettings';
 import { useAppointmentSettings } from '@/hooks/useAppointmentSettings';
 import { usePaymentMethods } from '@/hooks/usePaymentMethods';
-import LegalPage, { LegalSection, LegalTodo } from './LegalPage';
+import LegalPage, { LegalSection } from './LegalPage';
 
 export default function Terms() {
   const { settings } = useSettings();
@@ -25,7 +25,7 @@ export default function Terms() {
       badge="Conditions"
       title="Conditions de réservation"
       intro="Comment se déroulent la prise de rendez-vous, l’annulation et le règlement."
-      updatedAt="13 août 2026"
+      updatedAt="16 août 2026"
     >
       <LegalSection title="Objet">
         <p>
@@ -79,10 +79,12 @@ export default function Terms() {
           et peut conduire à l’écourter, ou à la reporter si elle ne peut plus être réalisée
           correctement. Prévenez-nous dès que possible en cas d’imprévu.
         </p>
-        <LegalTodo>
-          Politique en cas d’absence répétée sans prévenir : à définir avec la gérante — simple
-          rappel, ou demande d’acompte pour les rendez-vous suivants.
-        </LegalTodo>
+        <p>
+          Une absence sans nouvelle immobilise un créneau qu’une autre cliente aurait pu prendre.
+          Aucun frais n’est réclamé, mais des absences répétées peuvent conduire le salon à ne plus
+          accepter de réservation en ligne de votre part, et à vous proposer de convenir de vos
+          rendez-vous directement avec lui.
+        </p>
       </LegalSection>
 
       <LegalSection title="Tarifs et règlement">

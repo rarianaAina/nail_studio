@@ -62,8 +62,18 @@ export function LegalSection({ title, children }: { title: string; children: Rea
   );
 }
 
-/** Encadré signalant une information que seul l'exploitant peut fournir. */
+/**
+ * Encadré signalant une information que seul l'exploitant peut fournir.
+ *
+ * Il ne s'affiche qu'en développement. C'est une note de chantier adressée à
+ * qui maintient le site, pas une information destinée aux visiteuses : leur
+ * annoncer que les mentions légales sont incomplètes ne leur apporte rien et
+ * décrédibilise le salon. La lacune juridique, elle, subsiste tant que
+ * l'information manque — la masquer ne la comble pas.
+ */
 export function LegalTodo({ children }: { children: React.ReactNode }) {
+  if (!import.meta.env.DEV) return null;
+
   return (
     <p className="rounded-lg border border-dashed border-primary/40 bg-primary/5 px-4 py-3 text-xs text-foreground/70">
       <strong className="font-medium text-primary">À compléter — </strong>

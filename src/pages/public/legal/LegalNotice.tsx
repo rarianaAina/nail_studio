@@ -14,7 +14,7 @@ export default function LegalNotice() {
       badge="Mentions légales"
       title="Mentions légales"
       intro="Qui édite ce site, qui l’héberge, et à qui appartiennent les contenus qui s’y trouvent."
-      updatedAt="13 août 2026"
+      updatedAt="16 août 2026"
     >
       <LegalSection title="Éditeur du site">
         <ul className="space-y-1.5">
@@ -38,14 +38,28 @@ export default function LegalNotice() {
       </LegalSection>
 
       <LegalSection title="Hébergement">
+        <p>Le site est hébergé par :</p>
+        <ul className="space-y-1.5">
+          <li>
+            <strong>Vercel Inc.</strong> — 340 S Lemon Ave #4133, Walnut, CA 91789, États-Unis.
+            Contact :{' '}
+            <a className="text-primary underline" href="https://vercel.com/help">
+              vercel.com/help
+            </a>
+          </li>
+          <li>
+            <strong>Supabase, Inc.</strong> — 65 Chulia Street #38-02/03, OCBC Centre, Singapour
+            049513. Contact :{' '}
+            <a className="text-primary underline" href="https://supabase.com/support">
+              supabase.com/support
+            </a>
+          </li>
+        </ul>
         <p>
-          Le site est hébergé par <strong>Vercel Inc.</strong> Les données — comptes, rendez-vous et
-          photographies — sont hébergées par <strong>Supabase</strong>.
+          Vercel assure la diffusion du site ; Supabase héberge les données — comptes, rendez-vous
+          et photographies. Ni l’un ni l’autre ne publie de numéro de téléphone dédié au support :
+          leurs formulaires de contact en tiennent lieu.
         </p>
-        <LegalTodo>
-          La loi impose d’indiquer la dénomination, l’adresse et le numéro de téléphone de
-          l’hébergeur. À compléter pour Vercel Inc. et pour Supabase Inc.
-        </LegalTodo>
       </LegalSection>
 
       <LegalSection title="Propriété intellectuelle">
