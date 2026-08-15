@@ -10,15 +10,15 @@ import { useReminderSettings } from '@/hooks/useReminderSettings';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 import { useState } from 'react';
-import type { Reminder } from '@/types/reminder';
+import { parseDate } from '@/utils/date';
 
-const RECIPIENT_ICON: Record<Reminder['recipients'], typeof User> = {
+const RECIPIENT_ICON: Record<string, typeof User> = {
   client: User,
   admin: ShieldCheck,
   both: Users,
 };
 
-const RECIPIENT_LABEL: Record<Reminder['recipients'], string> = {
+const RECIPIENT_LABEL: Record<string, string> = {
   client: 'Cliente',
   admin: 'Administratrice',
   both: 'Les deux',
@@ -29,6 +29,18 @@ const DELAY_LABEL: Record<number, string> = {
   12: '12 h avant',
   2: '2 h avant',
 };
+
+/**
+ * Ces trois accesseurs ne peuvent pas renvoyer `undefined`.
+ *
+ * Les colonnes `recipients` et `delay_hours` sont un texte et un entier sans
+ * contrainte : rien n'empêche une valeur inattendue d'y figurer. Rendre
+ * `<Icon />` avec un composant absent fait planter React et emporte toute la
+ * page — un cas où une valeur imprévue ne doit surtout pas être fatale.
+ */
+const iconeDestinataire = (r: string) => RECIPIENT_ICON[r] ?? Bell;
+const libelleDestinataire = (r: string) => RECIPIENT_LABEL[r] ?? r;
+const libelleDelai = (h: number) => DELAY_LABEL[h] ?? `${h} h avant`;
 
 const fadeUp = {
   initial: { opacity: 0, y: 16 },
@@ -47,7 +59,9 @@ function formatScheduledAt(iso: string): string {
 }
 
 function formatApptDate(date: string, time: string): string {
-  return `${new Date(date).toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' })} à ${time}`;
+  // `parseDate` et non `new Date` : la seconde lit la chaîne comme minuit UTC
+  // et décale le jour affiché.
+  return `${parseDate(date).toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' })} à ${time}`;
 }
 
 export default function Notifications() {
@@ -122,18 +136,18 @@ export default function Notifications() {
                     </Badge>
                   </p>
                   <p className="mt-0.5 text-sm text-muted-foreground">
-                    {DELAY_LABEL[reminderSettings.delayHours]} · Destinataire : {RECIPIENT_LABEL[reminderSettings.recipients]}
+                    {libelleDelai(reminderSettings.delayHours)} · Destinataire : {libelleDestinataire(reminderSettings.recipients)}
                   </p>
                 </div>
               </div>
               <div className="flex flex-wrap gap-3 text-sm">
                 <div className="flex items-center gap-2 rounded-xl bg-white/70 px-3 py-2 shadow-soft">
                   <Clock className="h-4 w-4 text-primary" />
-                  <span>{DELAY_LABEL[reminderSettings.delayHours]}</span>
+                  <span>{libelleDelai(reminderSettings.delayHours)}</span>
                 </div>
                 <div className="flex items-center gap-2 rounded-xl bg-white/70 px-3 py-2 shadow-soft">
                   <Users className="h-4 w-4 text-primary" />
-                  <span>{RECIPIENT_LABEL[reminderSettings.recipients]}</span>
+                  <span>{libelleDestinataire(reminderSettings.recipients)}</span>
                 </div>
               </div>
             </CardContent>
@@ -188,7 +202,7 @@ export default function Notifications() {
             ) : (
               <div className="divide-y divide-border/60">
                 {[...overdue, ...upcoming].map((r, i) => {
-                  const Icon = RECIPIENT_ICON[r.recipients];
+                  const Icon = iconeDestinataire(r.recipients);
                   const isOverdue = new Date(r.scheduledAt) <= new Date();
                   return (
                     <motion.div
@@ -227,7 +241,7 @@ export default function Notifications() {
                         </div>
                         <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                           <Icon className="h-3 w-3" />
-                          <span>{RECIPIENT_LABEL[r.recipients]}</span>
+                          <span>{libelleDestinataire(r.recipients)}</span>
                         </div>
                         <Button
                           size="sm"
@@ -268,7 +282,7 @@ export default function Notifications() {
             <CardContent className="p-0">
               <div className="divide-y divide-border/60">
                 {sent.map((r) => {
-                  const Icon = RECIPIENT_ICON[r.recipients];
+                  const Icon = iconeDestinataire(r.recipients);
                   return (
                     <div key={r.id} className="flex items-center justify-between gap-3 p-4 opacity-70">
                       <div className="flex items-center gap-3">
@@ -283,7 +297,7 @@ export default function Notifications() {
                         </div>
                       </div>
                       <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                        <Icon className="h-3.5 w-3.5" /> {RECIPIENT_LABEL[r.recipients]}
+                        <Icon className="h-3.5 w-3.5" /> {libelleDestinataire(r.recipients)}
                       </div>
                     </div>
                   );
