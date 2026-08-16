@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Menu, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/hooks/useAuth';
 import InstallButton from '@/components/InstallButton';
 
 const LOGO_URL = 'https://tzgcyehdjgqxljjttflj.supabase.co/storage/v1/object/public/images/logos/logo.webp';
@@ -21,6 +22,17 @@ export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
   const location = useLocation();
+  const { user, loading } = useAuth();
+
+  // La barre proposait « Connexion » sans jamais consulter l'état
+  // d'authentification. Une cliente déjà connectée revenant sur l'accueil se
+  // croyait déconnectée, et n'avait aucun chemin vers son espace.
+  //
+  // C'est particulièrement trompeur dans l'application installée, dont le
+  // `start_url` est justement l'accueil : chaque ouverture donnait l'illusion
+  // d'une session perdue.
+  const espace = user?.role === 'admin' ? '/admin' : '/mon-espace';
+  const libelleEspace = user?.role === 'admin' ? 'Administration' : 'Mon espace';
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -84,9 +96,16 @@ export default function Navbar() {
         </div>
 
         <div className="hidden items-center gap-2 md:flex">
-          <Button asChild size="sm" variant="ghost" className="rounded-full">
-            <Link to="/connexion">Connexion</Link>
-          </Button>
+          {/* Rien tant que la session n'est pas tranchée : afficher
+              « Connexion » par défaut ferait clignoter le mauvais libellé sous
+              les yeux d'une personne déjà connectée. */}
+          {!loading && (
+            <Button asChild size="sm" variant="ghost" className="rounded-full">
+              <Link to={user ? espace : '/connexion'}>
+                {user ? libelleEspace : 'Connexion'}
+              </Link>
+            </Button>
+          )}
           <Button asChild size="sm" className="rounded-full">
             <Link to="/reservation">Prendre rendez-vous</Link>
           </Button>
@@ -126,9 +145,13 @@ export default function Navbar() {
                   {l.label}
                 </NavLink>
               ))}
-              <Button asChild variant="outline" className="mt-2 rounded-full">
-                <Link to="/connexion">Connexion</Link>
-              </Button>
+              {!loading && (
+                <Button asChild variant="outline" className="mt-2 rounded-full">
+                  <Link to={user ? espace : '/connexion'}>
+                    {user ? libelleEspace : 'Connexion'}
+                  </Link>
+                </Button>
+              )}
               <Button asChild className="rounded-full">
                 <Link to="/reservation">Prendre rendez-vous</Link>
               </Button>
