@@ -3,6 +3,7 @@ import { lazy, Suspense } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { PublicLayout, AdminLayout } from '@/layouts';
 import ProtectedRoute from '@/components/ProtectedRoute';
+import { useDemarrageApplication } from '@/hooks/useDemarrageApplication';
 import Availability from '@/pages/public/Availability';
 
 // ✅ Lazy loading des pages publiques
@@ -62,6 +63,10 @@ const PageLoader = () => (
 );
 
 export default function AppRoutes() {
+  // Lancée depuis l'écran d'accueil, l'application s'ouvre sur l'espace de la
+  // personne connectée plutôt que sur la vitrine publique.
+  useDemarrageApplication();
+
   return (
     <Suspense fallback={<PageLoader />}>
       <Routes>
