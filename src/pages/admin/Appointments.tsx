@@ -1,7 +1,7 @@
 // pages/admin/Appointments.tsx
 import { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Search, Eye, Pencil, Check, CheckCheck, X, CalendarPlus, Bell, Image as ImageIcon } from 'lucide-react';
+import { Search, Eye, Pencil, Check, CheckCheck, X, CalendarPlus, Bell, Trash2, Image as ImageIcon } from 'lucide-react';
 import { useNailServices } from '@/hooks/useNailServices';
 import { useClients } from '@/hooks/useClients';
 import {
@@ -29,12 +29,16 @@ import { supabase } from '@/lib/supabase';
 import { formatAriary, formatDuration, STATUS_COLORS, STATUS_LABELS } from '@/utils';
 import { getTotalPrice, getTotalDuration, getServiceNames } from '@/types';
 import type { Appointment, AppointmentStatus } from '@/types';
-import { parseDate } from '@/utils/date';
+import { parseDate, formatDate } from '@/utils/date';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 const FILTERS: ('Tous' | AppointmentStatus)[] = ['Tous', 'pending', 'confirmed', 'completed', 'cancelled'];
 
 export default function Appointments() {
-  const { appointments, updateStatus, createAppointment, updateAppointment, refresh } = useAppointments();
+  const { appointments, updateStatus, createAppointment, updateAppointment, deleteAppointment, refresh } = useAppointments();
   const { reminderSettings } = useReminderSettings();
   const { services } = useNailServices();
   const { clients } = useClients();
@@ -47,6 +51,9 @@ export default function Appointments() {
   // Rendez-vous en cours de modification. Le même formulaire sert aux deux
   // usages : les champs sont identiques, seul l'enregistrement diffère.
   const [editingId, setEditingId] = useState<string | null>(null);
+  // Rendez-vous dont la suppression est en attente de confirmation.
+  const [aSupprimer, setASupprimer] = useState<Appointment | null>(null);
+  const [suppression, setSuppression] = useState(false);
   const [newAppt, setNewAppt] = useState({
     clientId: '',
     clientName: '',
@@ -83,6 +90,20 @@ export default function Appointments() {
     if (!paymentMethodId) return '💳';
     const method = paymentMethods.find(m => m.id === paymentMethodId);
     return method?.icon || '💳';
+  };
+
+  const confirmerSuppression = async () => {
+    if (!aSupprimer) return;
+    setSuppression(true);
+    try {
+      await deleteAppointment(aSupprimer.id);
+      toast.success('Rendez-vous supprimé.');
+      setASupprimer(null);
+    } catch {
+      toast.error('La suppression a échoué.');
+    } finally {
+      setSuppression(false);
+    }
   };
 
   const handleStatus = async (id: string, status: AppointmentStatus) => {
@@ -294,10 +315,21 @@ export default function Appointments() {
                             </Button>
                           )}
                           {a.status !== 'cancelled' && a.status !== 'completed' && (
-                            <Button size="icon" variant="ghost" className="h-8 w-8 text-rose-600" onClick={() => handleStatus(a.id, 'cancelled')}>
+                            <Button size="icon" variant="ghost" className="h-8 w-8 text-rose-600" title="Annuler" onClick={() => handleStatus(a.id, 'cancelled')}>
                               <X className="h-4 w-4" />
                             </Button>
                           )}
+                          {/* Distinct de l'annulation : celle-ci conserve la
+                              trace du rendez-vous, la suppression l'efface. */}
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-8 w-8 text-muted-foreground hover:text-rose-600"
+                            title="Supprimer définitivement"
+                            onClick={() => setASupprimer(a)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
                         </div>
                       </TableCell>
                     </motion.tr>
@@ -369,6 +401,46 @@ export default function Appointments() {
           </div>
         </CardContent>
       </Card>
+
+      <AlertDialog open={!!aSupprimer} onOpenChange={(o) => !o && setASupprimer(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Supprimer ce rendez-vous ?</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-3">
+                <span className="block font-medium text-foreground">
+                  {aSupprimer?.clientName}
+                  {aSupprimer && ` — ${getServiceNames(aSupprimer)}`}
+                  {aSupprimer && ` le ${formatDate(aSupprimer.date)} à ${aSupprimer.time}`}
+                </span>
+                <span className="block">
+                  La suppression est définitive. Elle efface aussi l'avis et les rappels
+                  rattachés, et retire le montant des compteurs de la cliente.
+                </span>
+                <span className="block">
+                  Pour un rendez-vous qui n'aura pas lieu, préférez l'annulation : elle
+                  en conserve la trace.
+                </span>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={suppression}>Annuler</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                // Sans cela, la boîte se ferme avant la fin de la requête et
+                // une erreur éventuelle passerait inaperçue.
+                e.preventDefault();
+                confirmerSuppression();
+              }}
+              disabled={suppression}
+              className="bg-rose-600 text-white hover:bg-rose-700"
+            >
+              {suppression ? 'Suppression…' : 'Supprimer définitivement'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <Dialog
         open={showCreate}
