@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Mail, Lock, User as UserIcon,
@@ -18,7 +18,7 @@ type Mode = 'login' | 'register';
 const LOGO_URL = 'https://tzgcyehdjgqxljjttflj.supabase.co/storage/v1/object/public/images/logos/logo.webp';
 
 export default function Auth() {
-  const { login, register } = useAuth();
+  const { login, register, user, loading: sessionEnCours } = useAuth();
   const navigate = useNavigate();
 
   const [mode, setMode] = useState<Mode>('login');
@@ -49,6 +49,14 @@ export default function Auth() {
       setLoading(false);
     }
   };
+
+  // Une personne déjà connectée n'a rien à faire sur ce formulaire. Le lui
+  // présenter laissait croire à une déconnexion : c'est exactement ce qui se
+  // produisait à chaque ouverture de l'application installée, dont le
+  // `start_url` mène à l'accueil public.
+  if (!sessionEnCours && user) {
+    return <Navigate to={user.role === 'admin' ? '/admin' : '/mon-espace'} replace />;
+  }
 
   return (
     <div className="grid min-h-screen lg:grid-cols-2">
