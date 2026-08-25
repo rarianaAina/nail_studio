@@ -62,12 +62,21 @@ export function LegalSection({ title, children }: { title: string; children: Rea
   );
 }
 
-/** Encadré signalant une information que seul l'exploitant peut fournir. */
-export function LegalTodo({ children }: { children: React.ReactNode }) {
-  return (
-    <p className="rounded-lg border border-dashed border-primary/40 bg-primary/5 px-4 py-3 text-xs text-foreground/70">
-      <strong className="font-medium text-primary">À compléter — </strong>
-      {children}
-    </p>
-  );
+/**
+ * Information que seul l'exploitant peut fournir.
+ *
+ * Volontairement muet : ces encadrés s'affichaient aux visiteuses, qui n'ont
+ * que faire de nos notes de rédaction — un « À compléter » sur une page légale
+ * donne surtout l'impression d'un site inachevé.
+ *
+ * Le composant est conservé plutôt que les appels supprimés : le texte de
+ * chaque encadré reste lisible dans le source et recense ce qu'il manque. Au
+ * fur et à mesure que ces informations sont connues, remplacez l'encadré par
+ * le contenu correspondant. Quand il n'en restera aucun, ce composant pourra
+ * disparaître.
+ *
+ * Le paramètre est ignoré : le préfixe `_` l'exempte de `noUnusedParameters`.
+ */
+export function LegalTodo(_props: { children: React.ReactNode }) {
+  return null;
 }
