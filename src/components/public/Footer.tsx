@@ -35,7 +35,7 @@ export default function Footer() {
               </div>
             </div>
             <p className="mt-4 text-sm text-muted-foreground">
-              Salon d'onglerie haut de gamme. Sublimez vos mains
+              Sublimez vos mains
               dans un cadre raffiné et apaisant.
             </p>
           </div>
