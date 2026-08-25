@@ -10,3 +10,5 @@ export { useReminders } from './useReminders';
 export { useReminderSettings } from './useReminderSettings';
 export { useConfig } from './useConfig';
 export { useActiveConfig } from './useActiveConfig';
+export { useFrequentation } from './useFrequentation';
+export { usePageTracking } from './usePageTracking';

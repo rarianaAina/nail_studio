@@ -14,7 +14,8 @@ import {
   CalendarHeart,
   LogOut,
   Bell,
-  MessageSquare
+  MessageSquare,
+  Globe
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
@@ -30,6 +31,7 @@ const items = [
   { to: '/admin/prestations', label: 'Prestations', icon: Sparkles },
   { to: '/admin/avis', label: 'Avis', icon: MessageSquare },
   { to: '/admin/statistiques', label: 'Statistiques', icon: BarChart3 },
+  { to: '/admin/frequentation', label: 'Fréquentation', icon: Globe },
   { to: '/admin/notifications', label: 'Notifications', icon: Bell, badge: true },
   { to: '/admin/parametres', label: 'Paramètres', icon: Settings },
 ];

@@ -33,6 +33,7 @@ const CalendarPage = lazy(() => import('@/pages/admin/Calendar'));
 const Clients = lazy(() => import('@/pages/admin/Clients'));
 const AdminServices = lazy(() => import('@/pages/admin/AdminServices'));
 const Statistics = lazy(() => import('@/pages/admin/Statistics'));
+const Frequentation = lazy(() => import('@/pages/admin/Frequentation'));
 const SettingsLayout = lazy(() => import('@/pages/admin/settings/index'));
 const Notifications = lazy(() => import('@/pages/admin/Notifications'));
 const GalleryManagement = lazy(() => import('@/pages/admin/GalleryManagement'));
@@ -109,6 +110,7 @@ export default function AppRoutes() {
           <Route path="clientes" element={<Clients />} />
           <Route path="prestations" element={<AdminServices />} />
           <Route path="statistiques" element={<Statistics />} />
+          <Route path="frequentation" element={<Frequentation />} />
           <Route path="notifications" element={<Notifications />} />
           <Route path="avis" element={<Reviews />} />
 

@@ -66,3 +66,12 @@ export type {
   UpdateSpecialInfoDto,
 } from './specialInfo';
 export type { ReferenceImage } from './appointment'; // ✅ Ajout du type ReferenceImage
+export type {
+  FrequentationStats,
+  PointFrequentation,
+  PageConsultee,
+  Provenance,
+  Appareil,
+  Periode,
+} from './audience';
+export { PERIODES } from './audience';
