@@ -12,7 +12,7 @@ export default function Privacy() {
       badge="Confidentialité"
       title="Politique de confidentialité"
       intro={`Quelles données ${name} collecte, pourquoi, combien de temps elles sont conservées, et comment en obtenir la suppression.`}
-      updatedAt="13 août 2026"
+      updatedAt="25 août 2026"
     >
       <LegalSection title="Responsable du traitement">
         <p>
@@ -120,6 +120,10 @@ export default function Privacy() {
             Code de commerce.
           </li>
           <li>Compte cliente : jusqu'à sa suppression, à votre initiative ou à la nôtre après trois ans d'inactivité.</li>
+          <li>
+            Mesures d’audience anonymes : <strong>treize mois</strong>, durée recommandée par la
+            CNIL, afin de pouvoir comparer une saison à la précédente.
+          </li>
         </ul>
       </LegalSection>
 
@@ -155,14 +159,42 @@ export default function Privacy() {
 
       <LegalSection title="Cookies et stockage local">
         <p>
-          <strong>Ce site n’utilise aucun cookie publicitaire ni aucun outil de mesure d’audience.</strong>{' '}
-          Ni Google Analytics, ni pixel de réseau social, ni traceur tiers.
+          <strong>Ce site n’utilise aucun cookie publicitaire ni aucun traceur tiers.</strong>{' '}
+          Ni Google Analytics, ni pixel de réseau social.
         </p>
         <p>
           Seul un jeton de connexion est enregistré dans votre navigateur lorsque vous vous
           identifiez, afin de vous éviter de saisir votre mot de passe à chaque page. Il est
           strictement nécessaire au fonctionnement du service et disparaît à la déconnexion.
           C’est pourquoi aucun bandeau de consentement ne vous est présenté.
+        </p>
+      </LegalSection>
+
+      <LegalSection title="Mesure d’audience">
+        <p>
+          Nous comptons les pages consultées afin de savoir ce qui intéresse nos visiteuses et
+          d’améliorer le site. Cette mesure est réalisée par nos propres moyens, sans recourir à
+          un service tiers : <strong>rien n’est déposé dans votre navigateur, et aucune donnée
+          n’est transmise à qui que ce soit.</strong>
+        </p>
+        <p>Pour chaque page ouverte, nous conservons uniquement :</p>
+        <ul className="list-disc space-y-1.5 pl-5">
+          <li>la page consultée et la date ;</li>
+          <li>le site depuis lequel vous êtes arrivée — un réseau social, un moteur de recherche — sans l’adresse précise ;</li>
+          <li>la catégorie d’appareil : mobile, tablette ou ordinateur.</li>
+        </ul>
+        <p>
+          Pour distinguer deux visiteuses sans les identifier, une empreinte est calculée à partir
+          de votre adresse IP et de votre navigateur. <strong>Cette adresse n’est jamais
+          enregistrée</strong> : seule l’empreinte l’est, et elle est renouvelée chaque nuit. Il
+          nous est donc impossible de vous reconnaître d’un jour à l’autre, de relier ces
+          consultations à votre dossier de cliente, ou de remonter jusqu’à vous.
+        </p>
+        <p>
+          Ce dispositif répond aux conditions posées par la CNIL pour les mesures d’audience
+          exemptées de consentement. Il ne produit ni profilage, ni publicité ciblée. Si vous
+          préférez ne pas y figurer, le mode de navigation privée de votre navigateur ou une
+          extension de blocage suffisent à vous en soustraire.
         </p>
       </LegalSection>
 

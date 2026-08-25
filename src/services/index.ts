@@ -9,3 +9,4 @@ export { reminderService } from './reminderService';
 export { reminderSettingsService } from './reminderSettingsService';
 export { configService } from './configService';
 export { uploadImage } from './storageService';
+export { audienceService } from './audienceService';
