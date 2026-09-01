@@ -51,9 +51,12 @@ WHERE id <> (
   LIMIT 1
 );
 
--- Un index unique sur une expression constante n'autorise qu'une ligne.
+-- `id` étant la clé primaire, `id IS NOT NULL` vaut vrai pour toute ligne :
+-- l'index unique sur cette expression n'en autorise donc qu'une seule.
+-- Une expression purement constante conviendrait mal — elle ne référence
+-- aucune colonne, ce que le planificateur n'accepte pas partout.
 CREATE UNIQUE INDEX IF NOT EXISTS loyalty_settings_ligne_unique
-  ON public.loyalty_settings ((true));
+  ON public.loyalty_settings ((id IS NOT NULL));
 
 -- ---------------------------------------------------------------------------
 -- 2. Le taux accepte les décimales que l'écran propose
@@ -65,6 +68,13 @@ ALTER TABLE public.loyalty_settings
 
 ALTER TABLE public.loyalty_settings
   ALTER COLUMN points_per_euro SET DEFAULT 1;
+
+-- Une valeur déjà hors bornes ferait échouer l'ajout de la contrainte : elle
+-- est ramenée au défaut. Un taux nul ou absent n'accordait de toute façon
+-- aucun point.
+UPDATE public.loyalty_settings
+SET points_per_euro = 1
+WHERE points_per_euro IS NULL OR points_per_euro <= 0 OR points_per_euro > 1000;
 
 -- Un taux nul ou négatif n'a pas de sens ; le plafond garde le produit dans
 -- les bornes de `clients.loyalty_points`, qui est un entier sur 32 bits.
@@ -125,6 +135,25 @@ $$;
 -- 4. Le réglage se propage de lui-même
 -- ---------------------------------------------------------------------------
 
+-- Recréée à l'identique plutôt que supposée présente : ce script s'applique
+-- parfois à la main, hors de l'ordre des migrations.
+CREATE OR REPLACE FUNCTION public.recalc_all_loyalty_points()
+RETURNS text
+LANGUAGE plpgsql
+SET search_path = public, pg_temp
+AS $$
+DECLARE
+  r record;
+  n integer := 0;
+BEGIN
+  FOR r IN SELECT id FROM public.clients LOOP
+    PERFORM public.recalc_client_totals(r.id);
+    n := n + 1;
+  END LOOP;
+  RETURN format('%s clientes recalculées', n);
+END;
+$$;
+
 CREATE OR REPLACE FUNCTION public.loyalty_settings_propager()
 RETURNS trigger
 LANGUAGE plpgsql
@@ -138,13 +167,26 @@ BEGIN
 END;
 $$;
 
-DROP TRIGGER IF EXISTS loyalty_settings_recalcul ON public.loyalty_settings;
-CREATE TRIGGER loyalty_settings_recalcul
-  AFTER INSERT OR UPDATE OF points_per_euro ON public.loyalty_settings
+DROP TRIGGER IF EXISTS loyalty_settings_recalcul        ON public.loyalty_settings;
+DROP TRIGGER IF EXISTS loyalty_settings_recalcul_insert ON public.loyalty_settings;
+DROP TRIGGER IF EXISTS loyalty_settings_recalcul_update ON public.loyalty_settings;
+
+-- Deux déclarations, et non une couvrant `INSERT OR UPDATE` : la clause `WHEN`
+-- est évaluée en SQL et non en PL/pgSQL — `TG_OP` n'y existe pas — et `OLD`
+-- n'a pas de sens pour une insertion. Filtrer sur l'ancienne valeur impose
+-- donc de séparer les deux opérations.
+
+CREATE TRIGGER loyalty_settings_recalcul_insert
+  AFTER INSERT ON public.loyalty_settings
   FOR EACH ROW
-  -- À l'insertion, OLD n'existe pas : la condition ne porte que sur la
-  -- modification, où un enregistrement sans changement de taux est fréquent.
-  WHEN (TG_OP = 'INSERT' OR OLD.points_per_euro IS DISTINCT FROM NEW.points_per_euro)
+  EXECUTE FUNCTION public.loyalty_settings_propager();
+
+-- À la modification, le filtre a son utilité : enregistrer le formulaire sans
+-- avoir touché au taux ne doit pas relancer une reprise complète.
+CREATE TRIGGER loyalty_settings_recalcul_update
+  AFTER UPDATE OF points_per_euro ON public.loyalty_settings
+  FOR EACH ROW
+  WHEN (OLD.points_per_euro IS DISTINCT FROM NEW.points_per_euro)
   EXECUTE FUNCTION public.loyalty_settings_propager();
 
 -- ---------------------------------------------------------------------------
@@ -189,7 +231,8 @@ COMMIT;
 -- ---------------------------------------------------------------------------
 -- ROLLBACK
 -- ---------------------------------------------------------------------------
--- DROP TRIGGER IF EXISTS loyalty_settings_recalcul ON public.loyalty_settings;
+-- DROP TRIGGER IF EXISTS loyalty_settings_recalcul_insert ON public.loyalty_settings;
+-- DROP TRIGGER IF EXISTS loyalty_settings_recalcul_update ON public.loyalty_settings;
 -- DROP FUNCTION IF EXISTS public.loyalty_settings_propager();
 -- DROP INDEX IF EXISTS public.loyalty_settings_ligne_unique;
 -- ALTER TABLE public.loyalty_settings DROP CONSTRAINT IF EXISTS loyalty_settings_taux_valide;
