@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
+import { queryClient, queryKeys } from '@/lib/queryClient';
 
 interface LoyaltySettings {
   id: string;
@@ -18,6 +19,7 @@ export default function LoyaltySettings() {
   const [settings, setSettings] = useState<LoyaltySettings | null>(null);
   const [loading, setLoading] = useState(true);
   const [pointsPerEuro, setPointsPerEuro] = useState<number>(1);
+  const [saving, setSaving] = useState(false);
 
   // Charger les paramètres
   useEffect(() => {
@@ -59,6 +61,14 @@ export default function LoyaltySettings() {
   const save = async () => {
     if (!settings) return;
 
+    // La base refuse un taux nul ou négatif ; le dire ici évite de renvoyer
+    // une erreur de contrainte à la gérante.
+    if (!(pointsPerEuro > 0)) {
+      toast.error('Le taux doit être supérieur à zéro.');
+      return;
+    }
+
+    setSaving(true);
     try {
       const { error } = await supabase
         .from('loyalty_settings')
@@ -70,10 +80,19 @@ export default function LoyaltySettings() {
 
       if (error) throw error;
 
-      toast.success(`Paramètres enregistrés : ${pointsPerEuro} point(s) par euro`);
+      // L'enregistrement déclenche en base le recalcul de toutes les fiches :
+      // les points affichés ailleurs sont désormais périmés.
+      queryClient.invalidateQueries({ queryKey: queryKeys.clients });
+      queryClient.invalidateQueries({ queryKey: queryKeys.stats });
+
+      toast.success(`Taux enregistré : ${pointsPerEuro} point(s) par euro`, {
+        description: 'Les points de toutes les clientes ont été recalculés.',
+      });
     } catch (error) {
       console.error('Erreur:', error);
       toast.error('Erreur lors de l\'enregistrement');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -105,7 +124,7 @@ export default function LoyaltySettings() {
               <Input
                 id="points-per-euro"
                 type="number"
-                min={0}
+                min={0.5}
                 max={10}
                 step={0.5}
                 value={pointsPerEuro}
@@ -121,6 +140,15 @@ export default function LoyaltySettings() {
             </p>
           </div>
 
+          {/* Les points ne sont pas accumulés mais recalculés depuis les
+              rendez-vous : le changement vaut aussi pour le passé. Ne pas le
+              dire exposerait la gérante à voir tous les soldes bouger. */}
+          <div className="rounded-xl border border-amber-200 bg-amber-50/60 p-4 text-xs text-amber-900">
+            Changer ce taux <strong>recalcule les points de toutes les clientes</strong>, y compris
+            sur leurs visites passées. Une cliente ayant dépensé 45 € affichera toujours
+            45 × le taux retenu.
+          </div>
+
           <div className="rounded-xl bg-secondary/50 p-4 text-sm">
             <p className="font-medium">Aperçu</p>
             <div className="mt-2 space-y-1 text-muted-foreground">
@@ -132,8 +160,9 @@ export default function LoyaltySettings() {
           </div>
 
           <div className="flex justify-end">
-            <Button className="rounded-full" onClick={save}>
-              <Save className="mr-2 h-4 w-4" /> Enregistrer
+            <Button className="rounded-full" onClick={save} disabled={saving}>
+              <Save className="mr-2 h-4 w-4" />
+              {saving ? 'Recalcul en cours...' : 'Enregistrer'}
             </Button>
           </div>
         </CardContent>
