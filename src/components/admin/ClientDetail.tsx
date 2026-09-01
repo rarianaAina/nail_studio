@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Phone, Mail, Calendar, Wallet, Sparkles, ImageIcon, Save, X } from 'lucide-react';
+import { Phone, Mail, Calendar, Wallet, Sparkles, ImageIcon, Save, X, Trash2 } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -11,7 +11,11 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
-import type { Client } from '@/types';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import type { Client, SuppressionCliente } from '@/types';
 import { getTotalPrice, getTotalDuration, getServiceNames } from '@/types';
 import { useClientHistory } from '@/hooks/useClientHistory';
 import { formatAriary, formatDuration, STATUS_COLORS, STATUS_LABELS } from '@/utils';
@@ -22,6 +26,7 @@ interface ClientDetailProps {
   client: Client | null;
   onClose: () => void;
   onSaveNotes: (id: string, notes: string) => Promise<void>;
+  onDelete: (id: string) => Promise<SuppressionCliente>;
 }
 
 const PHOTO_LABELS: Record<string, string> = {
@@ -30,10 +35,12 @@ const PHOTO_LABELS: Record<string, string> = {
   inspiration: 'Inspiration',
 };
 
-export default function ClientDetail({ client, onClose, onSaveNotes }: ClientDetailProps) {
+export default function ClientDetail({ client, onClose, onSaveNotes, onDelete }: ClientDetailProps) {
   const { appointments, photos, completedCount, cancelledCount, loading } = useClientHistory(client?.id);
   const [notes, setNotes] = useState('');
   const [saving, setSaving] = useState(false);
+  const [confirmation, setConfirmation] = useState(false);
+  const [suppression, setSuppression] = useState(false);
 
   // Repartir des notes enregistrées à chaque changement de cliente, sans quoi
   // la saisie en cours suivrait d'une fiche à l'autre.
@@ -57,6 +64,27 @@ export default function ClientDetail({ client, onClose, onSaveNotes }: ClientDet
     }
   };
 
+  const handleDelete = async () => {
+    setSuppression(true);
+    try {
+      const r = await onDelete(client.id);
+
+      // Le détail est annoncé plutôt qu'un simple « supprimée » : la gérante
+      // doit pouvoir constater que l'historique comptable est resté en place.
+      toast.success(`${r.nom} supprimée.`, {
+        description:
+          `${r.rendezVousAnonymises} rendez-vous anonymisé(s), conservés pour la comptabilité.` +
+          (r.compteSupprime ? ' Son compte de connexion a été supprimé.' : ''),
+      });
+      setConfirmation(false);
+      onClose();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'La suppression a échoué.');
+    } finally {
+      setSuppression(false);
+    }
+  };
+
   const stats = [
     { label: 'Visites', value: String(client.visitCount), icon: Calendar },
     { label: 'Total dépensé', value: formatAriary(client.totalSpent), icon: Wallet },
@@ -64,7 +92,8 @@ export default function ClientDetail({ client, onClose, onSaveNotes }: ClientDet
   ];
 
   return (
-    <Dialog open={!!client} onOpenChange={(open) => !open && onClose()}>
+    <>
+      <Dialog open={!!client} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="font-display text-2xl">{client.name}</DialogTitle>
@@ -204,13 +233,58 @@ export default function ClientDetail({ client, onClose, onSaveNotes }: ClientDet
             )}
           </div>
 
-          <div className="flex justify-end">
+          <div className="flex flex-wrap justify-between gap-2">
+            <Button
+              variant="outline"
+              className="text-rose-600 hover:bg-rose-50 hover:text-rose-700"
+              onClick={() => setConfirmation(true)}
+            >
+              <Trash2 className="mr-1.5 h-4 w-4" /> Supprimer la cliente
+            </Button>
             <Button variant="outline" onClick={onClose}>
               <X className="mr-1.5 h-4 w-4" /> Fermer
             </Button>
           </div>
         </div>
       </DialogContent>
-    </Dialog>
+      </Dialog>
+
+      {/* Une confirmation qui ne dit pas ce qu'elle emporte ne protège de
+          rien : les conséquences sont énoncées, et la cliente nommée. */}
+      <AlertDialog open={confirmation} onOpenChange={(o) => !o && setConfirmation(false)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Supprimer {client.name} ?</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-2 text-sm">
+                <p>Sa fiche disparaît définitivement : coordonnées, notes de suivi et points de fidélité.</p>
+                <p>
+                  <strong>Ses rendez-vous sont conservés</strong> mais anonymisés —
+                  montants et dates restent dans vos statistiques, plus rien n'y désigne une personne.
+                  La loi impose de garder dix ans les pièces comptables.
+                </p>
+                <p>Ses photographies et ses avis sont dépouillés de toute identité.</p>
+                <p className="text-rose-600">Cette opération est irréversible.</p>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={suppression}>Annuler</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={suppression}
+              className="bg-rose-600 hover:bg-rose-700"
+              onClick={(e) => {
+                // La fermeture par défaut interviendrait avant la fin de la
+                // requête : un échec passerait alors inaperçu.
+                e.preventDefault();
+                void handleDelete();
+              }}
+            >
+              {suppression ? 'Suppression...' : 'Supprimer définitivement'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }

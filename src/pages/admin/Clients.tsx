@@ -9,7 +9,7 @@ import ClientDetail from '@/components/admin/ClientDetail';
 import type { Client } from '@/types';
 
 export default function Clients() {
-  const { clients, aggregates, updateClient } = useClients();
+  const { clients, aggregates, updateClient, deleteClient } = useClients();
   const [query, setQuery] = useState('');
   const [selected, setSelected] = useState<Client | null>(null);
 
@@ -142,6 +142,7 @@ export default function Clients() {
         client={selectedClient}
         onClose={() => setSelected(null)}
         onSaveNotes={(id, notes) => updateClient(id, { notes })}
+        onDelete={deleteClient}
       />
     </div>
   );
