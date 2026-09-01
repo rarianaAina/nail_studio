@@ -1,6 +1,6 @@
-import type { Client, CreateClientDto } from '@/types';
+import type { Client, CreateClientDto, SuppressionCliente } from '@/types';
 import { clientService } from '@/services/clientService';
-import { queryKeys } from '@/lib/queryClient';
+import { queryClient, queryKeys } from '@/lib/queryClient';
 import { useResource, useCacheWriter } from './useResource';
 
 interface ClientAggregates {
@@ -16,7 +16,7 @@ interface UseClientsReturn {
   error: string | null;
   createClient: (data: CreateClientDto) => Promise<Client>;
   updateClient: (id: string, data: Partial<Client>) => Promise<void>;
-  deleteClient: (id: string) => Promise<void>;
+  deleteClient: (id: string) => Promise<SuppressionCliente>;
   refresh: () => Promise<void>;
 }
 
@@ -59,8 +59,20 @@ export function useClients(): UseClientsReturn {
   };
 
   const deleteClient = async (id: string) => {
-    await clientService.delete(id);
+    const resume = await clientService.delete(id);
+
+    // Retrait immédiat de la liste, puis relecture : les agrégats — nombre de
+    // clientes, visites, chiffre d'affaires — sont recalculés en base, et les
+    // rejouer ici les ferait diverger de la source.
     write((prev) => ({ ...prev, clients: prev.clients.filter((c) => c.id !== id) }));
+    await refresh();
+
+    // Les rendez-vous conservés portent désormais « Cliente supprimée » : les
+    // vues qui les affichent montreraient l'ancien nom jusqu'à leur péremption.
+    queryClient.invalidateQueries({ queryKey: queryKeys.appointments });
+    queryClient.invalidateQueries({ queryKey: queryKeys.stats });
+
+    return resume;
   };
 
   return {

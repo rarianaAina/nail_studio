@@ -1,5 +1,5 @@
 import { supabase } from '@/lib/supabase';
-import type { Client, CreateClientDto, UpdateClientDto } from '@/types';
+import type { Client, CreateClientDto, UpdateClientDto, SuppressionCliente } from '@/types';
 
 interface ClientRow {
   id: string;
@@ -111,10 +111,23 @@ export const clientService = {
     return rowToClient(updated as ClientRow);
   },
 
-  async delete(id: string): Promise<void> {
-    const { error } = await supabase.from('clients').delete().eq('id', id);
+  /**
+   * Supprime une fiche cliente et son compte, en anonymisant l'historique.
+   *
+   * L'effacement direct de la ligne ne convenait pas : la contrainte portée
+   * par `appointments.client_id` s'y oppose, et supprimer les rendez-vous
+   * ferait diminuer rétroactivement le chiffre d'affaires de mois déjà clos.
+   * Toute la logique est donc côté serveur, dans une seule transaction — une
+   * suppression à moitié faite laisserait des coordonnées derrière elle.
+   */
+  async delete(id: string): Promise<SuppressionCliente> {
+    const { data, error } = await supabase.rpc('supprimer_cliente', {
+      p_client_id: id,
+    });
     if (error) throw error;
+    return data as SuppressionCliente;
   },
+
 
   async getAggregates(): Promise<{ totalClients: number; totalVisits: number; totalRevenue: number }> {
     const { data, error } = await supabase

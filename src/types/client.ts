@@ -30,3 +30,19 @@ export interface UpdateClientDto {
   totalSpent?: number;
   lastVisit?: string;
 }
+
+/**
+ * Compte rendu d'une suppression de fiche cliente.
+ *
+ * L'historique n'est pas effacé mais anonymisé : les pièces comptables sont
+ * conservées dix ans par obligation légale. Ces nombres permettent d'annoncer
+ * à la gérante ce que l'opération a réellement emporté.
+ */
+export interface SuppressionCliente {
+  nom: string;
+  rendezVousAnonymises: number;
+  avisAnonymises: number;
+  rappelsSupprimes: number;
+  courrielsSupprimes: number;
+  compteSupprime: boolean;
+}

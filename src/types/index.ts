@@ -3,6 +3,7 @@ export type {
   Client,
   CreateClientDto,
   UpdateClientDto,
+  SuppressionCliente,
 } from './client';
 export type {
   Appointment,
