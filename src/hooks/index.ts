@@ -12,3 +12,4 @@ export { useConfig } from './useConfig';
 export { useActiveConfig } from './useActiveConfig';
 export { useFrequentation } from './useFrequentation';
 export { usePageTracking } from './usePageTracking';
+export { useAvailableSlots } from './useAvailableSlots';

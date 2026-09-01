@@ -1,5 +1,5 @@
 // pages/admin/Appointments.tsx
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Search, Eye, Pencil, Check, CheckCheck, X, CalendarPlus, Bell, Trash2, Image as ImageIcon } from 'lucide-react';
 import { useNailServices } from '@/hooks/useNailServices';
@@ -29,7 +29,9 @@ import { supabase } from '@/lib/supabase';
 import { formatAriary, formatDuration, STATUS_COLORS, STATUS_LABELS } from '@/utils';
 import { getTotalPrice, getTotalDuration, getServiceNames } from '@/types';
 import type { Appointment, AppointmentStatus } from '@/types';
-import { parseDate, formatDate } from '@/utils/date';
+import { parseDate, formatDate, isPastDate } from '@/utils/date';
+import { useAvailableSlots } from '@/hooks/useAvailableSlots';
+import { Link } from 'react-router-dom';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -61,7 +63,7 @@ export default function Appointments() {
     email: '',
     serviceIds: [] as string[],
     date: '',
-    time: '09:00',
+    time: '',
     paymentMethodId: '',
     notes: '',
   });
@@ -145,6 +147,58 @@ export default function Appointments() {
       toast.success(`Statut mis à jour : ${STATUS_LABELS[status]}`);
     }
   };
+
+  // La disponibilité dépend de la durée cumulée : deux prestations
+  // enchaînées n'entrent pas dans le créneau qui suffisait à l'une d'elles.
+  const dureeTotale = useMemo(
+    () => newAppt.serviceIds.reduce(
+      (somme, id) => somme + (services.find((s) => s.id === id)?.duration ?? 0),
+      0
+    ),
+    [newAppt.serviceIds, services]
+  );
+
+  // Une date révolue ne se réserve pas, elle se consigne : la gérante
+  // enregistre après coup une cliente venue sans rendez-vous. Le serveur
+  // l'autorise explicitement et n'y vérifie aucune disponibilité, l'heure
+  // reste donc saisie librement.
+  const dateRevolue = !!newAppt.date && isPastDate(newAppt.date);
+
+  const { slots, loading: chargementCreneaux } = useAvailableSlots(
+    dateRevolue ? '' : newAppt.date,
+    dureeTotale
+  );
+
+  // En modification, le rendez-vous occupe son propre créneau : le serveur ne
+  // le renvoie donc pas comme libre. Sans cette réintégration, son heure
+  // actuelle disparaîtrait de la liste et paraîtrait invalide.
+  //
+  // Elle n'a cependant de titre à y figurer que tant que la date et les
+  // prestations sont inchangées. Dès que celles-ci changent, la durée aussi :
+  // le créneau d'origine devient une place comme une autre, à revalider.
+  const rdvEnCours = editingId ? appointments.find((a) => a.id === editingId) : undefined;
+
+  const heureInitiale = useMemo(() => {
+    if (!rdvEnCours || rdvEnCours.date !== newAppt.date) return undefined;
+    const memesPrestations =
+      rdvEnCours.services.length === newAppt.serviceIds.length &&
+      rdvEnCours.services.every((s) => newAppt.serviceIds.includes(s.id));
+    return memesPrestations ? rdvEnCours.time : undefined;
+  }, [rdvEnCours, newAppt.date, newAppt.serviceIds]);
+
+  const creneauxProposes = useMemo(() => {
+    if (!heureInitiale || slots.includes(heureInitiale)) return slots;
+    return [...slots, heureInitiale].sort();
+  }, [slots, heureInitiale]);
+
+  // Changer de prestation ou de date peut invalider l'heure déjà choisie :
+  // la laisser sélectionnée ferait échouer l'enregistrement sans explication.
+  useEffect(() => {
+    if (!showCreate || dateRevolue || chargementCreneaux) return;
+    if (newAppt.time && !creneauxProposes.includes(newAppt.time)) {
+      setNewAppt((p) => ({ ...p, time: '' }));
+    }
+  }, [showCreate, dateRevolue, chargementCreneaux, creneauxProposes, newAppt.time]);
 
   const toggleServiceSelection = (serviceId: string) => {
     setNewAppt(prev => ({
@@ -542,16 +596,81 @@ export default function Appointments() {
               )}
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <Label htmlFor="na-date">Date *</Label>
-                <Input id="na-date" type="date" value={newAppt.date} onChange={(e) => setNewAppt((p) => ({ ...p, date: e.target.value }))} />
-              </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="na-date">Date *</Label>
+              <Input id="na-date" type="date" value={newAppt.date} onChange={(e) => setNewAppt((p) => ({ ...p, date: e.target.value }))} />
+            </div>
+
+            {/* Une date révolue se consigne — l'heure y est libre. Pour toute
+                autre date, seuls les créneaux réellement libres sont proposés,
+                comme dans le tunnel de réservation des clientes. */}
+            {dateRevolue ? (
               <div className="space-y-1.5">
                 <Label htmlFor="na-time">Heure *</Label>
                 <Input id="na-time" type="time" value={newAppt.time} onChange={(e) => setNewAppt((p) => ({ ...p, time: e.target.value }))} />
+                <p className="text-xs text-muted-foreground">
+                  Date passée : vous consignez un rendez-vous ayant déjà eu lieu, l'heure est libre.
+                </p>
               </div>
-            </div>
+            ) : (
+              <div className="space-y-1.5">
+                <Label>Heure *</Label>
+
+                {!newAppt.date ? (
+                  <p className="rounded-lg border border-dashed border-border px-4 py-3 text-xs text-muted-foreground">
+                    Choisissez d'abord une date.
+                  </p>
+                ) : newAppt.serviceIds.length === 0 ? (
+                  <p className="rounded-lg border border-dashed border-border px-4 py-3 text-xs text-muted-foreground">
+                    Sélectionnez au moins une prestation : les créneaux dépendent de la durée totale.
+                  </p>
+                ) : chargementCreneaux ? (
+                  <p className="rounded-lg border border-dashed border-border px-4 py-3 text-xs text-muted-foreground">
+                    Recherche des créneaux libres...
+                  </p>
+                ) : creneauxProposes.length === 0 ? (
+                  <div className="space-y-2 rounded-lg border border-dashed border-amber-300 bg-amber-50/60 px-4 py-3">
+                    <p className="text-xs text-amber-800">
+                      Aucun créneau libre ce jour-là pour {formatDuration(dureeTotale)} de prestations.
+                    </p>
+                    {/* La cause la plus fréquente n'est pas un agenda plein mais
+                        une date sans créneau configuré : le dire évite une
+                        recherche à l'aveugle. */}
+                    <p className="text-xs text-amber-800/80">
+                      Soit la journée est complète, soit aucun créneau n'est ouvert à cette date.
+                      Vérifiez-les dans{' '}
+                      <Link to="/admin/parametres/creneaux" className="underline" onClick={() => setShowCreate(false)}>
+                        Paramètres › Créneaux
+                      </Link>
+                      .
+                    </p>
+                  </div>
+                ) : (
+                  <>
+                    <div className="grid max-h-40 grid-cols-4 gap-2 overflow-y-auto p-1">
+                      {creneauxProposes.map((c) => (
+                        <button
+                          key={c}
+                          type="button"
+                          onClick={() => setNewAppt((p) => ({ ...p, time: c }))}
+                          className={cn(
+                            'rounded-lg border py-2 text-xs font-medium transition-all',
+                            newAppt.time === c
+                              ? 'border-primary bg-primary text-primary-foreground'
+                              : 'border-border hover:border-primary/40'
+                          )}
+                        >
+                          {c}
+                        </button>
+                      ))}
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      {creneauxProposes.length} créneau(x) libre(s) pour {formatDuration(dureeTotale)} de prestations.
+                    </p>
+                  </>
+                )}
+              </div>
+            )}
             
             <div className="space-y-1.5">
               <Label>Moyen de paiement</Label>
@@ -587,7 +706,7 @@ export default function Appointments() {
           <DialogFooter>
             <Button variant="outline" onClick={() => { setShowCreate(false); setEditingId(null); }}>Annuler</Button>
             <Button
-              disabled={creating || !newAppt.clientName || !newAppt.phone || newAppt.serviceIds.length === 0 || !newAppt.date}
+              disabled={creating || !newAppt.clientName || !newAppt.phone || newAppt.serviceIds.length === 0 || !newAppt.date || !newAppt.time}
               title={editingId ? 'Enregistrer les modifications' : 'Créer le rendez-vous'}
               onClick={async () => {
                 setCreating(true);
@@ -655,7 +774,7 @@ export default function Appointments() {
                   });
                   toast.success('Rendez-vous créé.');
                   setShowCreate(false);
-                  setNewAppt({ clientId: '', clientName: '', phone: '', email: '', serviceIds: [], date: '', time: '09:00', paymentMethodId: '', notes: '' });
+                  setNewAppt({ clientId: '', clientName: '', phone: '', email: '', serviceIds: [], date: '', time: '', paymentMethodId: '', notes: '' });
                   await refresh();
                 } catch (e) {
                   toast.error(e instanceof Error ? e.message : 'Erreur lors de la création.');
