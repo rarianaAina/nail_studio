@@ -48,4 +48,5 @@ export const queryKeys = {
   reminderSettings: ['reminder-settings'] as const,
   loyalty: (userId?: string) => ['loyalty', userId] as const,
   frequentation: (jours: number) => ['frequentation', jours] as const,
+  availableSlots: (date: string, duree: number) => ['available-slots', date, duree] as const,
 } as const;
